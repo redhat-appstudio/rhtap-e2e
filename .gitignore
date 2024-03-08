@@ -1,0 +1,5 @@
+*.xml
+
+artifacts
+node_modules
+private.env
