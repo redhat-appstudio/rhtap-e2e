@@ -1,7 +1,18 @@
-import { gitHubBasicGoldenPathTemplateTests } from "./test-config/github_suite";
+import { gitHubBasicGoldenPathTemplateTests } from "./test-config/github_positive_suite.ts";
+import { skipSuite } from "../../test-utils.ts";
+import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
+
+const golangTemplateName = 'go';
 
 const runGolangBasicTests = () => {
-    gitHubBasicGoldenPathTemplateTests('go')
+    const configuration = loadSoftwareTemplatesTestsGlobals()
+
+    if (configuration.templates.includes(golangTemplateName) && configuration.github.active) {
+
+        gitHubBasicGoldenPathTemplateTests(golangTemplateName);
+    } else {
+        skipSuite(golangTemplateName);
+    }
 }
 
-runGolangBasicTests()
+runGolangBasicTests();

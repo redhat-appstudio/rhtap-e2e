@@ -47,10 +47,10 @@ for ENVIRONMENT_NAMESPACE in $ALL_ENVIRONMENTS_NAMESPACES ; do
   if [  "$ERR" != "0" ]
   then
       oc new-project $ENVIRONMENT_NAMESPACE
-      oc label namespace  $ENVIRONMENT_NAMESPACE argocd.argoproj.io/managed-by=openshift-gitops
+      oc label namespace  $ENVIRONMENT_NAMESPACE argocd.argoproj.io/managed-by=rhtap
       environmentNamespaceConfiguration $ENVIRONMENT_NAMESPACE
   else
       echo "$ENVIRONMENT_NAMESPACE exists and is labelled for gitops"
-      oc label namespace  $ENVIRONMENT_NAMESPACE argocd.argoproj.io/managed-by=openshift-gitops &> /dev/null
+      oc label namespace  $ENVIRONMENT_NAMESPACE argocd.argoproj.io/managed-by=rhtap &> /dev/null
   fi
 done
