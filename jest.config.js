@@ -1,6 +1,6 @@
 module.exports = {
     testEnvironment: 'node',
-    maxWorkers: 4,
+    maxWorkers: 6,
     bail: false,
     verbose: true,
     globals: {

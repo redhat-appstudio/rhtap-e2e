@@ -204,7 +204,7 @@ export class Kubernetes extends Utils {
     
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'openshift-gitops', 'applications', name);
+                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'rhtap', 'applications', name);
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
