@@ -27,7 +27,7 @@ export class DeveloperHubClient extends Utils {
         this.RHDHUrl = process.env.RED_HAT_DEVELOPER_HUB_URL;
         this.axiosInstance = axios.create({
             httpAgent: new https.Agent({
-                rejectUnauthorized: true
+                rejectUnauthorized: false
             })
         });
     }
