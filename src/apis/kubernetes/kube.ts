@@ -105,7 +105,7 @@ export class Kubernetes extends Utils {
      * @returns {Promise<PipelineRunKind | undefined>} A Promise resolving to the most recent PipelineRun associated with the repository, or undefined if no PipelineRun is found.
      * @throws This function may throw errors during API calls or retries.
      */
-    public async getPipelineRunByRepository(gitHubRepository: string): Promise<PipelineRunKind | undefined> {
+    public async getPipelineRunByRepository(gitHubRepository: string, enventType: string): Promise<PipelineRunKind | undefined> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi)
         const maxAttempts = 10;
         const retryInterval = 10 * 1000
@@ -113,7 +113,7 @@ export class Kubernetes extends Utils {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 const { body } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'pipelineruns',
-                    undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitHubRepository}`);
+                    undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitHubRepository}, pipelinesascode.tekton.dev/event-type=${enventType}`);
                 const pr = body as PipelineRunList;
                 // !TODO: Return most recent pipelinerun found
                 if (pr.items.length > 0) {

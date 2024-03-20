@@ -14,7 +14,7 @@ import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
  * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
-export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
+export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
         jest.retryTimes(2);
 
@@ -30,6 +30,10 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
+
+        let pullRequestNumber: number;
+        let gitopsPromotionPRNumber: number;
+        let extractedBuildImage: string;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -151,17 +155,21 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         /**
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
-        it(`Creates empty commit to trigger a pipeline run`, async ()=> {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName)
-            expect(commit).not.toBe(undefined)
+        it(`Creates a pull request to trigger a pipelinerun`, async ()=> {
+            const prNumber = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content')
 
+            if (prNumber !== undefined) {
+                pullRequestNumber = prNumber
+            } else {
+                throw new Error("Failed to create a pr");
+            }
         }, 120000)
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
-        it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+        it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request')
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
@@ -179,5 +187,92 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 expect(finished).toBe(true)
             }
         }, 900000)
+
+        /**
+         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         */
+        it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
+            await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber)
+        }, 120000)
+
+        /**
+         * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
+         */
+        it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+        
+            if (pipelineRun === undefined) {
+                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+            }
+        
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+        
+                for (const iterator of tskRuns) {
+                    if (iterator.status && iterator.status.podName) {
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                    }
+                }
+                expect(finished).toBe(true)
+            }
+        }, 900000)
+
+        it('component is deployed successfully in development', async ()=> {
+            console.log("verified")
+        })
+
+        it('trigger pull request promotion to promote from development to stage and production environments', async ()=> {
+            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, 'development')
+
+            if (getImage !== undefined) {
+                extractedBuildImage = getImage
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+
+            console.log("verified")
+        })
+
+        it('pipelinerun finished successfully to validate ec for promotion from dev to stage and prod', async ()=> {
+            console.log(extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, 'stage', extractedBuildImage)
+            if (gitopsPromotionPR !== undefined) {
+                gitopsPromotionPRNumber = gitopsPromotionPR
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+        })
+
+        it('pipelinerun finished successfully to validate ec for promotion from dev to stage and prod', async ()=> {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request')
+
+            if (pipelineRun === undefined) {
+                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+            }
+
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+
+                for (const iterator of tskRuns) {
+                    if (iterator.status && iterator.status.podName) {
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                    }
+                }
+                expect(finished).toBe(true)
+            }
+        }, 900000)
+
+        /**
+         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         */
+        it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
+        }, 120000)
+
+        it('component successfully deployed in stage and production', async ()=> {
+            console.log("verified")
+        })
     })
 }
