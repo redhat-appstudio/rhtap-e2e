@@ -273,7 +273,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage
@@ -281,7 +281,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR
             } else {
@@ -337,7 +337,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage
@@ -345,7 +345,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR
             } else {
