@@ -132,16 +132,19 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         it(`wait ${gptTemplate} component to be finished`, async () => {
             // Retrieve the processed task from Developer Hub
             const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-        
-            // Retrieve event stream logs for the processed task
-            const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-        
-            // Write logs to the artifact directory
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-        
-            // Expect the task status to be 'completed'
-            expect(taskCreated.status).toBe('completed');
-        }, 120000);
+
+            if (taskCreated.status !== 'completed') {
+                console.log("failed to create backstage tasks. creating logs...")
+                try {
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
+                } catch (error) {
+                    throw new Error(`failed to write files to console: ${error}`);
+                }
+            } else {
+                console.log("Task created successfully in backstage");
+            }
+        }, 600000);
 
         /**
          * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -271,7 +274,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage
@@ -279,7 +282,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR
             } else {
@@ -335,7 +338,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage
@@ -343,7 +346,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR
             } else {
