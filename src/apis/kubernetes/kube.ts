@@ -191,8 +191,7 @@ export class Kubernetes extends Utils {
                         console.log(`Pipeline run '${name}' finished successfully.`);
                         return true;
                     } else if (pipelineHasFailed) {
-                        console.error(`Pipeline run '${name}' failed.`);
-                        return false;
+                        throw new Error(`Pipeline run '${name}' failed.`);
                     }
                 }
             } catch (error) {

@@ -23,7 +23,7 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
             echo "argocd command not found. Aborting script."
             exit 0
         fi
-        sleep 10s
+        sleep 1m
 
         URL=$(oc get routes rhtap-argocd-server -n ${namespace} -o jsonpath={.spec.host})
         P64=$(oc get secret rhtap-argocd-cluster -n ${namespace} -ojsonpath='{.data.admin\\.password}')
