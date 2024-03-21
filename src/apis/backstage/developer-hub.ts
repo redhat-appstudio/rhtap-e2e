@@ -114,4 +114,26 @@ export class DeveloperHubClient extends Utils {
 
         return response.data;
     }
+
+    public async checkComponentEndpoint(url: string): Promise<boolean> {
+        try {
+            const response = await axios.get(url);
+            return response.status === 200;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    public async waitUntilComponentEndpointBecomeReady(url: string, timeoutMs: number): Promise<boolean> {
+        const startTime = Date.now();
+        let elapsedTime = 0;
+        while (elapsedTime < timeoutMs) {
+            if (await this.checkComponentEndpoint(url)) {
+                return true;
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            elapsedTime = Date.now() - startTime;
+        }
+        return false;
+    }
 }

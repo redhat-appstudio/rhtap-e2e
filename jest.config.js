@@ -1,7 +1,8 @@
 module.exports = {
-    testEnvironment: 'node',
+    testEnvironment: './jest-environment-fail-fast.js',
     maxWorkers: 6,
     bail: false,
+    testRunner: 'jest-circus/runner',
     verbose: true,
     globals: {
         suites: {

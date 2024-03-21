@@ -154,13 +154,14 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         it(`Creates empty commit to trigger a pipeline run`, async ()=> {
             const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName)
             expect(commit).not.toBe(undefined)
+
         }, 120000)
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName)
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
