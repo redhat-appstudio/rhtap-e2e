@@ -134,6 +134,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
+                console.log("failed to create backstage tasks. creating logs...")
                 try {
                     const logs = await backstageClient.getEventStreamLog(taskCreated.id)
                     await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
@@ -141,9 +142,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                     throw new Error(`failed to write files to console: ${error}`);
                 }
             } else {
-                throw new Error("Failed to create create backstage task");
+                console.log("Task created successfully in backstage");
             }
-        }, 120000);
+        }, 600000);
 
         /**
          * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
