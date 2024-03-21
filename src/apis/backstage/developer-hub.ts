@@ -84,7 +84,7 @@ export class DeveloperHubClient extends Utils {
         while (totalTimeMs < timeoutMs) {
             try {
                 const response: AxiosResponse<ScaffolderTask> = await this.axiosInstance.get(`${this.RHDHUrl}/api/scaffolder/v2/tasks/${taskId}`);
-                if (response.data.status != "processing") {
+                if (response.data.status !== "processing" && response.data.status !== "open") {
                     return response.data;
                 }
 
