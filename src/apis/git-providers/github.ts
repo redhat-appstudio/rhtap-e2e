@@ -177,6 +177,7 @@ export class GitHubProvider extends Utils {
             }
 
         } catch (error) {
+            console.log(error)
             throw new Error(`Error: ${error}`);
         }
     }

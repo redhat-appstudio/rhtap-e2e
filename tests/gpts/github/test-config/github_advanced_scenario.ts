@@ -132,15 +132,17 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         it(`wait ${gptTemplate} component to be finished`, async () => {
             // Retrieve the processed task from Developer Hub
             const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-        
-            // Retrieve event stream logs for the processed task
-            const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-        
-            // Write logs to the artifact directory
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-        
-            // Expect the task status to be 'completed'
-            expect(taskCreated.status).toBe('completed');
+
+            if (taskCreated.status !== 'completed') {
+                try {
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
+                } catch (error) {
+                    throw new Error(`failed to write files to console: ${error}`);
+                }
+            } else {
+                throw new Error("Failed to create create backstage task");
+            }
         }, 120000);
 
         /**
