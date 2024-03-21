@@ -7,20 +7,35 @@ import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
 
 /**
- * 1. Components get created in Red Hat Developer Hub
- * 2. Check that components gets created successfully in Red Hat Developer Hub
- * 3. Red Hat Developer Hub created GitHub repository
- * 4. Perform an commit in GitHub to trigger a push PipelineRun
- * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
- * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
+ * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
+ * 1. Create components in Red Hat Developer Hub.
+ * 2. Verify successful creation of components in Red Hat Developer Hub.
+ * 3. Ensure Red Hat Developer Hub creates a corresponding GitHub repository.
+ * 4. Initiate a Pull Request to trigger a PipelineRun for pull_request events in the GitHub repository.
+ * 5. Merge the Pull Request if the PipelineRun succeeds.
+ * 6. Upon merging the Pull Request, validate that the push PipelineRun starts and finishes successfully.
+ * 7. Verify that the new image is deployed correctly in the development environment.
+ * 8. Trigger a Pull Request in the component gitops folder to promote the development image to the stage environment.
+ * 9. Ensure that the EC Pipeline Runs are successfully passed.
+ * 10. Merge the Pull Request to main.
+ * 11. Wait for the new image to be deployed to the stage environment.
+ * 12. Trigger a Pull Request in the component gitops repository to promote the stage image to the production environment.
+ * 13. Verify that the EC Pipeline Runs are successfully passed.
+ * 14. Merge the Pull Request to main.
+ * 15. Wait for the new image to be deployed to the production environment.
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
-        jest.retryTimes(2);
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const developmentEnvironmentName = 'development';
+        const stagingEnvironmentName = 'stage';
+        const productionEnvironmentName = 'prod';
+
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
+        const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
+        const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomName()}-${gptTemplate}`;
@@ -75,18 +90,21 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          * 
-         * @param templateRef Refers to the Developer Hub template name.
-         * @param values Set of options to create the component.
-         * @param owner Developer Hub username who initiates the task.
-         * @param name Name of the repository to be created in GitHub.
-         * @param branch Default git branch for the component.
-         * @param repoUrl Complete URL of the git provider where the component will be created.
-         * @param imageRegistry Image registry provider. Default is Quay.io.
-         * @param namespace Kubernetes namespace where ArgoCD will create component manifests.
-         * @param imageName Registry image name for the component to be pushed.
-         * @param imageOrg Registry organization name for the component to be pushed.
+         * @param {string} templateRef Refers to the Developer Hub template name.
+         * @param {object} values Set of options to create the component.
+         * @param {string} values.branch Default git branch for the component.
+         * @param {string} values.githubServer GitHub server URL.
+         * @param {string} values.hostType Type of host (e.g., GitHub).
+         * @param {string} values.imageName Registry image name for the component to be pushed.
+         * @param {string} values.imageOrg Registry organization name for the component to be pushed.
+         * @param {string} values.imageRegistry Image registry provider. Default is Quay.io.
+         * @param {string} values.name Name of the repository to be created in GitHub.
+         * @param {string} values.namespace Kubernetes namespace where ArgoCD will create component manifests.
+         * @param {string} values.owner Developer Hub username who initiates the task.
+         * @param {string} values.repoName Name of the GitHub repository.
+         * @param {string} values.repoOwner Owner of the GitHub repository.
          */
-        it(`creates ${gptTemplate} component`, async () => {
+        it(`creates ${gptTemplate} component`, async () => {            
             const taskCreatorOptions: ScaffolderScaffoldOptions = {
                 templateRef: `template:default/${gptTemplate}`,
                 values: {
@@ -109,61 +127,78 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         }, 120000);
 
         /**
-         * Once test send a task to Developer Hub, test start to look for the task until all the steps are processed. Once all the steps are processed
-         * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
+         * Waits for the specified component task to be processed by Developer Hub and retrieves logs upon completion.
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
-
-            const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
-            expect(taskCreated.status).toBe('completed')
+            // Retrieve the processed task from Developer Hub
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
+        
+            // Retrieve event stream logs for the processed task
+            const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+        
+            // Write logs to the artifact directory
+            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
+        
+            // Expect the task status to be 'completed'
+            expect(taskCreated.status).toBe('completed');
         }, 120000);
 
         /**
-         * Once a DeveloperHub task is processed should create an argocd application in openshift-gitops namespace. 
-         * Need to wait until application is synced until commit something to github and trigger a pipelinerun
+         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
-            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)
-            expect(argoCDAppISSynced).toBe(true)
+            // Wait for the ArgoCD application to be synchronized in the cluster
+            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000);
+            
+            // Expect the ArgoCD application to be synced
+            expect(argoCDAppISSynced).toBe(true);
         }, 600000);
 
         /**
-         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
-         * my application. Also verifies if the repository contains a '.tekton' folder.
+         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
+         * The repository should contain the source code of the application and a '.tekton' folder.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)
-            expect(repositoryExists).toBe(true)
+            // Check if the repository exists in GitHub
+            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName);
+            expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
-
-        /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
-         */
-        it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)
-            expect(repositoryExists).toBe(true)
-
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
+            // Check if the '.tekton' folder exists in the repository
+            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
 
         /**
-         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         * Verifies if Red Hat Developer Hub created the GitOps repository with all the manifests for ArgoCD.
+         * The repository should contain the '.tekton' folder.
+         * 
          */
-        it(`Creates a pull request to trigger a pipelinerun`, async ()=> {
-            const prNumber = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content')
+        it(`verifies if component ${gptTemplate} have a valid GitOps repository and there exists a '.tekton' folder`, async () => {
+            // Check if the GitOps repository exists in GitHub
+            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`);
+            expect(repositoryExists).toBe(true);
 
+            // Check if the '.tekton' folder exists in the GitOps repository
+            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
+
+        /**
+         * Creates an empty commit in the repository and expects a PipelineRun to start.
+         * This step is used to trigger a PipelineRun by creating a pull request.
+         * 
+         * @throws {Error} Throws an error if the creation of the pull request fails.
+         */
+        it(`Creates a pull request to trigger a PipelineRun`, async () => {
+            const prNumber = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content');
+
+            // Set the pull request number if creation was successful
             if (prNumber !== undefined) {
-                pullRequestNumber = prNumber
+                pullRequestNumber = prNumber;
             } else {
-                throw new Error("Failed to create a pr");
+                throw new Error("Failed to create a pull request");
             }
-        }, 120000)
+        }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
@@ -218,12 +253,25 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             }
         }, 900000)
 
-        it('component is deployed successfully in development', async ()=> {
-            console.log("verified")
-        })
+        /**
+         * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
+         */
+        it('container component is successfully synced by gitops in development environment', async ()=> {
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
 
-        it('trigger pull request promotion to promote from development to stage and production environments', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, 'development')
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+
+            if (!isReady) {
+                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+            }
+
+        }, 900000)
+
+        /**
+         * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
+         */
+        it('trigger pull request promotion to promote from development to stage environment', async ()=> {
+            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage
@@ -231,12 +279,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            console.log("verified")
-        })
-
-        it('pipelinerun finished successfully to validate ec for promotion from dev to stage and prod', async ()=> {
-            console.log(extractedBuildImage)
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, 'stage', extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR
             } else {
@@ -244,7 +287,10 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             }
         })
 
-        it('pipelinerun finished successfully to validate ec for promotion from dev to stage and prod', async ()=> {
+        /**
+         * Verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging.
+         */
+        it('verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging', async () => {
             const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request')
 
             if (pipelineRun === undefined) {
@@ -265,14 +311,88 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         }, 900000)
 
         /**
-         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
          */
-        it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
+        it(`merge gitops pull request to sync new image in stage environment`, async ()=> {
             await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
         }, 120000)
 
-        it('component successfully deployed in stage and production', async ()=> {
-            console.log("verified")
+        /*
+        * Verifies if the new image is deployed with an expected endpoint in stage environment
+        */
+        it('container component is successfully synced by gitops in stage environment', async ()=> {
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
+
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+
+            if (!isReady) {
+                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+            }
+
+        }, 900000)
+
+        /**
+        * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
+        */
+        it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
+            const getImage = await gitHubClient.extractImageFromContent('rhtap-hub', `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
+
+            if (getImage !== undefined) {
+                extractedBuildImage = getImage
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment('rhtap-hub', `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
+            if (gitopsPromotionPR !== undefined) {
+                gitopsPromotionPRNumber = gitopsPromotionPR
+            } else {
+                throw new Error("Failed to create a pr");
+            }
         })
+
+        /**
+         * Verifies successful completion of EC PipelineRun to ensure environment promotion from staging to production.
+         */
+        it('verifies successful completion of PipelineRun to ensure environment promotion from stage to prod', async () => {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request')
+
+            if (pipelineRun === undefined) {
+                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+            }
+
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+
+                for (const iterator of tskRuns) {
+                    if (iterator.status && iterator.status.podName) {
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                    }
+                }
+                expect(finished).toBe(true)
+            }
+        }, 900000)
+
+        /**
+         * If pipelinerun succeeds merge the PR to allow image to sync in prod environment
+         */
+        it(`merge gitops pull request to sync new image in prod environment`, async ()=> {
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
+        }, 120000)
+
+        /**
+         * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
+         */
+        it('container component is successfully synced by gitops in prod environment', async ()=> {
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace)
+
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+
+            if (!isReady) {
+                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+            }
+
+        }, 900000)
     })
 }

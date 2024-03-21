@@ -1,4 +1,4 @@
-import { githubSoftwareTemplatesAdvancedScenarios } from "./test-config/github_advanced_scenario.ts";
+import { gitHubBasicGoldenPathTemplateTests } from "./test-config/github_positive_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 
@@ -9,7 +9,7 @@ const runSpringBootBasicTests = () => {
 
     if (configuration.templates.includes(springBootTemplateName) && configuration.github.active) {
 
-        githubSoftwareTemplatesAdvancedScenarios(springBootTemplateName)
+        gitHubBasicGoldenPathTemplateTests(springBootTemplateName)
     } else {
         skipSuite(springBootTemplateName)
     }

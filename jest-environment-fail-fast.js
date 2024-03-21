@@ -1,21 +1,52 @@
-import ParentEnvironment from 'jest-environment-node'; 
-// or require('jest-environment-jsdom')
-// or require('jest-playwright-preset/lib/PlaywrightEnvironment').default
+import NodeEnvironment from "jest-environment-node"
 
-class JestEnvironmentFailFast extends ParentEnvironment {
-    failedTest = false;
-    
+class NodeEnvironmentFailFast extends NodeEnvironment {
+    failedDescribeMap = {}
+    registeredEventHandler = []
+
+    async setup() {
+        await super.setup()
+        this.global.testEnvironment = this
+    }
+
+    registerTestEventHandler(registeredEventHandler) {
+        this.registeredEventHandler.push(registeredEventHandler)
+    }
+
+    async executeTestEventHandlers(event, state) {
+        for (let handler of this.registeredEventHandler) {
+            await handler(event, state)
+        }
+    }
+
     async handleTestEvent(event, state) {
-        if (event.name === 'hook_failure' || event.name === 'test_fn_failure') {
-            this.failedTest = true;
-        } else if (this.failedTest && event.name === 'test_start') {
-            event.test.mode = 'skip';
+        await this.executeTestEventHandlers(event, state)
+
+        switch (event.name) {
+            case "hook_failure": {
+                const describeBlockName = event.hook.parent.name
+
+                this.failedDescribeMap[describeBlockName] = true
+                // hook errors are not displayed if tests are skipped, so display them manually
+                console.error(`ERROR: ${describeBlockName} > ${event.hook.type}\n\n`, event.error, "\n")
+                break
+            }
+            case "test_fn_failure": {
+                this.failedDescribeMap[event.test.parent.name] = true
+                break
+            }
+            case "test_start": {
+                if (this.failedDescribeMap[event.test.parent.name]) {
+                    event.test.mode = "skip"
+                }
+                break
+            }
         }
 
         if (super.handleTestEvent) {
-            await super.handleTestEvent(event, state)
+            super.handleTestEvent(event, state)
         }
     }
 }
 
-export default JestEnvironmentFailFast
+export default NodeEnvironmentFailFast

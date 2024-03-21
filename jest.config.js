@@ -7,7 +7,7 @@ module.exports = {
     globals: {
         suites: {
             softwareTemplates: {
-                templates: ['python'],
+                templates: ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
                 github: {
                     active: true,
                     host: 'https://api.github.com',

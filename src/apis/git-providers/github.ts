@@ -108,7 +108,7 @@ export class GitHubProvider extends Utils {
                 owner,
                 repo,
                 path: filePath,
-                message: "Commit generated automatically from Red Hat Trusted Application Pipeline E2E framework",
+                message: "RHTAP E2E: Commit generated automatically from Red Hat Trusted Application Pipeline E2E framework",
                 content: Buffer.from(content).toString("base64"),
                 branch: newBranch,
                 sha: fileSHA
@@ -117,10 +117,10 @@ export class GitHubProvider extends Utils {
             const { data: pullRequest } = await this.octokit.pulls.create({
                 owner,
                 repo,
-                title: "E2E framework: Automatic Pull Request",
+                title: "RHTAP E2E: Automatic Pull Request",
                 head: newBranch,
                 base: baseBranch,
-                body: "E2E framework: Automatic Pull Request"
+                body: "RHTAP E2E: Automatic Pull Request"
             });
 
             return pullRequest.number
@@ -139,11 +139,11 @@ export class GitHubProvider extends Utils {
                 owner,
                 repo,
                 pull_number: pull_request,
-                commit_title: "E2E framework: Automatic Pull Request merge",
+                commit_title: "RHTAP E2E: Automatic Pull Request merge",
                 merge_method: "squash"
             });
         } catch (error) {
-            console.log(error)
+            throw new Error(`Failed to merge Pull Request ${pull_request}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
         }
     }
 
@@ -203,7 +203,7 @@ export class GitHubProvider extends Utils {
             return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA)
 
         } catch (error) {
-            console.log(error)
+            throw new Error(`Error: ${error}`);
         }
     }
 }

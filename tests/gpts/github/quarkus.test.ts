@@ -1,6 +1,6 @@
-import { gitHubBasicGoldenPathTemplateTests } from "./test-config/github_positive_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
+import { githubSoftwareTemplatesAdvancedScenarios } from "./test-config/github_advanced_scenario.ts";
 
 const quarkusTemplateName = 'java-quarkus';
 
@@ -9,7 +9,7 @@ const runQuarkusBasicTests = () => {
 
     if (configuration.templates.includes(quarkusTemplateName) && configuration.github.active) {
 
-        gitHubBasicGoldenPathTemplateTests(quarkusTemplateName)
+        githubSoftwareTemplatesAdvancedScenarios(quarkusTemplateName)
     } else {
         skipSuite(quarkusTemplateName)
     }

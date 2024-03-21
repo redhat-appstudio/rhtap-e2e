@@ -4,6 +4,7 @@ import * as path from "node:path";
 import { Utils } from "../git-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
+import { OpenshiftRoute } from "./types/oc.routes.cr";
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -63,6 +64,25 @@ export class Kubernetes extends Utils {
         }
     }
 
+    /**
+     * Waits for a specified duration.
+     * 
+     * @param {number} timeoutMs - The duration to wait in milliseconds.
+     * @returns {Promise<void>} A Promise that resolves once the specified duration has elapsed.
+     */
+    public async getOpenshiftRoute(name: string, namespace: string): Promise<string> {
+        const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
+        try {
+            const { body: openshiftRoute } = await customObjectsApi.getNamespacedCustomObject('route.openshift.io', 'v1', namespace, 'routes', name);
+            const route = openshiftRoute as OpenshiftRoute
+
+            return route.spec.host
+
+        } catch (error) {
+            console.error(error)
+            throw new Error(`Failed to obtain openshift route ${name}: ${error}`);
+        }
+    }
 
     /**
      * Reads logs from all containers within a specified pod in a given namespace and writes them to artifact files.
@@ -183,9 +203,8 @@ export class Kubernetes extends Utils {
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
-    
-        console.error(`Timeout reached waiting for pipeline run '${name}' to finish.`);
-        return false;
+
+        throw new Error(`Timeout reached waiting for pipeline run '${name}' to finish.`);
     }
 
     /**
