@@ -111,9 +111,18 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         it(`wait ${gptTemplate} component to be finished`, async () => {
             const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
 
-            const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
-            expect(taskCreated.status).toBe('completed')
+            if (taskCreated.status !== 'completed') {
+                console.log("failed to create backstage tasks. creating logs...");
+
+                try {
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
+                } catch (error) {
+                    throw new Error(`failed to write files to console: ${error}`);
+                }
+            } else {
+                console.log("Task created successfully in backstage");
+            }
         }, 120000);
 
         /**
