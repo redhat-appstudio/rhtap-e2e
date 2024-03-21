@@ -1,7 +1,8 @@
-import { beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { beforeAll, describe, expect, it } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomName } from '../../../../src/utils/generator';
+import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
@@ -257,6 +258,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
          */
         it('container component is successfully synced by gitops in development environment', async ()=> {
+            console.log("syncing argocd application in development environment")
+            await syncArgoApplication('rhtap', `${repositoryName}-${developmentEnvironmentName}`)
+
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
 
             const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
@@ -321,6 +325,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Verifies if the new image is deployed with an expected endpoint in stage environment
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
+            console.log("syncing argocd application in stage environment")
+            await syncArgoApplication('rhtap', `${repositoryName}-${stagingEnvironmentName}`)
+
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
 
             const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
@@ -385,6 +392,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
          */
         it('container component is successfully synced by gitops in prod environment', async ()=> {
+            console.log("syncing argocd application in prod environment")
+            await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`)
+
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace)
 
             const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
