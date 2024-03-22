@@ -28,13 +28,10 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
         URL=$(oc get routes rhtap-argocd-server -n ${namespace} -o jsonpath={.spec.host})
         P64=$(oc get secret rhtap-argocd-cluster -n ${namespace} -ojsonpath='{.data.admin\\.password}')
         ARGOPW=$(echo $P64 | base64 --decode -i -)
-        echo
-        echo "rhtap console = $URL"
-        echo "rhtap argo pw = $ARGOPW"
 
         argocd login $URL --insecure --grpc-web --username admin --password $ARGOPW
 
-        argocd app sync ${applicationName}
+        argocd app sync ${applicationName} --insecure
     `;
 
     // Execute the shell script commands
@@ -47,6 +44,8 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
             console.error(`Commands STDERR: ${stderr}`);
             return;
         }
+
         console.log(`succesfully synced application ${applicationName} in cluster`);
+        console.log(stdout)
     });
 }
