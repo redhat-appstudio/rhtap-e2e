@@ -154,9 +154,7 @@ export class Kubernetes extends Utils {
             }
         }
 
-        console.error('Max attempts reached. Unable to fetch pipeline runs.');
-
-        return undefined;
+        throw new Error('Max attempts reached. Unable to fetch pipeline runs for your component in cluster. Check PAC logs.');
     }
 
     /**
@@ -244,7 +242,6 @@ export class Kubernetes extends Utils {
             totalTimeMs += retryInterval;
         }
 
-        console.error(`Timeout reached waiting for application '${name}' to be healthy.`);
-        return false;
+        throw new Error(`Timeout reached waiting for application '${name}' to be healthy. Check argocd console for application health.`);
     }
 }
