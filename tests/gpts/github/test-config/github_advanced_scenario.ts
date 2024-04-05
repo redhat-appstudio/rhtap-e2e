@@ -405,7 +405,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
-
         }, 900000)
     })
 }
