@@ -25,8 +25,10 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
         fi
         sleep 1m
 
-        URL=$(oc get routes rhtap-argocd-server -n ${namespace} -o jsonpath={.spec.host})
-        P64=$(oc get secret rhtap-argocd-cluster -n ${namespace} -ojsonpath='{.data.admin\\.password}')
+        RTHAP_ARGOCD_INSTANCE=$(kubectl get argocds.argoproj.io -n ${namespace} -o jsonpath='{.items[0].metadata.name}')
+        URL=$(oc get routes $RTHAP_ARGOCD_INSTANCE-server -n ${namespace} -o jsonpath={.spec.host})
+        P64=$(oc get secret $RTHAP_ARGOCD_INSTANCE-cluster -n ${namespace} -ojsonpath='{.data.admin\\.password}')
+
         ARGOPW=$(echo $P64 | base64 --decode -i -)
 
         argocd login $URL --insecure --grpc-web --username admin --password $ARGOPW
