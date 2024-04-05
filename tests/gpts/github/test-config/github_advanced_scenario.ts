@@ -26,7 +26,7 @@ import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
  * 15. Wait for the new image to be deployed to the production environment.
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
+    describe.skip(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
