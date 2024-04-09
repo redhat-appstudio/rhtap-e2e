@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@backstage/plugin-scaffolder-common": "^1.4.4",
-    "@backstage/plugin-scaffolder-react": "^1.7.0",
+    "@backstage/plugin-scaffolder-react": "^1.8.1",
     "@gitbeaker/rest": "^39.30.0",
     "@janus-idp/shared-react": "^2.4.0",
     "@kubernetes/client-node": "^0.20.0",
