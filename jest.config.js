@@ -19,7 +19,7 @@ module.exports = {
                     },
                 },
                 gitlab: {
-                    active: true,
+                    active: false,
                     host: 'https://gitlab.com',
                     registriesConfig: {
                         quay: {
