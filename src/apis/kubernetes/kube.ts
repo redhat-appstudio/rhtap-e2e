@@ -1,4 +1,4 @@
-import { CoreV1Api, CustomObjectsApi, KubeConfig } from "@kubernetes/client-node";
+import { CoreV1Api, CustomObjectsApi, KubeConfig, V1ObjectMeta } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
 import { Utils } from "../git-providers/utils";
@@ -119,13 +119,13 @@ export class Kubernetes extends Utils {
     }
 
     /**
-     * Retrieves the most recent PipelineRun associated with a GitHub repository.
+     * Retrieves the most recent PipelineRun associated with a GitHub/GitLab repository.
      * 
-     * @param {string} gitHubRepository - The name of the GitHub repository.
+     * @param {string} gitRepository - The name of the GitHub/GitLab repository.
      * @returns {Promise<PipelineRunKind | undefined>} A Promise resolving to the most recent PipelineRun associated with the repository, or undefined if no PipelineRun is found.
      * @throws This function may throw errors during API calls or retries.
      */
-    public async getPipelineRunByRepository(gitHubRepository: string, enventType: string): Promise<PipelineRunKind | undefined> {
+    public async getPipelineRunByRepository(gitRepository: string, eventType: string): Promise<PipelineRunKind | undefined> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi)
         const maxAttempts = 10;
         const retryInterval = 10 * 1000
@@ -133,13 +133,23 @@ export class Kubernetes extends Utils {
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 const { body } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'pipelineruns',
-                    undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitHubRepository}, pipelinesascode.tekton.dev/event-type=${enventType}`);
+                    undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitRepository}`);
                 const pr = body as PipelineRunList;
-                // !TODO: Return most recent pipelinerun found
-                if (pr.items.length > 0) {
-                    console.log(`Found pipeline run ${pr.items[0].metadata!.name}`);
 
-                    return pr.items[0];
+                const filteredPipelineRuns = pr.items.filter((pipelineRun: PipelineRunKind) => {
+                    const metadata: V1ObjectMeta = pipelineRun.metadata!;
+                    const labels = metadata.labels;
+
+                    if (labels && labels['pipelinesascode.tekton.dev/event-type'] === eventType) {
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (filteredPipelineRuns.length > 0) {
+                    console.log(`Found pipeline run ${filteredPipelineRuns[0].metadata!.name}`);
+
+                    return filteredPipelineRuns[0];
                 } else {
                     await this.sleep(retryInterval);
                 }
@@ -154,7 +164,7 @@ export class Kubernetes extends Utils {
             }
         }
 
-        throw new Error('Max attempts reached. Unable to fetch pipeline runs for your component in cluster. Check PAC logs.');
+        throw new Error('Max attempts reached. Unable to fetch pipeline runs for your component in cluster. Check Openshift Pipelines resources...');
     }
 
     /**
@@ -193,6 +203,7 @@ export class Kubernetes extends Utils {
                     }
                 }
             } catch (error) {
+                console.log(error)
                 console.error('Error fetching pipeline run: retrying');
                 // You might handle specific errors differently here
             }

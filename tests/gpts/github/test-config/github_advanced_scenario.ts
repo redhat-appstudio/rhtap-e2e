@@ -26,7 +26,7 @@ import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
  * 15. Wait for the new image to be deployed to the production environment.
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
-    describe.skip(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
+    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
@@ -148,17 +148,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         }, 600000);
 
         /**
-         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
-         */
-        it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
-            // Wait for the ArgoCD application to be synchronized in the cluster
-            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000);
-            
-            // Expect the ArgoCD application to be synced
-            expect(argoCDAppISSynced).toBe(true);
-        }, 600000);
-
-        /**
          * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
          * The repository should contain the source code of the application and a '.tekton' folder.
          */
@@ -186,6 +175,17 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
+
+        /**
+         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
+         */
+        it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
+            // Wait for the ArgoCD application to be synchronized in the cluster
+            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000);
+            
+            // Expect the ArgoCD application to be synced
+            expect(argoCDAppISSynced).toBe(true);
+        }, 600000);
 
         /**
          * Creates an empty commit in the repository and expects a PipelineRun to start.

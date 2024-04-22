@@ -19,7 +19,7 @@ module.exports = {
                     },
                 },
                 gitlab: {
-                    active: false,
+                    active: true,
                     host: 'https://gitlab.com',
                     registriesConfig: {
                         quay: {
@@ -33,6 +33,13 @@ module.exports = {
     },
     reporters: [
         "default",
-        "jest-junit"
+        "jest-junit",
+        ["jest-html-reporters", {
+            "publicPath": process.env.ARTIFACT_DIR || "./artifacts",
+            "filename": "report.html",
+            "openReport": true,
+            "expand": true,
+            "pageTitle": "Red Hat Trusted Application Pipeline e2e report",
+        }],
     ]
 };
