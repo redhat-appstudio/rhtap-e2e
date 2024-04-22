@@ -33,12 +33,15 @@ class NodeEnvironmentFailFast extends NodeEnvironment {
             }
             case "test_fn_failure": {
                 this.failedDescribeMap[event.test.parent.name] = true
+                event.test.mode = "fail";
+
                 break
             }
             case "test_start": {
-                if (this.failedDescribeMap[event.test.parent.name]) {
-                    event.test.mode = "skip"
+                if (this.failedDescribeMap[event.test.parent.name] && event.test.mode === undefined) {
+                    event.test.mode = "skip";
                 }
+
                 break
             }
         }
