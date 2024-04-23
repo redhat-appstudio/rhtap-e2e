@@ -1,18 +1,17 @@
-apiVersion: tekton.dev/v1
-kind: Pipeline
+apiVersion: tekton.dev/v1beta1
+kind: Task
 metadata:
-  name: test-pipeline
+  name: test-app
 spec:
   description: >-
-    This is an integration pipeline example
-  params:
-    - name: test-task
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/redhat-appstudio/rhtap-e2e
-          - name: revision
-            value: main
-          - name: pathInRepo
-            value: integration/task.yaml
+    Expects an Snapshot deployed.
+  steps:
+    - image: quay.io/redhat-appstudio/hacbs-test:latest
+      env:
+        - name: SNAPSHOT
+          value: "test-snap"
+        - name: NAMESPACE
+          value: "test-ns"
+      script: |
+        echo -e "${SNAPSHOT}"
+        echo -e "${NAMESPACE}"
