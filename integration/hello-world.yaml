@@ -4,10 +4,17 @@ metadata:
   name: hello-tekton
 spec:
   tasks:
-    - name: say-hello
+    - name: kubectl-version
       taskSpec:
         steps:
-          - name: say-hello
-            image: alpine
+          - name: kubectl-version
+            image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
+            env:
+            - name: FAKE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fake-test
+                  key: fake-secret
             script: |
-              echo "Hello, Tekton!"
+              echo "${FAKE_SECRET}!"
+              kubectl version
