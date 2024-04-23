@@ -1,13 +1,8 @@
 apiVersion: tekton.dev/v1beta1
-kind: PipelineRun
+kind: Pipeline
 metadata:
-  name: hello-world-pipeline-run
+  name: hello-world-pipeline
 spec:
-  pipelineSpec:
-    tasks:
-      - name: hello-world-task
-        taskRef:
-          name: hello-world-task
   tasks:
     - name: hello-world-task
       taskSpec:
