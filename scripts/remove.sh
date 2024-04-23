@@ -5,3 +5,5 @@ resource_names=$(kubectl get applications -n rhtap -o jsonpath='{.items[*].metad
 for resource_name in $resource_names; do
     kubectl patch application $resource_name -n rhtap --type merge -p '{"metadata":{"finalizers":null}}'
 done
+
+###########
