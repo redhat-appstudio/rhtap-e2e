@@ -56,8 +56,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             gitLabProvider = new GitLabProvider()
             kubeClient = new Kubernetes()
 
-            const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines')
-            pipelineAsCodeRoute = `https://${componentRoute}`
+            const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
+            pipelineAsCodeRoute = `https://${componentRoute}`;
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

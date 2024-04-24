@@ -25,6 +25,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         let kubeClient: Kubernetes;
     
         let gitlabRepositoryID: number;
+        let pipelineAsCodeRoute: string;
         
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
         const developmentNamespace = `${componentRootNamespace}-development`;
@@ -38,7 +39,10 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             backstageClient = new DeveloperHubClient();
             gitLabProvider = new GitLabProvider()
             kubeClient = new Kubernetes()
-    
+
+            const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
+            pipelineAsCodeRoute = `https://${componentRoute}`;
+
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
             }
@@ -151,7 +155,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
         */
         it(`Creates empty commit to trigger a pipeline run`, async ()=> {
-            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, 'https://pipelines-as-code-controller-openshift-pipelines.apps.rhtap-staging.7g6o.p1.openshiftapps.com')    
+            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, pipelineAsCodeRoute);
         }, 120000)
     
         /**
