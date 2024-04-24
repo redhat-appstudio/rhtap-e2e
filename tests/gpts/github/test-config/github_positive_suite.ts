@@ -1,10 +1,12 @@
-import { beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomName } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
+import { cleanAfterTest } from "../../../../src/utils/test.utils";
+import { Octokit } from '@octokit/rest';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -20,6 +22,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
@@ -190,5 +193,15 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 expect(finished).toBe(true)
             }
         }, 900000)
+
+
+        /**
+        * Deletes created applications
+        */
+        afterAll(async () => {
+            await cleanAfterTest(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+        })
+
     })
+
 }
