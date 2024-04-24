@@ -146,7 +146,7 @@ export class GitLabProvider extends Utils {
                     pushEvents: true,
                     mergeRequestsEvents: true,
                     tagPushEvents: true,
-                    enableSslVerification: true
+                    enableSslVerification: false
                 }
             )
         } catch (error) {
