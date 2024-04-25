@@ -9,7 +9,7 @@ import { OpenshiftRoute } from "./types/oc.routes.cr";
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const applicationRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap';
+const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -238,7 +238,7 @@ export class Kubernetes extends Utils {
     
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', applicationRootNamespace, 'applications', name);
+                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPRootNamespace, 'applications', name);
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
