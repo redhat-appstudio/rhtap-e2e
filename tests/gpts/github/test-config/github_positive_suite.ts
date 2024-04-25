@@ -6,7 +6,6 @@ import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
 import { cleanAfterTest } from "../../../../src/utils/test.utils";
-import { Octokit } from '@octokit/rest';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
