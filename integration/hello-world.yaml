@@ -1,25 +1,31 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: pipeline-param-enum
+  name: test-pipeline
 spec:
+  description: >-
+    This is an integration pipeline example
   params:
-    - name: message
-      description: "Message to be printed"
+    - description: 'Snapshot of the application'
+      name: SNAPSHOT
+      default: '{"components": [{"name":"test-app", "containerImage": "quay.io/example/repo:latest"}]}'
       type: string
-      default:
-        secretKeyRef:
-          name: fake-test
-          key: fake-secret
-  tasks:
-    - name: task1
-      params:
-        - name: message
-          value: $(params.message)
+    - description: 'Namespace where the application is running'
+      name: NAMESPACE
+      default: "default"
+      type: string
+    - name: test-task
       taskRef:
-        name: hello-world-task
-        resolver:
-          git:
-            url: https://github.com/konflux-ci/integration-examples
-            revision: integration-test
-            file: integration/task.yaml
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-ci/integration-examples
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: examples/task.yaml
+      params:
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: NAMESPACE
+          value: $(params.NAMESPACE)
