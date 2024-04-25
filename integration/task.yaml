@@ -1,14 +1,14 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: hello-world-task
+  name: deploy-ocp
 spec:
   params:
-    - name: message
+    - name: ocp-version
       type: string
   steps:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
         #!/bin/bash
-        echo "$(params.message)"
+        echo "$(params.ocp-version)"
