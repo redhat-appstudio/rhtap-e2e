@@ -4,19 +4,22 @@ metadata:
   name: pipeline-param-enum
 spec:
   params:
-  - name: message
-    default: "hello world"
+    - name: message
+      description: "Message to be printed"
+      type: string
+      default:
+        secretKeyRef:
+          name: fake-test
+          key: fake-secret
   tasks:
-  - name: task1
-    params:
-      - name: message
-        value: $(params.message)
-    taskRef:
-      resolver: git
+    - name: task1
       params:
-        - name: url
-          value: https://github.com/konflux-ci/integration-examples
-        - name: revision
-          value: integration-test
-        - name: pathInRepo
-          value: integration/task.yaml
+        - name: message
+          value: $(params.message)
+      taskRef:
+        name: hello-world-task
+        resolver:
+          git:
+            url: https://github.com/konflux-ci/integration-examples
+            revision: integration-test
+            file: integration/task.yaml
