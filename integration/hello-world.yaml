@@ -1,20 +1,25 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: hello-tekton
+  name: pipeline-param-enum
 spec:
+  params:
+    - name: message
+      description: "Message to be printed"
+      type: string
+      default:
+        secretKeyRef:
+          name: fake-test
+          key: fake-secret
   tasks:
-    - name: kubectl-version
-      taskSpec:
-        steps:
-          - name: kubectl-version
-            image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
-            env:
-            - name: FAKE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: fake-test
-                  key: fake-secret
-            script: |
-              echo "${FAKE_SECRET}!"
-              kubectl version
+    - name: task1
+      params:
+        - name: message
+          value: $(params.message)
+      taskRef:
+        name: hello-world-task
+        resolver:
+          git:
+            url: https://github.com/konflux-ci/integration-examples
+            revision: integration-test
+            file: integration/task.yaml

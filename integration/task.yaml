@@ -1,17 +1,14 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: test-app
+  name: hello-world-task
 spec:
-  description: >-
-    Expects an Snapshot deployed.
+  params:
+    - name: message
+      type: string
   steps:
-    - image: quay.io/redhat-appstudio/hacbs-test:latest
-      env:
-        - name: SNAPSHOT
-          value: "test-snap"
-        - name: NAMESPACE
-          value: "test-ns"
+    - name: hello
+      image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
-        echo -e "${SNAPSHOT}"
-        echo -e "${NAMESPACE}"
+        #!/bin/bash
+        echo "$(params.message)"
