@@ -1,20 +1,22 @@
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: hello-tekton
+  name: pipeline-param-enum
 spec:
+  params:
+  - name: message
+    default: "hello world"
   tasks:
-    - name: kubectl-version
-      taskSpec:
-        steps:
-          - name: kubectl-version
-            image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
-            env:
-            - name: FAKE_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: fake-test
-                  key: fake-secret
-            script: |
-              echo "${FAKE_SECRET}!"
-              kubectl version
+  - name: task1
+    params:
+      - name: message
+        value: $(params.message)
+    taskRef:
+      resolver: git
+      params:
+        - name: url
+          value: https://github.com/konflux-ci/integration-examples
+        - name: revision
+          value: integration-test
+        - name: pathInRepo
+          value: integration/task.yaml
