@@ -6,6 +6,8 @@ spec:
   params:
     - name: ocp-version
       type: string
+    - name: event-type
+      value: "$(body.pull_request != null ? 'pull_request' : 'push')"
   steps:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
