@@ -15,7 +15,7 @@ spec:
         #!/bin/bash
         echo "Task Annotations:"
         env
-
+        ls /workspace
         echo "$(params.ocp-version)"
         echo "$(params.event-type)"
         oc version
