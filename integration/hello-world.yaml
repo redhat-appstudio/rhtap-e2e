@@ -12,7 +12,7 @@ spec:
       type: string
     - description: 'Openshift version for epehmeral cluster deployment'
       name: event-type
-      default: $(body.annotations['pac.test.appstudio.openshift.io/event-type'])
+      default: $(annotations.pac.test.appstudio.openshift.io/event-type)
       type: string
   tasks:
     - name: deploy-ocp-task
