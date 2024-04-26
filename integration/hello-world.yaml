@@ -13,10 +13,10 @@ spec:
   tasks:
     - name: deploy-ocp-task
       when:
-    - input: $(params.git-action)
-      operator: in
-      values:
-        - pull_request
+        - input: $(params.git-action)
+          operator: in
+          values:
+            - pull_request
       taskRef:
         resolver: git
         params:
