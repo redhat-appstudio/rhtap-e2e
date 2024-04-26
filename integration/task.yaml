@@ -2,6 +2,9 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: deploy-ocp
+  annotations:
+    pipelinesascode.tekton.dev/on-cel-expression: |
+      event == "pull_request"
 spec:
   params:
     - name: ocp-version
