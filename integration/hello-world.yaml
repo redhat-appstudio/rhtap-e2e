@@ -2,9 +2,6 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: rhtap-415-e2e
-  annotations:
-    pac.test.appstudio.openshift.io/on-cel-expression: |
-      event == "pull_request"
 spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
@@ -13,6 +10,8 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
+    - description: 'Openshift version for epehmeral cluster deployment'
+      name: event-type
   tasks:
     - name: deploy-ocp-task
       taskRef:
@@ -27,3 +26,5 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
+        - name: event-type
+          value: $(params.event-type)

@@ -2,12 +2,11 @@ apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: deploy-ocp
-  annotations:
-    pac.test.appstudio.openshift.io/on-cel-expression: |
-      event == "pull_request"
 spec:
   params:
     - name: ocp-version
+      type: string
+    - name: event-type
       type: string
   steps:
     - name: hello
@@ -16,6 +15,6 @@ spec:
         #!/bin/bash
         echo "Task Annotations:"
         cd /workspace
-
+        echo $(params.event-type)
         oc version
         oc whoami
