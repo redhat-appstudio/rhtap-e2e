@@ -7,24 +7,10 @@ spec:
     - name: ocp-version
       type: string
     - name: event-type
-      default: 'nothing'
-      value: "$(body.pull_request != null ? 'pull_request' : 'push')"
+      default: "$(body.pull_request != null ? 'pull_request' : 'push')"
+      type: string
   steps:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
       script: |
-        #!/usr/bin/env python3
-        import json
-        event_type = """{{ event_type }}"""
-        print(event_type)
-        if event_type == "pull_request":
-            labels = json.loads("""{{ body.pull_request.labels }}""")
-            for label in labels:
-                if label['name'] == 'bug':
-                    print('This is a PR targeting a BUG')
-                    exit(0)
-            print('This is not a PR targeting a BUG :(')
-            exit(1)
-        else:
-            print('Not a pull request event')
-            exit(0)
+        echo $(params.event-type)
