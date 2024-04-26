@@ -12,6 +12,8 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
+    - name: event-type
+      value: "$(body.pull_request != null ? 'pull_request' : 'push')"
   tasks:
     - name: deploy-ocp-task
       taskRef:
@@ -26,3 +28,5 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
+        - name: event-type
+          value: $(params.event-type)

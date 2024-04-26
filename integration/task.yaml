@@ -7,10 +7,10 @@ spec:
     - name: ocp-version
       type: string
     - name: event-type
-      default: "$(body.pull_request != null ? 'pull_request' : 'push')"
+      default: "$(params.event-type)"
       type: string
   steps:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
       script: |
-        echo $(params.event-type)
+        echo $(event-type)
