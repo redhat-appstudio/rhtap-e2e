@@ -13,11 +13,6 @@ spec:
   tasks:
     - name: deploy-ocp-task
       filter: event == "push"
-      when:
-        - input: event
-          operator: in
-          values:
-            - push
       taskRef:
         resolver: git
         params:
