@@ -7,10 +7,9 @@ spec:
     - name: ocp-version
       type: string
     - name: event-type
-      default: "$(params.event-type)"
       type: string
   steps:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
       script: |
-        echo $(event-type)
+        $(params.event-type)
