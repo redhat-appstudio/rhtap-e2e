@@ -22,3 +22,6 @@ spec:
       env:
         - name: TEKTON_EVENT_TYPE
           value: $(TEKTON_EVENT_TYPE)
+      envFrom:
+        - secretRef:
+            name: tekton-parameters
