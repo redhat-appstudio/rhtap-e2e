@@ -29,4 +29,4 @@ spec:
         - name: ocp-version
           value: $(params.ocp-version)
         - name: event-type
-          value: {{event_type}}
+          value:  $(params.event-type)
