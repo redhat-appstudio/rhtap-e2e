@@ -14,3 +14,9 @@ spec:
         echo "$(params.ocp-version)"
         oc version
         oc whoami
+
+        if {{ event_type == "push" }}; then
+          echo "This task is not allowed to run on Pull Requests"
+        fi
+
+        echo {{ event_type }}

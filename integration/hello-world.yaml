@@ -12,11 +12,6 @@ spec:
       type: string
   tasks:
     - name: deploy-ocp-task
-      when: 
-        - input: {{ event_type }}
-          operator: in
-          values:
-            - "push"
       taskRef:
         resolver: git
         params:
