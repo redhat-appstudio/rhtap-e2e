@@ -14,6 +14,12 @@ spec:
         echo "$(params.ocp-version)"
         oc version
         oc whoami
+        echo "$(inputs.params.event-type)" || true
+        echo "$(annotations.pac.test.appstudio.openshift.io/event-type)" || true
+
+        if [[ "$(annotations.pac.test.appstudio.openshift.io/event-type)" == "push" ]]; then
+          echo "This task is not allowed to run on Push events"
+        fi
 
         if [[ "$(event_type)" == "push" ]]; then
           echo "This task is not allowed to run on Push events"
