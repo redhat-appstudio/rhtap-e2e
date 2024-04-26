@@ -14,7 +14,7 @@ spec:
       script: |
         #!/bin/bash
         echo "Task Annotations:"
-        echo "$(metadata.annotations)"
+        env | grep -E "^TASK_ANNOTATION_"
 
         echo "$(params.ocp-version)"
         echo "$(params.event-type)"
