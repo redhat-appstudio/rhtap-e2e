@@ -16,9 +16,9 @@ spec:
         oc whoami
 
 
-        echo "$(annotations.pac.test.appstudio.openshift.io/event-type)" || true
+        echo "$(annotations.pipelinesascode.tekton.dev/event-type)" || true
         echo "$(inputs.params.event-type)" || true
-        if [[ "$(annotations.pac.test.appstudio.openshift.io/event-type)" == "push" ]]; then
+        if [[ "$(annotations.pipelinesascode.tekton.dev/event-type)" == "push" ]]; then
           echo "This task is not allowed to run on Push events"
         fi
 
