@@ -13,6 +13,7 @@ spec:
       image: registry.access.redhat.com/ubi9/ubi
       script: |
         #!/bin/sh
+        echo $TEKTON_EVENT_TYPE
         if [ -n "$TEKTON_EVENT_TYPE" ] && [ "$TEKTON_EVENT_TYPE" == "pull_request" ]; then
           echo "pull_request"
         else
