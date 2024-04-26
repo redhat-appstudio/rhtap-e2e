@@ -3,7 +3,7 @@ kind: Pipeline
 metadata:
   name: rhtap-415-e2e
   annotations:
-    pipelinesascode.tekton.dev/on-cel-expression: |
+    pac.test.appstudio.openshift.io/on-cel-expression: |
       event == "pull_request"
 spec:
   description: >-

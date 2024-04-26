@@ -3,7 +3,7 @@ kind: Task
 metadata:
   name: deploy-ocp
   annotations:
-    pipelinesascode.tekton.dev/on-cel-expression: |
+    pac.test.appstudio.openshift.io/on-cel-expression: |
       event == "pull_request"
 spec:
   params:
