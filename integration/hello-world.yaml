@@ -13,16 +13,15 @@ spec:
       default: '4.15.9'
       type: string
   tasks:
-    - name: deploy-ocp-task
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/redhat-appstudio/rhtap-e2e
-          - name: revision
-            value: integration-test
-          - name: pathInRepo
-            value: integration/task.yaml
-      params:
-        - name: ocp-version
-          value: $(params.ocp-version)
+    - name: check-label
+      image: registry.access.redhat.com/ubi9/ubi
+      script: |
+        #!/usr/bin/env python3
+        import json
+        labels=json.loads("""{{ body.pull_request.labels }}""")
+        for label in labels:
+            if label['name'] == 'bug':
+              print('This is a PR targeting a BUG')
+              exit(0)
+        print('This is not a PR targeting a BUG :(')
+        exit(1) 
