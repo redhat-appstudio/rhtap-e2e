@@ -10,20 +10,13 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
-  workspaces:
-  - name: shared-workspace
-    volumeClaimTemplate:
-      metadata:
-        creationTimestamp: null
-      spec:
-        accessModes:
-        - ReadWriteOnce
-        resources:
-          requests:
-            storage: 2Gi
-      status: {}
   tasks:
     - name: deploy-ocp-task
+      when:
+    - input: $(params.git-action)
+      operator: in
+      values:
+        - pull_request
       taskRef:
         resolver: git
         params:
@@ -36,5 +29,3 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
-      workspaces:
-        - name: shared-workspace

@@ -6,8 +6,6 @@ spec:
   params:
     - name: ocp-version
       type: string
-  workspaces:
-    - name: shared-workspace
   steps:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
@@ -15,5 +13,4 @@ spec:
         #!/bin/bash
         echo "$(params.ocp-version)"
         oc version
-        env
-        echo "$(workspaces.shared-workspace.path)"
+        oc whoami
