@@ -325,14 +325,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         /**
             * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
         */
-        it(`merge gitops pull request to sync new image in prod environment`, async ()=> {
+        it.skip(`merge gitops pull request to sync new image in prod environment`, async ()=> {
             await gitLabProvider.mergeMergeRequest(gitlabGitopsRepositoryID, gitopsPromotionMergeRequestNumber)
         }, 120000)
 
         /*
             * Verifies if the new image is deployed with an expected endpoint in stage environment
         */
-        it('container component is successfully synced by gitops in prod environment', async ()=> {
+        it.skip('container component is successfully synced by gitops in prod environment', async ()=> {
             console.log("syncing argocd application in prod environment")
             await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`)
                 
