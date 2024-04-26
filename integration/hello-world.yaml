@@ -13,11 +13,10 @@ spec:
   tasks:
     - name: deploy-ocp-task
       when:
-        all:
-          - input: $(annotations.pac.test.appstudio.openshift.io/event-type)
-            operator: in
-            values: 
-              - pull_request
+        - input: $(annotations.pac.test.appstudio.openshift.io/event-type)
+          operator: in
+          values:
+            - pull_request
       taskRef:
         resolver: git
         params:
