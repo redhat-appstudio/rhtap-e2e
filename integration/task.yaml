@@ -13,6 +13,6 @@ spec:
         #!/bin/bash
         echo "Task Annotations:"
         cd /workspace
-
+        ls -larth
         oc version
         oc whoami
