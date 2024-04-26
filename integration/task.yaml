@@ -12,3 +12,6 @@ spec:
       script: |
         #!/bin/bash
         echo "$(params.ocp-version)"
+        oc version
+        env
+        echo "$(params)"
