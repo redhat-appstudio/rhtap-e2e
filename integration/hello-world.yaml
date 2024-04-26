@@ -2,8 +2,6 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: rhtap-415-e2e
-  annotations:
-    pipelinesascode.tekton.dev/on-event: "[pull_request]"
 spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
@@ -17,7 +15,8 @@ spec:
       when:
         input: $(annotations.pac.test.appstudio.openshift.io/event-type)
         operator: in
-        values: pull_request
+        values: 
+          - pull_request
       taskRef:
         resolver: git
         params:
