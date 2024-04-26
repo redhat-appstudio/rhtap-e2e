@@ -13,7 +13,7 @@ spec:
   tasks:
     - name: deploy-ocp-task
       when: 
-        - input: {{event_type}}	
+        - input: {{ event_type }}
           operator: in
           values:
             - "push"
