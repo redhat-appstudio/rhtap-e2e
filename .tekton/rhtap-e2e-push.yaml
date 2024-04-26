@@ -371,7 +371,7 @@ spec:
       optional: true
   taskRunTemplate: {}
   workspaces:
-  - name: shared-workspace
+  - name: workspace
     volumeClaimTemplate:
       metadata:
         creationTimestamp: null
