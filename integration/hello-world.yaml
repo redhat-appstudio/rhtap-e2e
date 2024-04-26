@@ -17,7 +17,7 @@ spec:
         - input: event
           operator: in
           values:
-            - pull_request
+            - push
       taskRef:
         resolver: git
         params:
