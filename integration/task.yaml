@@ -10,9 +10,12 @@ spec:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
-        #!/bin/bash
-        echo "Task Annotations:"
-        cd /workspace
-        ls -larth
-        oc version
-        oc whoami
+        #!/usr/bin/env python3
+        import json
+        labels=json.loads("""{{ body.pull_request.labels }}""")
+        for label in labels:
+            if label['name'] == 'bug':
+              print('This is a PR targeting a BUG')
+              exit(0)
+        print('This is not a PR targeting a BUG :(')
+        exit(1)  
