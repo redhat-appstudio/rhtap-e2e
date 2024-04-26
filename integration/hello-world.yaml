@@ -11,7 +11,7 @@ spec:
       default: '4.15.9'
       type: string
   workspaces:
-  - name: workspace
+  - name: shared-workspace
     volumeClaimTemplate:
       metadata:
         creationTimestamp: null
@@ -36,3 +36,5 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
+      workspaces:
+        - name: shared-workspace
