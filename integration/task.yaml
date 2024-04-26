@@ -12,4 +12,12 @@ spec:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
       script: |
-        echo $(params.event-type)
+        #!/bin/sh
+        if [ -n "$TEKTON_EVENT_TYPE" ] && [ "$TEKTON_EVENT_TYPE" == "pull_request" ]; then
+          echo "pull_request"
+        else
+          echo "push"
+        fi
+      env:
+        - name: TEKTON_EVENT_TYPE
+          value: $(TEKTON_EVENT_TYPE)
