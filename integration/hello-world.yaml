@@ -10,8 +10,6 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
-  workspaces:
-    - name: shared-workspace
   tasks:
     - name: deploy-ocp-task
       when:
@@ -31,6 +29,3 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
-      workspaces:
-        - name: shared-workspace
-          workspace: shared-workspace

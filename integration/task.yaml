@@ -6,15 +6,11 @@ spec:
   params:
     - name: ocp-version
       type: string
-  workspaces:
-    - name: shared-workspace
   steps:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
         #!/bin/bash
         echo "$(params.ocp-version)"
-        echo "Using git-source workspace:"
-        ls /workspace/shared-workspace
         oc version
         oc whoami
