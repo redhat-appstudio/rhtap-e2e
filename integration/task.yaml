@@ -6,13 +6,18 @@ spec:
   params:
     - name: ocp-version
       type: string
-    - name: event_type
-      value: {{ event_type }}
   steps:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
         #!/bin/bash
-        echo "$(params.event_type)"
+        echo "$(params.ocp-version)"
         oc version
         oc whoami
+
+        if [[ "$(event_type)" == "push" ]]; then
+          echo "This task is not allowed to run on Push events"
+          exit 1
+        fi
+
+        echo "$(event_type)"
