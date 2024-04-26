@@ -10,6 +10,10 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
+    - description: 'Openshift version for epehmeral cluster deployment'
+      name: event-type
+      default: 'pull_request'
+      type: string
   tasks:
     - name: deploy-ocp-task
       taskRef:
@@ -24,3 +28,5 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
+        - name: event-type
+          value: {{event_type}}

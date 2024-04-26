@@ -6,6 +6,8 @@ spec:
   params:
     - name: ocp-version
       type: string
+    - name: event-type
+      type: string
   steps:
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
@@ -15,16 +17,6 @@ spec:
         oc version
         oc whoami
 
-
-        echo "$(annotations.pipelinesascode.tekton.dev/event-type)" || true
-        echo "$(inputs.params.event-type)" || true
-        if [[ "$(annotations.pipelinesascode.tekton.dev/event-type)" == "push" ]]; then
-          echo "This task is not allowed to run on Push events"
-        fi
-
-        if [[ "$(event_type)" == "push" ]]; then
-          echo "This task is not allowed to run on Push events"
-          exit 1
-        fi
-
-        echo "$(event_type)"
+        for param in $(params); do
+          echo "$param: $(params.$param)"
+        done
