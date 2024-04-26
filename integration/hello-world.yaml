@@ -16,7 +16,7 @@ spec:
         - input: $(annotations.pac.test.appstudio.openshift.io/event-type)
           operator: in
           values:
-            - pull_request
+            - "pull_request"
       taskRef:
         resolver: git
         params:
