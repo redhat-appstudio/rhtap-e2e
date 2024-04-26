@@ -13,7 +13,9 @@ spec:
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
         #!/bin/bash
-        kubectl get pipeline rhtap-415-e2e -o=jsonpath='{.metadata.annotations}'
+        echo "Task Annotations:"
+        echo "$(metadata.annotations)"
+
         echo "$(params.ocp-version)"
         echo "$(params.event-type)"
         oc version
