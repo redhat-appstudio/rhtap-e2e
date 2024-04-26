@@ -7,15 +7,9 @@ spec:
     - name: ocp-version
       type: string
   steps:
-    - name: hello
-      image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
-      script: |
-        #!/usr/bin/env python3
-        import json
-        labels=json.loads("""{{ body.pull_request.labels }}""")
-        for label in labels:
-            if label['name'] == 'bug':
-              print('This is a PR targeting a BUG')
-              exit(0)
-        print('This is not a PR targeting a BUG :(')
-        exit(1)  
+  - name: bash
+    image: registry.access.redhat.com/ubi9/ubi
+    script: |
+      if {{ body.pull_request.state == "open" }}; then
+        echo "PR is Open"
+      fi
