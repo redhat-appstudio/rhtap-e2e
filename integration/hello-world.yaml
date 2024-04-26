@@ -2,8 +2,6 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: rhtap-415-e2e
-  annotations:
-    pipelinesascode.tekton.dev/on-event: "[pull_request]"
 spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
@@ -12,10 +10,9 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
-    - name: event-type
-      default: '{{revision}}'
   tasks:
     - name: deploy-ocp-task
+      filter: event == "pull_request"
       taskRef:
         resolver: git
         params:
@@ -28,5 +25,3 @@ spec:
       params:
         - name: ocp-version
           value: $(params.ocp-version)
-        - name: event-type
-          value: $(params.event-type)
