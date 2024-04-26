@@ -14,7 +14,10 @@ spec:
       type: string
   tasks:
     - name: deploy-ocp-task
-      filter: pac.event_type == "pull_request"
+      when:
+        input: $(annotations.pac.test.appstudio.openshift.io/event-type)
+        operator: in
+        values: pull_request
       taskRef:
         resolver: git
         params:
