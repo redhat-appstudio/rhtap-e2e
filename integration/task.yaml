@@ -7,17 +7,9 @@ spec:
     - name: ocp-version
       type: string
     - name: event-type
-      default: pac.event_type
-      filter: pac.event_type == "push"
       type: string
   steps:
     - name: check-label
       image: registry.access.redhat.com/ubi9/ubi
       script: |
-        #!/usr/bin/env python3
-        import json
-        labels=json.loads("""{{ body.pull_request.labels }}""")
-        for label in labels:
-            print(label)
-        print('This is not a PR targeting a BUG :(')
-        exit(1)
+        echo $(params.event-type)
