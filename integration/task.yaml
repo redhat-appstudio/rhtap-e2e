@@ -12,8 +12,7 @@ spec:
       script: |
         #!/bin/bash
         echo "Task Annotations:"
-        env
-        ls /workspace
+        cd /workspace
 
         oc version
         oc whoami
