@@ -12,7 +12,7 @@ spec:
       type: string
     - description: 'Openshift version for epehmeral cluster deployment'
       name: event-type
-      default: 'pull_request'
+      default: {{ event_type }}
       type: string
   tasks:
     - name: deploy-ocp-task
