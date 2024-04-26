@@ -2,6 +2,8 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: rhtap-415-e2e
+  annotations:
+    pipelinesascode.tekton.dev/on-event: "[pull_request]"
 spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
