@@ -8,6 +8,7 @@ spec:
       type: string
     - name: event-type
       default: pac.event_type
+      filter: pac.event_type == "push
       type: string
   steps:
     - name: check-label
