@@ -19,6 +19,7 @@ spec:
         #!/usr/bin/env python3
         import json
         labels=json.loads("""{{ body.pull_request.labels }}""")
+        print(labels)
         for label in labels:
             if label['name'] == 'bug':
               print('This is a PR targeting a BUG')
