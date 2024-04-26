@@ -14,4 +14,4 @@ spec:
         echo "$(params.ocp-version)"
         oc version
         env
-        echo "$(params)"
+        echo "$(workspaces.shared-workspace.path)"

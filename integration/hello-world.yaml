@@ -10,6 +10,18 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
+  workspaces:
+  - name: workspace
+    volumeClaimTemplate:
+      metadata:
+        creationTimestamp: null
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+      status: {}
   tasks:
     - name: deploy-ocp-task
       taskRef:
