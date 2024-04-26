@@ -6,10 +6,13 @@ spec:
   params:
     - name: ocp-version
       type: string
-    - name: event-type
-      type: string
   steps:
-    - name: check-label
-      image: registry.access.redhat.com/ubi9/ubi
+    - name: hello
+      image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
-        echo $(params.event-type)
+        #!/bin/bash
+        echo "Task Annotations:"
+        cd /workspace
+
+        oc version
+        oc whoami
