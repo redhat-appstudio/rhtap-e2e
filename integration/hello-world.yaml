@@ -12,7 +12,7 @@ spec:
       type: string
   tasks:
     - name: deploy-ocp-task
-      filter: event == "push"
+      filter: event != "push"
       taskRef:
         resolver: git
         params:
