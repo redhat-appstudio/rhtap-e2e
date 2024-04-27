@@ -28,3 +28,4 @@ spec:
         echo $(params.event-type)
         oc version
         oc whoami
+        kubectl get pipelineruns -n rhtap-qe-shared
