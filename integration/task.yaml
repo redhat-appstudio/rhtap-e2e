@@ -28,4 +28,4 @@ spec:
         echo $(params.event-type)
         oc version
         oc whoami
-        kubectl get serviceaccount appstudio-pipeline -o yaml
+        kubectl get integrationtests
