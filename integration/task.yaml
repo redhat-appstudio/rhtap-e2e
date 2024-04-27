@@ -28,4 +28,4 @@ spec:
         echo $(params.event-type)
         oc version
         oc whoami
-        kubectl api-resources
+        kubectl get trs
