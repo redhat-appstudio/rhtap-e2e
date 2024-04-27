@@ -28,4 +28,4 @@ spec:
         echo $(params.event-type)
         oc version
         oc whoami
-        kubectl get trs
+        kubectl get pods -n rhtap-qe-shared-tenant
