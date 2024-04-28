@@ -13,14 +13,14 @@ spec:
     - name: check-pull-request
       image: alpine:latest
       env:
-        - name: AWS_ACCESS_KEY_ID
-          value: fake-aws-access-key-id
-        - name: AWS_ACCESS_KEY_SECRET
-          value: fake-aws-access-secret
+        - name: TEST_ID
+          value: $(context.pipelineRun.uid)
+        - name: TEST_NAME
+          value: $(context.pipelineRun.name)
       script: |
         #!/bin/sh
-        echo ${AWS_ACCESS_KEY_ID}
-        echo ${DEPLOY_SOMETHING}
+        echo ${TEST_ID}
+        echo ${TEST_NAME}
         if [ -n "$TEKTON_PULL_PULL_REF" ]; then
           echo "Running from pull request"
         else

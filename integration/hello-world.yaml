@@ -5,9 +5,6 @@ metadata:
 spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
-  env:
-    - name: DEPLOY_SOMETHING
-      value: 'never-my-friend'
   params:
     - description: 'Openshift version for epehmeral cluster deployment'
       name: ocp-version
@@ -17,9 +14,6 @@ spec:
       name: event-type
   tasks:
     - name: deploy-ocp-task
-      env:
-        - name: DEPLOY_SOMETHING
-          value: 'never-my-friend'
       taskRef:
         resolver: git
         params:
