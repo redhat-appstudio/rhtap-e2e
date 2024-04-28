@@ -6,8 +6,8 @@ spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
   env:
-    name: DEPLOY_SOMETHING
-    value: 'never-my-friend'
+    - name: DEPLOY_SOMETHING
+      value: 'never-my-friend'
   params:
     - description: 'Openshift version for epehmeral cluster deployment'
       name: ocp-version
