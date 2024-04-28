@@ -20,6 +20,7 @@ spec:
       script: |
         #!/bin/sh
         echo ${AWS_ACCESS_KEY_ID}
+        echo ${DEPLOY_SOMETHING}
         if [ -n "$TEKTON_PULL_PULL_REF" ]; then
           echo "Running from pull request"
         else
