@@ -14,6 +14,9 @@ spec:
       name: event-type
   tasks:
     - name: deploy-ocp-task
+      env:
+        name: DEPLOY_SOMETHING
+        value: 'never-my-friend'
       taskRef:
         resolver: git
         params:
@@ -23,11 +26,6 @@ spec:
             value: integration-test
           - name: pathInRepo
             value: integration/task.yaml
-        env:
-          - name: AWS_ACCESS_KEY_ID
-            value: fake-aws-access-key-id
-          - name: AWS_ACCESS_KEY_SECRET
-            value: fake-aws-access-secret
       params:
         - name: ocp-version
           value: $(params.ocp-version)
