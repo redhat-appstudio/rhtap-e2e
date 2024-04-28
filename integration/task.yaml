@@ -4,19 +4,20 @@ metadata:
   name: deploy-ocp
 spec:
   params:
+    - name: test-id
+      type: string
+    - name: test-name
+      type: string
     - name: ocp-version
       type: string
-    - name: event-type
-      type: string
-
   steps:
     - name: check-pull-request
       image: alpine:latest
       env:
         - name: TEST_ID
-          value: $(params.ocp-version)
+          value: $(params.test-id)
         - name: TEST_NAME
-          value: $(context.pipelineRun.name)
+          value: $(params.test-name)
       script: |
         #!/bin/sh
         echo ${TEST_ID}

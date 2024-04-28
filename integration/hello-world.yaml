@@ -6,12 +6,16 @@ spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
   params:
+    - description: 'Test ID corresponding to a defined Konflux integration test'
+      name: test-id
+      default: ''
+    - description: 'Test name corresponding to a defined Konflux integration test'
+      name: test-name
+      default: ''
     - description: 'Openshift version for epehmeral cluster deployment'
       name: ocp-version
       default: '4.15.9'
       type: string
-    - description: 'Openshift version for epehmeral cluster deployment'
-      name: event-type
   tasks:
     - name: deploy-ocp-task
       taskRef:
@@ -24,7 +28,9 @@ spec:
           - name: pathInRepo
             value: integration/task.yaml
       params:
+        - name: test-id
+          value: $(context.pipelineRun.uid)
+        - name: test-name
+          value: $(context.pipelineRun.name)
         - name: ocp-version
           value: $(params.ocp-version)
-        - name: event-type
-          value: $(params.event-type)
