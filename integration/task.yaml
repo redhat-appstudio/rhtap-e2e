@@ -22,18 +22,3 @@ spec:
         #!/bin/sh
         echo ${TEST_ID}
         echo ${TEST_NAME}
-        if [ -n "$TEKTON_PULL_PULL_REF" ]; then
-          echo "Running from pull request"
-        else
-          echo "Not running from pull request"
-        fi
-    - name: hello
-      image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
-      script: |
-        #!/bin/bash
-        echo "Task Annotations:"
-        echo ${ENV_VARIABLE_NAME}
-        cd /workspace
-        echo $(params.event-type)
-        oc version
-        oc whoami
