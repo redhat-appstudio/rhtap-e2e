@@ -14,7 +14,7 @@ spec:
       image: alpine:latest
       env:
         - name: TEST_ID
-          value: $(context.pipelineRun.uid)
+          value: $(params.ocp-version)
         - name: TEST_NAME
           value: $(context.pipelineRun.name)
       script: |
