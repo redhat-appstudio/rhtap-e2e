@@ -18,8 +18,8 @@ spec:
   tasks:
     - name: deploy-ocp-task
       env:
-        name: DEPLOY_SOMETHING
-        value: 'never-my-friend'
+        - name: DEPLOY_SOMETHING
+          value: 'never-my-friend'
       taskRef:
         resolver: git
         params:
