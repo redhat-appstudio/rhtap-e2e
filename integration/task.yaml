@@ -8,17 +8,17 @@ spec:
       type: string
     - name: event-type
       type: string
+    - name: AWS_ACCESS_KEY_ID
+      description: "AWS access key ID"
+    - name: AWS_SECRET_ACCESS_KEY
+      description: "AWS secret access key"
   steps:
     - name: check-pull-request
       image: alpine:latest
       script: |
         #!/bin/sh
-        echo ${ANOTHER_ENV_VARIABLE}
-        if [ -n "$TEKTON_PULL_PULL_REF" ]; then
-          echo "Running from pull request"
-        else
-          echo "Not running from pull request"
-        fi
+        echo $(params.AWS_ACCESS_KEY_ID)
+
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |

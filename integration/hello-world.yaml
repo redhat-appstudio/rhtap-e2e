@@ -6,19 +6,15 @@ spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
   params:
-    - description: 'Openshift version for ephemeral cluster deployment'
+    - description: 'Openshift version for epehmeral cluster deployment'
       name: ocp-version
       default: '4.15.9'
       type: string
-    - description: 'Event type for ephemeral cluster deployment'
+    - description: 'Openshift version for epehmeral cluster deployment'
       name: event-type
-  env:
-    - name: ENV_VARIABLE_NAME
-      value: VALUE
-    - name: ANOTHER_ENV_VARIABLE
-      value: ANOTHER_VALUE
   tasks:
     - name: deploy-ocp-task
+    
       taskRef:
         resolver: git
         params:
@@ -33,3 +29,8 @@ spec:
           value: $(params.ocp-version)
         - name: event-type
           value: $(params.event-type)
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          value: fake-aws-access-key-id
+        - name: AWS_ACCESS_KEY_SECRET
+          value: fake-aws-access-secret
