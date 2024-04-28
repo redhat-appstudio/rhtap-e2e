@@ -13,20 +13,19 @@ spec:
       image: alpine:latest
       script: |
         #!/bin/sh
+        echo ${ANOTHER_ENV_VARIABLE}
         if [ -n "$TEKTON_PULL_PULL_REF" ]; then
           echo "Running from pull request"
         else
           echo "Not running from pull request"
         fi
-        printenv
     - name: hello
       image: quay.io/redhat-appstudio/appstudio-utils:25c43952f247797d8de4cf16e668b954292e8794
       script: |
         #!/bin/bash
-        echo "${ANOTHER_ENV_VARIABLE}"
+        echo "Task Annotations:"
+        echo ${ENV_VARIABLE_NAME}
         cd /workspace
         echo $(params.event-type)
         oc version
         oc whoami
-        env
-        printenv

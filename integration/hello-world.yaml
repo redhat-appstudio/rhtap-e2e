@@ -12,6 +12,11 @@ spec:
       type: string
     - description: 'Event type for ephemeral cluster deployment'
       name: event-type
+  env:
+    - name: ENV_VARIABLE_NAME
+      value: VALUE
+    - name: ANOTHER_ENV_VARIABLE
+      value: ANOTHER_VALUE
   tasks:
     - name: deploy-ocp-task
       taskRef:
@@ -28,8 +33,3 @@ spec:
           value: $(params.ocp-version)
         - name: event-type
           value: $(params.event-type)
-      env:
-        - name: ENV_VARIABLE_NAME
-          value: VALUE
-        - name: ANOTHER_ENV_VARIABLE
-          value: ANOTHER_VALUE
