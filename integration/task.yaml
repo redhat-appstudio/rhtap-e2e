@@ -12,6 +12,11 @@ spec:
   steps:
     - name: check-pull-request
       image: alpine:latest
+      env:
+        - name: AWS_ACCESS_KEY_ID
+          value: fake-aws-access-key-id
+        - name: AWS_ACCESS_KEY_SECRET
+          value: fake-aws-access-secret
       script: |
         #!/bin/sh
         echo ${AWS_ACCESS_KEY_ID}
