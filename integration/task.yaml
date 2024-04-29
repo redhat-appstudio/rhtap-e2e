@@ -20,5 +20,6 @@ spec:
           value: $(params.test-name)
       script: |
         #!/bin/sh
+        pwd
         echo ${TEST_ID}
         echo ${TEST_NAME}
