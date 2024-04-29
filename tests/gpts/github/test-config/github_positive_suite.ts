@@ -5,7 +5,7 @@ import { generateRandomName } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTest } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -198,7 +198,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         * Deletes created applications
         */
         afterAll(async () => {
-            await cleanAfterTest(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+            await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
         })
 
     })
