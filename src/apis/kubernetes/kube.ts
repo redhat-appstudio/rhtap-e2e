@@ -171,7 +171,7 @@ export class Kubernetes extends Utils {
             }
         }
 
-        throw new Error('Max attempts reached. Unable to fetch pipeline runs for your component in cluster. Check Openshift Pipelines resources...');
+        throw new Error(`Max attempts reached. Unable to fetch pipeline runs for your component in cluster for ${gitRepository}. Check Openshift Pipelines resources...`);
     }
 
     /**

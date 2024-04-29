@@ -264,7 +264,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          */
         it('container component is successfully synced by gitops in development environment', async ()=> {
             console.log("syncing argocd application in development environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${developmentEnvironmentName}`)
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
 
