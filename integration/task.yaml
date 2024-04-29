@@ -36,3 +36,4 @@ spec:
         #!/bin/sh
         cd /workspace
         ls -larth
+        echo "AAAA"
