@@ -20,6 +20,8 @@ spec:
           value: $(params.test-name)
       script: |
         #!/bin/sh
-        pwd
+        cd /workspace
+        mkdir -p test
+        ls -larth
         echo ${TEST_ID}
         echo ${TEST_NAME}
