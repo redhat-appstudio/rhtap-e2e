@@ -5,6 +5,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomName } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
+import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -42,6 +43,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const productionEnvironmentName = 'prod';
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
@@ -284,7 +286,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
             console.log("syncing argocd application in stage environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${stagingEnvironmentName}`)
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`)
         
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
         
@@ -344,5 +346,12 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
         }, 900000)
+
+        /**
+        * Deletes created applications
+        */
+         afterAll(async () => {
+            await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+        })
     })
 }

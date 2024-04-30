@@ -7,9 +7,16 @@ import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
 import { OpenshiftRoute } from "./types/oc.routes.cr";
 
 /**
+ * Constants for interacting with Kubernetes/OpenShift clusters.
+ */
+const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+
+/**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
  */
 export class Kubernetes extends Utils {
+
+    
     private readonly kubeConfig
 
     /**
@@ -164,7 +171,7 @@ export class Kubernetes extends Utils {
             }
         }
 
-        throw new Error('Max attempts reached. Unable to fetch pipeline runs for your component in cluster. Check Openshift Pipelines resources...');
+        throw new Error(`Max attempts reached. Unable to fetch pipeline runs for your component in cluster for ${gitRepository}. Check Openshift Pipelines resources...`);
     }
 
     /**
@@ -231,7 +238,7 @@ export class Kubernetes extends Utils {
     
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', 'rhtap', 'applications', name);
+                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPRootNamespace, 'applications', name);
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
@@ -254,5 +261,38 @@ export class Kubernetes extends Utils {
         }
 
         throw new Error(`Timeout reached waiting for application '${name}' to be healthy. Check argocd console for application health.`);
+    }
+
+    /**
+     * Patches Argo CD application and deletes it.
+     * 
+     * @param {string} namespace - The name of the Argo CD application to check.
+     * @param {string} applicationName - The name of the Argo CD application to check.
+     * @throws This function does not throw directly, but may throw errors during API calls or retries.
+     */
+    public async deleteApplicationFromNamespace(namespace: string, applicationName: string) {
+        try {
+            const k8sCoreApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
+
+            // Define the patch object
+            const patchObject = {
+                metadata: {
+                    finalizers: ['resources-finalizer.argocd.argoproj.io']
+                }
+            };
+
+            // Define the options
+            const options = { headers: { 'Content-Type': 'application/merge-patch+json' } };
+
+             // Patch the app
+            await k8sCoreApi.patchNamespacedCustomObject('argoproj.io','v1alpha1', namespace, 'applications', applicationName,  patchObject, undefined, undefined, undefined, options);
+
+            // Delete the app
+            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io','v1alpha1', namespace, 'applications', applicationName)
+
+            console.log(`App ${applicationName} patched and deleted successfully.`);
+        } catch (error) {
+            throw new Error(`Error when deleting application '${applicationName}' from namespace '${namespace}': '${error}'`);
+        }
     }
 }

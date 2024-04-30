@@ -6,6 +6,7 @@ import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
+import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -30,6 +31,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
@@ -262,7 +264,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          */
         it('container component is successfully synced by gitops in development environment', async ()=> {
             console.log("syncing argocd application in development environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${developmentEnvironmentName}`)
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
 
@@ -406,5 +408,12 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
         }, 900000)
+
+        /**
+        * Deletes created applications
+        */
+        afterAll(async () => {
+            await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+        })
     })
 }

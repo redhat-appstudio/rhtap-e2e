@@ -34,6 +34,47 @@ export class GitHubProvider extends Utils {
     }
 
     /**
+     * Check, if repo exists and delete, returns true if a repository exists and was deleted in GitHub
+     * @param organization A valid GitHub organization
+     * @param name A valid GitHub repository
+     */
+    public async checkIfRepositoryExistsAndDelete(organization: string, name: string): Promise<boolean> {
+        //Check, if repo exists and delete
+        try {
+            if (await this.checkIfRepositoryExists(organization, name)) {
+                await this.deleteRepository(organization, name)
+                return true
+            } 
+            return false
+        } catch (error) {
+            console.log(error)
+            return false
+        }
+    }
+
+    /**
+     * delete repository in GitHub
+     * @param organization A valid GitHub organization
+     * @param name A valid GitHub repository
+     */
+        public async deleteRepository(organization: string, name: string): Promise<boolean> {
+            try {
+                const repositoryResponse = await this.octokit.request('DELETE /repos/'+organization+'/'+`${name}`, {
+                    owner: organization,
+                    repo: `${name}`,
+                    headers: {
+                      'X-GitHub-Api-Version': '2022-11-28'
+                    }
+                  })
+                return repositoryResponse.status === 204
+            } catch (error) {
+                console.log(error)
+    
+                return false
+            }
+        }
+
+    /**
      * checkIfFolderExistsInRepository
      * @param organization
      * @param name

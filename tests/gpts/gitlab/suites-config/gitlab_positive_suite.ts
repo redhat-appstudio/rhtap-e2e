@@ -5,6 +5,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { generateRandomName } from "../../../../src/utils/generator";
+import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -28,6 +29,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         let pipelineAsCodeRoute: string;
         
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
     
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
@@ -188,5 +190,12 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             }
 
         }, 900000)
+
+        /**
+        * Deletes created applications
+        */
+         afterAll(async () => {
+            await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+        })
     })
 }
