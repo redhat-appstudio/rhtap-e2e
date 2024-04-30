@@ -17,16 +17,16 @@ spec:
       default: '4.15.9'
       type: string
   tasks:
-    - name: deploy-ocp-task
+    - name: rhtap-e2e
       taskRef:
         resolver: git
         params:
           - name: url
-            value: https://github.com/redhat-appstudio/rhtap-e2e
+            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
           - name: revision
-            value: integration-test
+            value: main
           - name: pathInRepo
-            value: integration/task.yaml
+            value: tasks/deploy-ocp/rosa/0.0.1/rosa-hcp.yaml
       params:
         - name: test-id
           value: $(context.pipelineRun.uid)
