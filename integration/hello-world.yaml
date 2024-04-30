@@ -34,3 +34,20 @@ spec:
           value: $(context.pipelineRun.name)
         - name: ocp-version
           value: $(params.ocp-version)
+    - name: rhtap-test
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/deploy-ocp/rosa/0.0.1/rosa-hcp.yaml
+      params:
+        - name: test-id
+          value: $(context.pipelineRun.uid)
+        - name: test-name
+          value: $(context.pipelineRun.name)
+        - name: ocp-version
+          value: $(params.ocp-version)
