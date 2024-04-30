@@ -292,7 +292,7 @@ export class Kubernetes extends Utils {
 
             console.log(`App ${applicationName} patched and deleted successfully.`);
         } catch (error) {
-            console.error('Error:', error);
+            throw new Error(`Error when deleting application '${applicationName}' from namespace '${namespace}': '${error}'`);
         }
     }
 }
