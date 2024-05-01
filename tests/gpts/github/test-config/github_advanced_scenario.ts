@@ -413,7 +413,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Deletes created applications
         */
         afterAll(async () => {
-            await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+            if (process.env.CLEAN_AFTER_TESTS === 'true') {
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+            }
         })
     })
 }
