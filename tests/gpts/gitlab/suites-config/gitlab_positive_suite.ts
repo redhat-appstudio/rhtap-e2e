@@ -194,8 +194,10 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         /**
         * Deletes created applications
         */
-         afterAll(async () => {
-            await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+        afterAll(async () => {
+            if (process.env.CLEAN_AFTER_TESTS === 'true') {
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+            }
         })
     })
 }
