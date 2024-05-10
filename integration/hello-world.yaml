@@ -20,8 +20,11 @@ spec:
       name: ocp-version
       default: '4.15.9'
       type: string
+    - name: test-event-type
+      default: 'none'
+      description: image tag value will be passed by pipeline from build-image task result
   tasks:
-    - name: rhtap-e2e
+    - name: extract-test-details
       taskRef:
         resolver: git
         params:
@@ -30,19 +33,17 @@ spec:
           - name: revision
             value: main
           - name: pathInRepo
-            value: tasks/deploy-ocp/rosa/0.0.1/rosa-hcp.yaml
+            value: tasks/test-details-extraction/0.0.1/test-details-extraction.yaml
       params:
-        - name: test-id
-          value: $(context.pipelineRun.uid)
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
-        - name: test-name
-          value: $(context.pipelineRun.name)
-        - name: ocp-version
-          value: $(params.ocp-version)
     - name: upload-artifacts
       runAfter:
-        - "rhtap-e2e"
+        - "extract-test-details"
+      when:
+        - input: "$(tasks.extract-test-details.results.test-event-type)"
+          operator: in
+          values: ["pull_request"]
       taskRef:
         resolver: git
         params:
@@ -59,3 +60,5 @@ spec:
           value: $(context.pipelineRun.name)
         - name: ocp-version
           value: $(params.ocp-version)
+        - name: test-event-type
+          value: $(tasks.extract-test-details.results.test-event-type)
