@@ -6,6 +6,10 @@ spec:
   description: >-
     This is an integration pipeline to deploy Ephemeral cluster
   params:
+    - description: 'Snapshot of the application'
+      name: SNAPSHOT
+      default: '{"components": [{"name":"test-app", "containerImage": "quay.io/example/repo:latest"}]}'
+      type: string
     - description: 'Test ID corresponding to a defined Konflux integration test'
       name: test-id
       default: ''
@@ -30,6 +34,8 @@ spec:
       params:
         - name: test-id
           value: $(context.pipelineRun.uid)
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
         - name: test-name
           value: $(context.pipelineRun.name)
         - name: ocp-version
