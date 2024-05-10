@@ -35,6 +35,8 @@ spec:
         - name: ocp-version
           value: $(params.ocp-version)
     - name: upload-artifacts
+      dependsOn:
+        - rhtap-e2e
       taskRef:
         resolver: git
         params:
