@@ -133,7 +133,7 @@ export class GitLabProvider extends Utils {
         }
     }
 
-    /**
+    /*****
      * createProjectWebHook: create a webhook for a specific repository in gitlab
      */
     public async createProjectWebHook(repositoryID: number, webHookUrl: string): Promise<ProjectHookSchema> {
