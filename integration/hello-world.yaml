@@ -23,6 +23,9 @@ spec:
     - name: test-event-type
       default: 'none'
       description: image tag value will be passed by pipeline from build-image task result
+    - name: ocp-login-command
+      default: ''
+      description: ''
   tasks:
     - name: extract-test-details
       taskRef:
@@ -37,13 +40,36 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
-    - name: upload-artifacts
+    - name: deploy-rosa
       runAfter:
         - "extract-test-details"
       when:
         - input: "$(tasks.extract-test-details.results.test-event-type)"
           operator: in
-          values: ["pull_request"]
+          values: ["push"]
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/deploy-ocp/rosa/0.0.1/rosa-hcp.yaml
+      params:
+        - name: test-id
+          value: $(context.pipelineRun.uid)
+        - name: test-name
+          value: $(context.pipelineRun.name)
+        - name: ocp-version
+          value: $(params.ocp-version)
+    - name: upload-artifacts
+      runAfter:
+        - "deploy-rosa"
+      when:
+        - input: "$(tasks.extract-test-details.results.test-event-type)"
+          operator: in
+          values: ["push"]
       taskRef:
         resolver: git
         params:
@@ -60,5 +86,28 @@ spec:
           value: $(context.pipelineRun.name)
         - name: ocp-version
           value: $(params.ocp-version)
-        - name: test-event-type
-          value: $(tasks.extract-test-details.results.test-event-type)
+        - name: ocp-login-command
+          value: $(tasks.deploy-rosa.results.ocp-login-command)
+    - name: rhtap-install
+      runAfter:
+        - "deploy-rosa"
+      when:
+        - input: "$(tasks.extract-test-details.results.test-event-type)"
+          operator: in
+          values: ["push"]
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tasks/rhtap-installer/rhtap-install.yaml
+      params:
+        - name: test-id
+          value: $(context.pipelineRun.uid)
+        - name: test-name
+          value: $(context.pipelineRun.name)
+        - name: ocp-login-command
+          value: $(tasks.deploy-rosa.results.ocp-login-command)
