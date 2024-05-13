@@ -16,7 +16,7 @@ import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
 export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
+    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
         const backstageClient =  new DeveloperHubClient();
@@ -27,6 +27,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomName()}-${gptTemplate}`;
 
+        const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
 
         let developerHubTask: TaskIdReponse;
@@ -91,7 +92,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                     branch: 'main',
                     githubServer: 'github.com',
                     hostType: 'GitHub',
-                    imageName: 'rhtap-qe',
+                    imageName: quayImageName,
                     imageOrg: quayImageOrg,
                     imageRegistry: 'quay.io',
                     name: repositoryName,

@@ -17,7 +17,7 @@ import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
  * @param softwareTemplateName The name of the software template.
  */
 export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider`, () => {
+    describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
         let backstageClient: DeveloperHubClient;
@@ -35,6 +35,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomName()}-${softwareTemplateName}`;
     
+        const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
     
         beforeAll(async ()=> {
@@ -88,7 +89,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
                     branch: 'main',
                     gitlabServer: 'gitlab.com',
                     hostType: 'GitLab',
-                    imageName: 'rhtap-qe',
+                    imageName: quayImageName,
                     imageOrg: quayImageOrg,
                     imageRegistry: 'quay.io',
                     name: repositoryName,
