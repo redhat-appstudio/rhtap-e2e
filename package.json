@@ -37,12 +37,8 @@
     "@janus-idp/shared-react": "^2.4.0",
     "@kubernetes/client-node": "^0.20.0",
     "@octokit/rest": "^20.0.2",
-<<<<<<< HEAD
-    "axios": "^1.6.5",
-    "jest-html-reporters": "^3.1.7",
-=======
     "axios": "^1.6.8",
->>>>>>> 9a7d7ae (fix: upgrade axios from 1.6.5 to 1.6.8)
+    "jest-html-reporters": "^3.1.7",
     "unique-names-generator": "^4.7.1"
   }
 }
