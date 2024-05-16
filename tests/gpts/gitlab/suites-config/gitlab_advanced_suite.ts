@@ -26,7 +26,7 @@ import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
     * 15. Wait for the new image to be deployed to the production environment.
  */
 export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string) => {
-    describe(`Advanced Red Hat Trusted Application Pipeline ${softwareTemplateName} tests GitLab provider`, () => {
+    describe(`Advanced Red Hat Trusted Application Pipeline ${softwareTemplateName} tests GitLab provider with public/private image registry`, () => {
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
@@ -41,6 +41,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
+        const quayImageName = "rhtap-qe";
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
         const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
@@ -104,7 +105,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                     branch: 'main',
                     gitlabServer: 'gitlab.com',
                     hostType: 'GitLab',
-                    imageName: 'rhtap-qe',
+                    imageName: quayImageName,
                     imageOrg: quayImageOrg,
                     imageRegistry: 'quay.io',
                     name: repositoryName,

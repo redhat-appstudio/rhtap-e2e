@@ -27,7 +27,7 @@ import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
  * 15. Wait for the new image to be deployed to the production environment.
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider`, () => {
+    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
 
         const backstageClient =  new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
@@ -35,6 +35,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
+        const quayImageName = "rhtap-qe";
 
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -114,7 +115,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                     branch: 'main',
                     githubServer: 'github.com',
                     hostType: 'GitHub',
-                    imageName: 'rhtap-qe',
+                    imageName: quayImageName,
                     imageOrg: quayImageOrg,
                     imageRegistry: 'quay.io',
                     name: repositoryName,
