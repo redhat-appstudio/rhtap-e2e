@@ -189,7 +189,10 @@ export class GitLabProvider extends Utils {
     }
 
     /**
-     * name
+     * Merge merge request
+     * 
+     * @param {number} projectId - The ID number of GitLab repo.
+     * @param {number} mergeRequestId - The ID number of GitLab merge request.
      */
     public async mergeMergeRequest(projectId: number, mergeRequestId: number) {
         try {
@@ -201,4 +204,20 @@ export class GitLabProvider extends Utils {
             throw new Error("Failed to merge Merge Request. Check bellow error");
         }
     }
+
+    /**
+     * Delete project with ID from GitLab org.
+     * 
+     * @param {number} projectId - The ID number of GitLab repo.
+     */
+        public async deleteProject(projectId: number) {
+            try {
+                await this.gitlab.Projects.remove(projectId);
+    
+                console.log(`Project with "${projectId}" deleted successfully.`);
+            } catch (error) {
+                console.log(error)
+                throw new Error("Failed to delete project. Check bellow error");
+            }
+        }
 }
