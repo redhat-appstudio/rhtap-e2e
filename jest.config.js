@@ -9,7 +9,7 @@ module.exports = {
             softwareTemplates: {
                 templates: ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
                 github: {
-                    active: false,
+                    active: true,
                     host: 'https://api.github.com',
                     registriesConfig: {
                         quay: {
