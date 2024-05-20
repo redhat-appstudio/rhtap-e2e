@@ -151,8 +151,8 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
         */
         it(`wait ${softwareTemplateName} argocd to be synced in the cluster`, async () => {
-            expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
-        }, 600000);
+            expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 50000)).toBe(true);
+        }, 60000);
     
         /**
             * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
