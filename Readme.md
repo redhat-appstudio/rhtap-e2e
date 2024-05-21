@@ -7,3 +7,6 @@
 * Make sure that RHTAP templates[](https://github.com/redhat-appstudio/tssc-sample-templates) are imported to your RHDH instance 
 * Change backstageBaseUrl[](/src/tests/components.test.ts)
 * Run `yarn && yarn test`
+
+
+dummy change
