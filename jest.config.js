@@ -7,13 +7,13 @@ module.exports = {
     globals: {
         suites: {
             softwareTemplates: {
-                templates: ['java-springboot'],
+                templates: ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
                 github: {
-                    active: false,
+                    active: true,
                     host: 'https://api.github.com',
                     registriesConfig: {
                         quay: {
-                            active: false,
+                            active: true,
                             host: 'quay.io'
                         },
                     },
