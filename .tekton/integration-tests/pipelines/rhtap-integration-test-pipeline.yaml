@@ -62,6 +62,8 @@ spec:
       params:
         - name: SNAPSHOT
           value: $(params.SNAPSHOT)
+        - name: oras-container
+          value: $(params.oras-container)
         - name: test-name
           value: $(context.pipelineRun.name)
     - name: provision-rosa
