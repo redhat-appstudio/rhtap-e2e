@@ -3,8 +3,6 @@ kind: Task
 metadata:
   name: rhtap-e2e-runner
 spec:
-  description: |
-    This task runs end-to-end (E2E) tests for the Red Hat Test Automation Platform (RHTAP).
   params:
     - name: test-name
       type: string
