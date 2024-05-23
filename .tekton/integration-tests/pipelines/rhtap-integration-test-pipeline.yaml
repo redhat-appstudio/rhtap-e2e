@@ -35,6 +35,9 @@ spec:
     - name: machine-type
       description: 'The type of machine to use for the cluster nodes.'
       default: 'm5.xlarge'
+    - name: oras-container
+      default: 'quay.io/konflux-qe-incubator/konflux-qe-oci-storage'
+      description: The ORAS container used to store all test artifacts.
   tasks:
     - name: rosa-hcp-metadata
       taskRef:
@@ -43,7 +46,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/rosa/hosted-cp/rosa-hcp-metadata/rosa-hcp-metadata.yaml
     - name: test-metadata
@@ -53,7 +56,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/test-metadata/test-metadata.yaml
       params:
@@ -75,7 +78,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/rosa/hosted-cp/rosa-hcp-provision/rosa-hcp-provision.yaml
       params:
@@ -104,7 +107,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: integration-test/rhtap/rhtap-installer/task/rhtap-installer.yaml
       params:
@@ -125,7 +128,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/sprayproxy/sprayproxy-provision/sprayproxy-register-server.yaml
       params:
@@ -142,11 +145,11 @@ spec:
         resolver: git
         params:
           - name: url
-            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions
+            value: https://github.com/redhat-appstudio/rhtap-e2e
           - name: revision
-            value: onboard_rhtap_e2e
+            value: ig-tests
           - name: pathInRepo
-            value: integration-test/rhtap/rhtap-e2e/task/rhtap-e2e-runner.yaml
+            value: .tekton/integration-tests/tasks/rhtap-e2e.yaml
       params:
         - name: test-name
           value: $(context.pipelineRun.name)
@@ -172,7 +175,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/rosa/hosted-cp/rosa-hcp-deprovision/rosa-hcp-deprovision.yaml
       params:
@@ -209,6 +212,6 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: onboard_rhtap_e2e
+            value: main
           - name: pathInRepo
             value: common/tasks/sprayproxy/sprayproxy-deprovision/sprayproxy-unregister-server.yaml
