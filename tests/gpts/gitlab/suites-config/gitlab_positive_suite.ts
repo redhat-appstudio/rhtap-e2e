@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
-import { generateRandomName } from "../../../../src/utils/generator";
+import { generateRandomChars } from "../../../../src/utils/generator";
 import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
 
 /**
@@ -33,7 +33,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const developmentNamespace = `${componentRootNamespace}-development`;
     
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
-        const repositoryName = `${generateRandomName()}-${softwareTemplateName}`;
+        const repositoryName = `${generateRandomChars(6)}-${softwareTemplateName}`;
     
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';

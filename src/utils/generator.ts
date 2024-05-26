@@ -1,8 +1,5 @@
-import { uniqueNamesGenerator, animals } from 'unique-names-generator';
-
-export function generateRandomName(): string {
-    return uniqueNamesGenerator({
-        dictionaries: [animals,],
-        separator: '-'
-    })
+export function generateRandomChars(length: number): string {
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    return Array.from({ length }, () => characters[Math.floor(Math.random() * charactersLength)]).join('');
 }
