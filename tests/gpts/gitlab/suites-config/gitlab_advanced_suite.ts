@@ -209,7 +209,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         /**
             * Merges a merge request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
         */
-        it(`merge merge request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async ()=> {
+        it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async ()=> {
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber)
 
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push')

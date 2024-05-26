@@ -29,9 +29,9 @@ export class GitLabProvider extends Utils {
 
             return projects.id
         } catch (error) {
-            console.error(`Error finding repository: ${error}`);
+            console.error(error);
 
-            throw new Error("check");
+            throw new Error(`Failed to check if repository ${repoName} exists`);
         }
     }
 
@@ -210,14 +210,14 @@ export class GitLabProvider extends Utils {
      * 
      * @param {number} projectId - The ID number of GitLab repo.
      */
-        public async deleteProject(projectId: number) {
-            try {
-                await this.gitlab.Projects.remove(projectId);
+    public async deleteProject(projectId: number) {
+        try {
+            await this.gitlab.Projects.remove(projectId);
     
-                console.log(`Project with "${projectId}" deleted successfully.`);
-            } catch (error) {
-                console.log(error)
-                throw new Error("Failed to delete project. Check bellow error");
-            }
+            console.log(`Project with "${projectId}" deleted successfully.`);
+        } catch (error) {
+            console.log(error)
+            throw new Error("Failed to delete project. Check bellow error");
         }
+    }
 }
