@@ -33,7 +33,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const developmentNamespace = `${componentRootNamespace}-development`;
     
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
-        const repositoryName = `${generateRandomChars(6)}-${softwareTemplateName}`;
+        const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
     
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
