@@ -74,7 +74,7 @@ spec:
         export ARTIFACT_DIR="/workspace/test-artifacts"
         mkdir -p $ARTIFACT_DIR
 
-        echo -e "Running from revision"
+        echo -e "Hello, this is my task modified in my pr..."
         echo -e "INFO: Login to the ephemeral cluster..."
         $(params.ocp-login-command)
 
