@@ -57,7 +57,6 @@ spec:
               key: config.env
       script: |
         #!/bin/sh
-
         function saveArtifacts() {
           cd /workspace
           oras login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
@@ -75,6 +74,7 @@ spec:
         export ARTIFACT_DIR="/workspace/test-artifacts"
         mkdir -p $ARTIFACT_DIR
 
+        echo -e "Running from revision"
         echo -e "INFO: Login to the ephemeral cluster..."
         $(params.ocp-login-command)
 
