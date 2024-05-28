@@ -149,7 +149,7 @@ spec:
           - name: url
             value: https://github.com/redhat-appstudio/rhtap-e2e
           - name: revision
-            value: $(tasks.test-metadata.results.git-revision)
+            value: main
           - name: pathInRepo
             value: .tekton/integration-tests/tasks/rhtap-e2e.yaml
       params:
