@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
-import { generateRandomName } from '../../../../src/utils/generator';
+import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
@@ -42,7 +42,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
-        const repositoryName = `${generateRandomName()}-${gptTemplate}`;
+        const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
 

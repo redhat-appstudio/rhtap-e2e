@@ -3,7 +3,7 @@ import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { generateRandomName } from "../../../../src/utils/generator";
+import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
 import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
 
@@ -50,7 +50,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
-        const repositoryName = `${generateRandomName()}-${softwareTemplateName}`;
+        const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
         
@@ -184,7 +184,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         it(`creates a Merge Request for ${softwareTemplateName} component and check if pipeline run finish successfull`, async ()=> {
             const mergeRequestTitleName = 'Automatic Merge Request created from testing framework';
 
-            mergeRequestNumber = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomName(), mergeRequestTitleName);
+            mergeRequestNumber = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomChars(6), mergeRequestTitleName);
             expect(mergeRequestNumber).toBeDefined()
 
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Merge_Request')
@@ -209,7 +209,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         /**
             * Merges a merge request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
         */
-        it(`merge merge request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async ()=> {
+        it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async ()=> {
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber)
 
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push')
@@ -252,7 +252,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from development to stage environment', async ()=> {
-            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomName(),
+            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined()
 
@@ -302,7 +302,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
-            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomName(),
+            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined()
         

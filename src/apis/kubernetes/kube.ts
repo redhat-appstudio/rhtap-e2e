@@ -188,7 +188,7 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
-
+    
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const { body } = await customObjectsApi.getNamespacedCustomObject('tekton.dev', 'v1', namespace, 'pipelineruns', name);
@@ -206,21 +206,21 @@ export class Kubernetes extends Utils {
                         console.log(`Pipeline run '${name}' finished successfully.`);
                         return true;
                     } else if (pipelineHasFailed) {
-                        throw new Error(`Pipeline run '${name}' failed.`);
+                        console.error(`Pipeline run '${name}' failed.`);
+                        return false;
                     }
                 }
             } catch (error) {
-                console.log(error)
-                console.error('Error fetching pipeline run: retrying');
+                console.error('Error fetching pipeline run: retrying', error);
                 // You might handle specific errors differently here
             }
     
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
-
+    
         throw new Error(`Timeout reached waiting for pipeline run '${name}' to finish.`);
-    }
+    }   
 
     /**
      * Waits for an Argo CD application to become healthy.
@@ -284,7 +284,7 @@ export class Kubernetes extends Utils {
             // Define the options
             const options = { headers: { 'Content-Type': 'application/merge-patch+json' } };
 
-             // Patch the app
+            // Patch the app
             await k8sCoreApi.patchNamespacedCustomObject('argoproj.io','v1alpha1', namespace, 'applications', applicationName,  patchObject, undefined, undefined, undefined, options);
 
             // Delete the app
