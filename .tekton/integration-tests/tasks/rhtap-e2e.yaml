@@ -74,7 +74,6 @@ spec:
         export ARTIFACT_DIR="/workspace/test-artifacts"
         mkdir -p $ARTIFACT_DIR
 
-        echo -e "Hello, this is my task modified in my pr..."
         echo -e "INFO: Login to the ephemeral cluster..."
         $(params.ocp-login-command)
 
@@ -83,7 +82,7 @@ spec:
 
         echo -e "INFO: Cloning repository '$(params.git-repo)' with revision '$(params.git-revision)' from URL '$(params.git-url)'"
         git clone "$(params.git-url)" .
-        
+
         if [ "$(params.git-repo)" = "rhtap-e2e" ]; then
           git checkout "$(params.git-revision)"
         fi
