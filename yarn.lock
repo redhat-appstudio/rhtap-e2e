@@ -1123,6 +1123,16 @@
     ajv "^8.10.0"
     lodash "^4.17.21"
 
+"@backstage/catalog-model@^1.4.5":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/@backstage/catalog-model/-/catalog-model-1.4.5.tgz#b8f6309ff12b72dffdfe852d615c553ae13452c0"
+  integrity sha512-I4QOCy0pSXJikQWgC8MWj2zDRCgQnnmvnNOOnPFcg7hIIIzeV0sGp6d3Qi7bc2tvzXt3fT3biSOCgGOWi1IJKA==
+  dependencies:
+    "@backstage/errors" "^1.2.4"
+    "@backstage/types" "^1.1.1"
+    ajv "^8.10.0"
+    lodash "^4.17.21"
+
 "@backstage/config@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.1.1.tgz#824ef3d74b391579060d5646fa1f45fcd553ce02"
@@ -1131,6 +1141,14 @@
     "@backstage/errors" "^1.2.3"
     "@backstage/types" "^1.1.1"
     lodash "^4.17.21"
+
+"@backstage/config@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.2.0.tgz#6a4d93197d0586ee3a40f9e4877c5cfd76c128f3"
+  integrity sha512-tW8hNzDTClotYmpOrUrutymzZ0Zimx/WeU2+5tLv+ZI8ssRV64KGRe8hi7PuQz2lARVF1DxjwV//Bq2VjR5veA==
+  dependencies:
+    "@backstage/errors" "^1.2.4"
+    "@backstage/types" "^1.1.1"
 
 "@backstage/core-components@^0.13.9":
   version "0.13.9"
@@ -1195,6 +1213,14 @@
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.3.tgz#6418d3ece63b13d14e32d44ec4db0f8866b0b1c9"
   integrity sha512-3YtYRKLNeRaSCzKSikNFoemesacDoEY0UwZAq7lnzCCpiCpSCfg7UA4y7wfjadFFU9Pd6nckUg2BzOk9keL15w==
+  dependencies:
+    "@backstage/types" "^1.1.1"
+    serialize-error "^8.0.1"
+
+"@backstage/errors@^1.2.4":
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.4.tgz#2ba79c6308e87b0de99edf499e1c82477d3d6e8a"
+  integrity sha512-JBhKn9KwZTzp/AaOC0vBncKCM1vI9Z8rKKyr9vj3wt3SSgCnDPxNwVz7SlXa2Rc9TOQq0Yk3olkmQE9U+S5uWg==
   dependencies:
     "@backstage/types" "^1.1.1"
     serialize-error "^8.0.1"
@@ -1293,6 +1319,18 @@
     uuid "^8.0.0"
     zod "^3.22.4"
 
+"@backstage/plugin-permission-common@^0.7.13":
+  version "0.7.13"
+  resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-common/-/plugin-permission-common-0.7.13.tgz#ea8509d2a38063309b8726ee6be8b95e1f99e5b9"
+  integrity sha512-FGC6qrQc96SuovRCWQARDKss7TRenusMX9i0k0Devx/0+h2jM0TYYtuJ52jAFSAx9Db3BRRSlj9M5AQFgjoNmg==
+  dependencies:
+    "@backstage/config" "^1.2.0"
+    "@backstage/errors" "^1.2.4"
+    "@backstage/types" "^1.1.1"
+    cross-fetch "^4.0.0"
+    uuid "^9.0.0"
+    zod "^3.22.4"
+
 "@backstage/plugin-permission-react@^0.4.18":
   version "0.4.18"
   resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-react/-/plugin-permission-react-0.4.18.tgz#4339f4738e7991858d7d599e7c9802f9bb38e408"
@@ -1313,6 +1351,15 @@
   dependencies:
     "@backstage/catalog-model" "^1.4.3"
     "@backstage/plugin-permission-common" "^0.7.11"
+    "@backstage/types" "^1.1.1"
+
+"@backstage/plugin-scaffolder-common@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.1.tgz#cd79c2b222ae03a6906f1599d71c1ef385710f57"
+  integrity sha512-4ULWyWb7U8N4iUP6LR7SleS1G3pmMkeAvZ/u2OFWyWp1kU2Mgx+SfskZDYNgVb8T4viNlU6nKlsYCkcOSrf4Hw==
+  dependencies:
+    "@backstage/catalog-model" "^1.4.5"
+    "@backstage/plugin-permission-common" "^0.7.13"
     "@backstage/types" "^1.1.1"
 
 "@backstage/plugin-scaffolder-react@^1.7.0":
@@ -1571,32 +1618,32 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.1.tgz#16308cea045f0fc777b6ff20a9f25474dd8293d2"
   integrity sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==
 
-"@gitbeaker/core@^39.30.0":
-  version "39.30.0"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-39.30.0.tgz#171b5e1b76d68fffe67516ed4af7364417799ed6"
-  integrity sha512-+/naVrcXN9rcRTop28uFGH/neaqTMbRtifsbaocfhAoI8m0swc2Jm5Da6XY0ngVwhdyq4hXcHTN2DAbbV3VTBA==
+"@gitbeaker/core@^39.34.3":
+  version "39.34.3"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-39.34.3.tgz#94fafc92507f1e17aba2b299bf47e4af7e53f74b"
+  integrity sha512-/3qBXme2MjO38QU2F/MYGon9a4wHKrgtwNzdHHdjpbYJ2/wOGNgbEWSZcibcFkiWVgAjbPXdYqC5sY8hcwGO1w==
   dependencies:
-    "@gitbeaker/requester-utils" "^39.30.0"
+    "@gitbeaker/requester-utils" "^39.34.3"
     qs "^6.11.2"
     xcase "^2.0.1"
 
-"@gitbeaker/requester-utils@^39.30.0":
-  version "39.30.0"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/requester-utils/-/requester-utils-39.30.0.tgz#764bce3af242e90311882658a4de5246eef1aa46"
-  integrity sha512-VKiiICvAnnjS33yn79fX9BiF9blljyk/QTfU5ovnqu0GKQg1IevfkPTg4d6luL4tIQRXRL+Q3q2Y3vXcbkLKaw==
+"@gitbeaker/requester-utils@^39.34.3":
+  version "39.34.3"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/requester-utils/-/requester-utils-39.34.3.tgz#a790626123901be9ca5765e5add9e2f9c6185370"
+  integrity sha512-nMnTkTo4UixHPwPYsYIjp8UdKrmSw3TjvRESexliAeNNq4/LVeyVUyRqBUa1ZI8MXt1nPPnPX3wh8s7rqlm7uA==
   dependencies:
     picomatch-browser "^2.2.6"
     qs "^6.11.2"
     rate-limiter-flexible "^4.0.0"
     xcase "^2.0.1"
 
-"@gitbeaker/rest@^39.30.0":
-  version "39.30.0"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/rest/-/rest-39.30.0.tgz#25ebbb376badab1badebcbe420df9f4f9ac268b7"
-  integrity sha512-kNzR2E4lBlYL8wiE3pDvOALlfUlmCP5cRidmqHMIM1TD8HcA0XDCVj6u4JXSLNMSIrNHW7GWvdvdNRiIKKXBEQ==
+"@gitbeaker/rest@^39.34.3":
+  version "39.34.3"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/rest/-/rest-39.34.3.tgz#3e3582766e45d5591353e8c4445e345460665ea1"
+  integrity sha512-SuceThS6WhJtqNNcKmW8j0yUU7aXA4k5a29OWcd6bn7peQ3MXlIpbfvLLRnmuUaYUuxHLnUzZhAfuxaNf4DVtQ==
   dependencies:
-    "@gitbeaker/core" "^39.30.0"
-    "@gitbeaker/requester-utils" "^39.30.0"
+    "@gitbeaker/core" "^39.34.3"
+    "@gitbeaker/requester-utils" "^39.34.3"
 
 "@humanwhocodes/config-array@^0.11.13":
   version "0.11.14"
@@ -3008,12 +3055,12 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.12.0.tgz#ce1c9d143389679e253b314241ea9aa5cec980d3"
   integrity sha512-NmWvPnx0F1SfrQbYwOi7OeaNGokp9XhzNioJ/CSBs8Qa4vxug81mhJEAVZwxXuBmYB5KDRfMq/F3RR0BIU7sWg==
 
-axios@^1.6.5:
-  version "1.6.5"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.5.tgz#2c090da14aeeab3770ad30c3a1461bc970fb0cd8"
-  integrity sha512-Ii012v05KEVuUoFWmMW/UQv9aRIc3ZwkWDcM+h5Il8izZCtRVpDUfwpoFf7eOtajT3QiGR4yDUx7lPqHJULgbg==
+axios@^1.6.8:
+  version "1.6.8"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.8.tgz#66d294951f5d988a00e87a0ffb955316a619ea66"
+  integrity sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==
   dependencies:
-    follow-redirects "^1.15.4"
+    follow-redirects "^1.15.6"
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
@@ -4093,10 +4140,10 @@ flatted@^3.2.9:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.9.tgz#7eb4c67ca1ba34232ca9d2d93e9886e611ad7daf"
   integrity sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==
 
-follow-redirects@^1.15.4:
-  version "1.15.5"
-  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.5.tgz#54d4d6d062c0fa7d9d17feb008461550e3ba8020"
-  integrity sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==
+follow-redirects@^1.15.6:
+  version "1.15.6"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.15.6.tgz#7f815c0cda4249c74ff09e95ef97c23b5fd0399b"
+  integrity sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==
 
 forever-agent@~0.6.1:
   version "0.6.1"
@@ -7515,6 +7562,11 @@ uuid@^8.0.0, uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
+
+uuid@^9.0.0:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
+  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 uvu@^0.5.0:
   version "0.5.6"
