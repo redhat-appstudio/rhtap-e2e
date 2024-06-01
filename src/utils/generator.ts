@@ -4,7 +4,7 @@ export function generateRandomChars(length: number): string {
     }
 
     const letters = 'abcdefghijklmnopqrstuvwxyz';
-    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789-';
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
     
     const firstChar = letters[Math.floor(Math.random() * letters.length)];
     const middleChars = Array.from({ length: length - 2 }, () => characters[Math.floor(Math.random() * characters.length)]).join('');
