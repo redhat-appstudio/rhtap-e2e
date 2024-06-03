@@ -75,6 +75,7 @@ spec:
         mkdir -p $ARTIFACT_DIR
 
         echo -e "INFO: Login to the ephemeral cluster..."
+        echo -e "Hi from PR test"
         $(params.ocp-login-command)
 
         cd "$(mktemp -d)"
