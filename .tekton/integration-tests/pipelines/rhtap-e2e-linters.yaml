@@ -1,3 +1,4 @@
+---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
@@ -44,7 +45,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: yamllint
+            value: main
           - name: pathInRepo
             value: common/tasks/linters/shellcheck/shellcheck.yaml
       params:
@@ -61,7 +62,7 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: yamllint
+            value: main
           - name: pathInRepo
             value: common/tasks/linters/yamllint/yaml-lint.yaml
       params:
