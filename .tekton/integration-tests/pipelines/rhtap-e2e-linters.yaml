@@ -44,9 +44,26 @@ spec:
           - name: url
             value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
           - name: revision
-            value: main
+            value: yamllint
           - name: pathInRepo
             value: common/tasks/linters/shellcheck/shellcheck.yaml
+      params:
+        - name: git-url
+          value: "$(tasks.test-metadata.results.git-url)"
+        - name: git-revision
+          value: "$(tasks.test-metadata.results.git-revision)"
+    - name: yaml-lint
+      runAfter:
+        - test-metadata
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/konflux-qe-incubator/konflux-qe-definitions.git
+          - name: revision
+            value: yamllint
+          - name: pathInRepo
+            value: common/tasks/linters/yamllint/yaml-lint.yaml
       params:
         - name: git-url
           value: "$(tasks.test-metadata.results.git-url)"
