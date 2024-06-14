@@ -874,4 +874,70 @@ export class GitHubProvider extends Utils {
         const jobId = await this.getLatestWorkflowRunsJobId(owner, repo, runId);
         return await this.getJobLogsFromWorkflowRun(owner, repo, jobId);
     }
+    
+    /**
+     * Get the list of files in a folder from a GitHub repository.
+     * @param folderPath - Path to the folder in the repository.
+     */
+    public async getFilesInFolder(gitOrg: string, gitRepository: string, folderPath: string): Promise<{ path: string; sha: string; type: string }[]> {
+        try {
+            const response = await this.octokit.repos.getContent({
+                owner: gitOrg,
+                repo: gitRepository,
+                path: folderPath,
+                ref: `main`,
+            });
+
+            if (!Array.isArray(response.data)) {
+                console.error(`The provided path is not a folder: ${folderPath}`);
+                return [];
+            }
+
+            return response.data.map((item) => ({
+                path: item.path,
+                sha: item.sha!,
+                type: item.type, // 'file' or 'dir'
+            }));
+        } catch (error) {
+            console.log(`Error fetching files in folder: ${folderPath}`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Delete a folder and all its contents from a GitHub repository.
+     * @param folderPath - Path to the folder in the repository.
+     * @param commitMessage - Commit message for the deletion.
+     */
+    public async deleteFolderInRepository(gitOrg: string, gitRepository: string, folderPath: string){
+        const files = await this.getFilesInFolder(gitOrg, gitRepository, folderPath);
+
+        if (files.length === 0) {
+            console.log(`No files found in folder: ${folderPath}.`);
+            return;
+        }
+
+        for (const item of files) {
+            if (item.type === 'dir') {
+                // Recursively delete subfolder first
+                await this.deleteFolderInRepository(gitOrg, gitRepository, item.path);
+            } else {
+                // Delete file
+                try {
+                    await this.octokit.repos.deleteFile({
+                        owner: gitOrg,
+                        repo: gitRepository,
+                        path: item.path,
+                        message: `Delete file: ${folderPath}`,
+                        sha: item.sha,
+                        branch: `main`,
+                    });
+                    console.log(`Deleted file: ${item.path}`);
+                } catch (error) {
+                    console.error(`Error deleting file: ${item.path}`, error);
+                }
+            }
+        }
+    }
+
 }
