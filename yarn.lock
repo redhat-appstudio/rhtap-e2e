@@ -1125,11 +1125,7 @@
 
 "@backstage/catalog-model@^1.4.5":
   version "1.4.5"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@backstage/catalog-model/-/catalog-model-1.4.5.tgz#b8f6309ff12b72dffdfe852d615c553ae13452c0"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@backstage/catalog-model/-/catalog-model-1.4.5.tgz#b8f6309ff12b72dffdfe852d615c553ae13452c0"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-I4QOCy0pSXJikQWgC8MWj2zDRCgQnnmvnNOOnPFcg7hIIIzeV0sGp6d3Qi7bc2tvzXt3fT3biSOCgGOWi1IJKA==
   dependencies:
     "@backstage/errors" "^1.2.4"
@@ -1148,11 +1144,7 @@
 
 "@backstage/config@^1.2.0":
   version "1.2.0"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.2.0.tgz#6a4d93197d0586ee3a40f9e4877c5cfd76c128f3"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@backstage/config/-/config-1.2.0.tgz#6a4d93197d0586ee3a40f9e4877c5cfd76c128f3"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-tW8hNzDTClotYmpOrUrutymzZ0Zimx/WeU2+5tLv+ZI8ssRV64KGRe8hi7PuQz2lARVF1DxjwV//Bq2VjR5veA==
   dependencies:
     "@backstage/errors" "^1.2.4"
@@ -1227,11 +1219,7 @@
 
 "@backstage/errors@^1.2.4":
   version "1.2.4"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.4.tgz#2ba79c6308e87b0de99edf499e1c82477d3d6e8a"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@backstage/errors/-/errors-1.2.4.tgz#2ba79c6308e87b0de99edf499e1c82477d3d6e8a"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-JBhKn9KwZTzp/AaOC0vBncKCM1vI9Z8rKKyr9vj3wt3SSgCnDPxNwVz7SlXa2Rc9TOQq0Yk3olkmQE9U+S5uWg==
   dependencies:
     "@backstage/types" "^1.1.1"
@@ -1333,11 +1321,7 @@
 
 "@backstage/plugin-permission-common@^0.7.13":
   version "0.7.13"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-common/-/plugin-permission-common-0.7.13.tgz#ea8509d2a38063309b8726ee6be8b95e1f99e5b9"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@backstage/plugin-permission-common/-/plugin-permission-common-0.7.13.tgz#ea8509d2a38063309b8726ee6be8b95e1f99e5b9"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-FGC6qrQc96SuovRCWQARDKss7TRenusMX9i0k0Devx/0+h2jM0TYYtuJ52jAFSAx9Db3BRRSlj9M5AQFgjoNmg==
   dependencies:
     "@backstage/config" "^1.2.0"
@@ -1371,11 +1355,7 @@
 
 "@backstage/plugin-scaffolder-common@^1.5.1":
   version "1.5.1"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.1.tgz#cd79c2b222ae03a6906f1599d71c1ef385710f57"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.1.tgz#cd79c2b222ae03a6906f1599d71c1ef385710f57"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-4ULWyWb7U8N4iUP6LR7SleS1G3pmMkeAvZ/u2OFWyWp1kU2Mgx+SfskZDYNgVb8T4viNlU6nKlsYCkcOSrf4Hw==
   dependencies:
     "@backstage/catalog-model" "^1.4.5"
@@ -1640,11 +1620,7 @@
 
 "@gitbeaker/core@^39.34.3":
   version "39.34.3"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-39.34.3.tgz#94fafc92507f1e17aba2b299bf47e4af7e53f74b"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@gitbeaker/core/-/core-39.34.3.tgz#94fafc92507f1e17aba2b299bf47e4af7e53f74b"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-/3qBXme2MjO38QU2F/MYGon9a4wHKrgtwNzdHHdjpbYJ2/wOGNgbEWSZcibcFkiWVgAjbPXdYqC5sY8hcwGO1w==
   dependencies:
     "@gitbeaker/requester-utils" "^39.34.3"
@@ -1653,11 +1629,7 @@
 
 "@gitbeaker/requester-utils@^39.34.3":
   version "39.34.3"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@gitbeaker/requester-utils/-/requester-utils-39.34.3.tgz#a790626123901be9ca5765e5add9e2f9c6185370"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@gitbeaker/requester-utils/-/requester-utils-39.34.3.tgz#a790626123901be9ca5765e5add9e2f9c6185370"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-nMnTkTo4UixHPwPYsYIjp8UdKrmSw3TjvRESexliAeNNq4/LVeyVUyRqBUa1ZI8MXt1nPPnPX3wh8s7rqlm7uA==
   dependencies:
     picomatch-browser "^2.2.6"
@@ -1667,11 +1639,7 @@
 
 "@gitbeaker/rest@^39.34.3":
   version "39.34.3"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/@gitbeaker/rest/-/rest-39.34.3.tgz#3e3582766e45d5591353e8c4445e345460665ea1"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/@gitbeaker/rest/-/rest-39.34.3.tgz#3e3582766e45d5591353e8c4445e345460665ea1"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-SuceThS6WhJtqNNcKmW8j0yUU7aXA4k5a29OWcd6bn7peQ3MXlIpbfvLLRnmuUaYUuxHLnUzZhAfuxaNf4DVtQ==
   dependencies:
     "@gitbeaker/core" "^39.34.3"
@@ -7597,11 +7565,7 @@ uuid@^8.0.0, uuid@^8.3.0, uuid@^8.3.2:
 
 uuid@^9.0.0:
   version "9.0.1"
-<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
-=======
-  resolved "https://nexus.corp.redhat.com/repository/npmjs/uuid/-/uuid-9.0.1.tgz#e188d4c8853cc722220392c424cd637f32293f30"
->>>>>>> ba149b0 (RHTAP-2547)
   integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
 
 uvu@^0.5.0:
