@@ -5,15 +5,15 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { beforeChecks, checkComponentInBackstage, cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
  * 3. Red Hat Developer Hub created GitHub repository
- * 4. Perform an commit in GitHub to trigger a push PipelineRun
- * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
- * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
+ * 4. Remove component/location from RHDH
+ * 5. Add component/location to RHDH
+ * 6. Check that components gets created successfully in Red Hat Developer Hub
  */
 export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
@@ -43,23 +43,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             gitHubClient = new GitHubProvider()
             kubeClient = new Kubernetes()
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await beforeChecks(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient)
         })
 
         /**
@@ -112,22 +96,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await checkComponentInBackstage(backstageClient, repositoryName, developerHubTask)
         }, 120000);
 
         /**
@@ -152,56 +121,28 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         }, 120000)
 
         /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
+         * Delete location from backstage
          */
-        it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)
-            expect(repositoryExists).toBe(true)
-
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
-
-        /**
-         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
-         */
-        it(`Unregister template from backstage`, async () => {
+        it(`Delete location from backstage`, async () => {
             // Unregister component from developer hub
             const componentIsUnregistered = await backstageClient.unregisterComponentByName(repositoryName);
             expect(componentIsUnregistered).toBe(true)
         }, 120000)
+
         /**
-         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         * Register existing location in backstage
          */
-        it(`Register template in backstage`, async () => {
+        it(`Register location in backstage`, async () => {
             // Register repo in developer hub
             const componentIsRegistered = await backstageClient.registerLocation(repositoryName);
             expect(componentIsRegistered).toBe(true)
         }, 120000)
 
         /**
-        * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+        * Check, if (new) location is added successfully
         */
         it(`Check imported location(component in backstage) backstage`, async () => {
-            // Check location in developer hub
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
-            const componentUid = await backstageClient.getComponentUid(repositoryName);
-            expect(componentUid).toBeDefined()
+            await checkComponentInBackstage(backstageClient, repositoryName, developerHubTask)
         }, 120000)
 
         /**
