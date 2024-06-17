@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
-import { generateRandomName } from '../../../../src/utils/generator';
+import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
@@ -25,7 +25,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         const developmentNamespace = `${componentRootNamespace}-development`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
-        const repositoryName = `${generateRandomName()}-${gptTemplate}`;
+        const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
