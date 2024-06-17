@@ -179,7 +179,6 @@ export class DeveloperHubClient extends Utils {
             console.error('Error fetching component ID:', error);
             return null;
         }
-        return null;
     }
       
      public  async registerLocation(repositoryName: string): Promise<boolean> {
