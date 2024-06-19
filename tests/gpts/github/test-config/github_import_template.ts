@@ -11,15 +11,15 @@ import { beforeChecks, checkComponentInBackstage, cleanAfterTestGitHub } from ".
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
  * 3. Red Hat Developer Hub created GitHub repository
- * 4. Perform an commit in GitHub to trigger a push PipelineRun
- * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
- * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
+ * 4. Remove component/location from RHDH
+ * 5. Add component/location to RHDH
+ * 6. Check that components gets created successfully in Red Hat Developer Hub
  */
 export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
-        const backstageClient =  new DeveloperHubClient();
+        const backstageClient = new DeveloperHubClient();
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
         const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
@@ -39,18 +39,19 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
-        beforeAll(async()=> {
+        beforeAll(async () => {
             gitHubClient = new GitHubProvider()
             kubeClient = new Kubernetes()
+
             await beforeChecks(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient)
         })
 
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
          */
-        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async ()=> {
+        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async () => {
             const goldenPathTemplates = await backstageClient.getGoldenPathTemplates();
-            
+
             expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true)
         })
 
@@ -111,57 +112,38 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
          * my application. Also verifies if the repository contains a '.tekton' folder.
          */
-        it(`verifies if component ${gptTemplate} was created in GitHub and contains '.tekton' folder`, async () => {
+        it(`verifies if component ${gptTemplate} was created in GitHub and contains 'catalog-info.yaml' file`, async () => {
             const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)
             expect(repositoryExists).toBe(true)
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
+            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'catalog-info.yaml')
             expect(tektonFolderExists).toBe(true)
         }, 120000)
 
         /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
+         * Delete location from backstage
          */
-        it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)
-            expect(repositoryExists).toBe(true)
-
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
+        it(`Delete location from backstage`, async () => {
+            // Unregister component from developer hub
+            const componentIsUnregistered = await backstageClient.unregisterComponentByName(repositoryName);
+            expect(componentIsUnregistered).toBe(true)
         }, 120000)
 
         /**
-         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+         * Register existing location in backstage
          */
-        it(`Creates empty commit to trigger a pipeline run`, async ()=> {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName)
-            expect(commit).not.toBe(undefined)
-
+        it(`Register location in backstage`, async () => {
+            // Register repo in developer hub
+            const componentIsRegistered = await backstageClient.registerLocation(repositoryName);
+            expect(componentIsRegistered).toBe(true)
         }, 120000)
 
         /**
-         * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
-         */
-        it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
-                    }
-                }
-                expect(finished).toBe(true)
-            }
-        }, 900000)
-
+        * Check, if (new) location is added successfully
+        */
+        it(`Check imported location(component in backstage) backstage`, async () => {
+            await checkComponentInBackstage(backstageClient, repositoryName, developerHubTask)
+        }, 120000)
 
         /**
         * Deletes created applications
