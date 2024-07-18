@@ -112,7 +112,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: gitLabOrganization
+                    repoOwner: gitLabOrganization, 
+                    ciType: "tekton"
                 }
             };
 
