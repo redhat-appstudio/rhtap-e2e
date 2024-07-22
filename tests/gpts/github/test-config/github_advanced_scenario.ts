@@ -106,7 +106,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: githubOrganization
+                    repoOwner: githubOrganization,
+                    ciType: "tekton"
                 }
             };
 

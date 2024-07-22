@@ -96,7 +96,8 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: gitLabOrganization
+                    repoOwner: gitLabOrganization, 
+                    ciType: "tekton"
                 }
             };
         
