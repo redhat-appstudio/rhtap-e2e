@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.4-947.1717074712 as builder
+FROM registry.access.redhat.com/ubi9/ubi:9.4-1181 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
@@ -63,7 +63,7 @@ RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://github.com/tektoncd/cli/rel
     mv tkn /usr/local/bin && \
     tkn version
 
-FROM registry.access.redhat.com/ubi9/ubi:9.4-947.1717074712
+FROM registry.access.redhat.com/ubi9/ubi:9.4-1181
 
 RUN dnf module install -y nodejs:20/common && \
     npm i -g yarn && \
