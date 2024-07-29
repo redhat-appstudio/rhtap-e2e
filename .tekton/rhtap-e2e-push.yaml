@@ -22,7 +22,7 @@ spec:
   - name: revision
     value: '{{revision}}'
   - name: output-image
-    value: quay.io/rhtap_qe/rhtap-e2e:{{revision}}
+    value: quay.io/rhtap/rhtap-e2e:{{revision}}
   - name: dockerfile
     value: Dockerfile
   pipelineSpec:
@@ -443,6 +443,9 @@ spec:
           requests:
             storage: 1Gi
       status: {}
+  - name: rhtap-quay-credentials
+    secret:
+      secretName: rhtap-builder
   - name: git-auth
     secret:
       secretName: '{{ git_auth_secret }}'
