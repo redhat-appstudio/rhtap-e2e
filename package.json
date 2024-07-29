@@ -36,7 +36,7 @@
     "@gitbeaker/rest": "^39.34.3",
     "@janus-idp/shared-react": "^2.4.0",
     "@kubernetes/client-node": "^0.20.0",
-    "@octokit/rest": "^20.0.2",
+    "@octokit/rest": "^20.1.1",
     "axios": "^1.6.8",
     "jest-html-reporters": "^3.1.7",
     "unique-names-generator": "^4.7.1"
