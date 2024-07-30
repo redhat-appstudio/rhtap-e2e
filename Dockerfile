@@ -63,7 +63,9 @@ RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://github.com/tektoncd/cli/rel
     mv tkn /usr/local/bin && \
     tkn version
 
-FROM registry.access.redhat.com/ubi9/ubi:9.4-1181
+FROM registry.access.redhat.com/ubi9/go-toolset:1.21.11-7
+
+USER root
 
 RUN dnf module install -y nodejs:20/common && \
     npm i -g yarn && \
