@@ -1663,32 +1663,32 @@
   resolved "https://registry.yarnpkg.com/@eslint/object-schema/-/object-schema-2.1.4.tgz#9e69f8bb4031e11df79e03db09f9dbbae1740843"
   integrity sha512-BsWiH1yFGjXXS2yvrf5LyuoSIIbPrGUWob917o+BTKuZ7qJdxX8aJLRxs1fS9n6r7vESrq1OUqb68dANcFXuQQ==
 
-"@gitbeaker/core@^39.34.3":
-  version "39.34.3"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-39.34.3.tgz#94fafc92507f1e17aba2b299bf47e4af7e53f74b"
-  integrity sha512-/3qBXme2MjO38QU2F/MYGon9a4wHKrgtwNzdHHdjpbYJ2/wOGNgbEWSZcibcFkiWVgAjbPXdYqC5sY8hcwGO1w==
+"@gitbeaker/core@^40.1.2":
+  version "40.1.2"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-40.1.2.tgz#27683d535f9025fa873e15596154db8575e994ce"
+  integrity sha512-KjP40EIdPWDX2w+GZUjgc5f9L/a0VsA6A2dkiKdH27m5BUpVrH3eHC3M0h1SsIA5edO3BiebqWFO2ipkGJCBZA==
   dependencies:
-    "@gitbeaker/requester-utils" "^39.34.3"
-    qs "^6.11.2"
+    "@gitbeaker/requester-utils" "^40.1.2"
+    qs "^6.12.2"
     xcase "^2.0.1"
 
-"@gitbeaker/requester-utils@^39.34.3":
-  version "39.34.3"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/requester-utils/-/requester-utils-39.34.3.tgz#a790626123901be9ca5765e5add9e2f9c6185370"
-  integrity sha512-nMnTkTo4UixHPwPYsYIjp8UdKrmSw3TjvRESexliAeNNq4/LVeyVUyRqBUa1ZI8MXt1nPPnPX3wh8s7rqlm7uA==
+"@gitbeaker/requester-utils@^40.1.2":
+  version "40.1.2"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/requester-utils/-/requester-utils-40.1.2.tgz#90122f573570469ea25dde6188b02ea7a1d12dcc"
+  integrity sha512-s3c2TzJpBk3VGujEo/57+TAntg36kEhdob28i2kAEDztFWlNp0sfDT/jlDwUywKF6AbmYIJYe3FikLNyAiv+iA==
   dependencies:
     picomatch-browser "^2.2.6"
-    qs "^6.11.2"
-    rate-limiter-flexible "^4.0.0"
+    qs "^6.12.2"
+    rate-limiter-flexible "^4.0.1"
     xcase "^2.0.1"
 
-"@gitbeaker/rest@^39.34.3":
-  version "39.34.3"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/rest/-/rest-39.34.3.tgz#3e3582766e45d5591353e8c4445e345460665ea1"
-  integrity sha512-SuceThS6WhJtqNNcKmW8j0yUU7aXA4k5a29OWcd6bn7peQ3MXlIpbfvLLRnmuUaYUuxHLnUzZhAfuxaNf4DVtQ==
+"@gitbeaker/rest@^40.0.0":
+  version "40.1.2"
+  resolved "https://registry.yarnpkg.com/@gitbeaker/rest/-/rest-40.1.2.tgz#ab7424dd417fdda38266f13378448bd1693266fe"
+  integrity sha512-q9FYEC0SQcEbj1Hu+EOVFGRBjxbUFciK/iVD3BhBx+ZUGIPfHYS32EWL4uqVSBLq/zSUEd2gWjLy7LRVq/Pz3A==
   dependencies:
-    "@gitbeaker/core" "^39.34.3"
-    "@gitbeaker/requester-utils" "^39.34.3"
+    "@gitbeaker/core" "^40.1.2"
+    "@gitbeaker/requester-utils" "^40.1.2"
 
 "@humanwhocodes/module-importer@^1.0.1":
   version "1.0.1"
@@ -6602,14 +6602,7 @@ pure-rand@^6.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.0.4.tgz#50b737f6a925468679bff00ad20eade53f37d5c7"
   integrity sha512-LA0Y9kxMYv47GIPJy6MI84fqTd2HmYZI83W/kM/SkKfDlajnZYfmXFTxkbY+xSBPkLJxltMa9hIkmdc29eguMA==
 
-qs@^6.11.2:
-  version "6.11.2"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.11.2.tgz#64bea51f12c1f5da1bc01496f48ffcff7c69d7d9"
-  integrity sha512-tDNIz22aBzCDxLtVH++VnTfzxlfeK5CbqohpSqpJgj1Wg/cQbStNAz3NuqCs5vV+pjBsK4x4pN9HlVh7rcYRiA==
-  dependencies:
-    side-channel "^1.0.4"
-
-qs@^6.9.4:
+qs@^6.12.2, qs@^6.9.4:
   version "6.12.3"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.12.3.tgz#e43ce03c8521b9c7fd7f1f13e514e5ca37727754"
   integrity sha512-AWJm14H1vVaO/iNZ4/hO+HyaTehuy9nRqVdkTqlJt0HWvBiBIEXFmb4C0DGeYo3Xes9rrEW+TxHsaigCbN5ICQ==
@@ -6644,10 +6637,10 @@ randexp@0.4.6:
     discontinuous-range "1.0.0"
     ret "~0.1.10"
 
-rate-limiter-flexible@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/rate-limiter-flexible/-/rate-limiter-flexible-4.0.0.tgz#4754706216f0b442e7527b1367e42b7682145010"
-  integrity sha512-SkA18LEPqJJKHixi6E7tzBKTXbj9gu5wPyfTykPVRZR5JGSw0dMCjtZsjlfuabVY940pu28Wu87NZN4FhztnyQ==
+rate-limiter-flexible@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/rate-limiter-flexible/-/rate-limiter-flexible-4.0.1.tgz#79b0ce111abe9c5da41d6fddf7cca93cedd3a8fc"
+  integrity sha512-2/dGHpDFpeA0+755oUkW+EKyklqLS9lu0go9pDsbhqQjZcxfRyJ6LA4JI0+HAdZ2bemD/oOjUeZQB2lCZqXQfQ==
 
 rc-progress@3.5.1:
   version "3.5.1"
@@ -7097,7 +7090,7 @@ shebang-regex@^3.0.0:
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
-side-channel@^1.0.4, side-channel@^1.0.6:
+side-channel@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/side-channel/-/side-channel-1.0.6.tgz#abd25fb7cd24baf45466406b1096b7831c9215f2"
   integrity sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==
