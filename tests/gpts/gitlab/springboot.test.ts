@@ -7,7 +7,7 @@ const springBootTemplateName = 'java-springboot';
 const runSpringBootBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.gitlab.active) {
+    if (configuration.templates.includes(springBootTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
 
         gitLabProviderBasicTests(springBootTemplateName);
     } else {
