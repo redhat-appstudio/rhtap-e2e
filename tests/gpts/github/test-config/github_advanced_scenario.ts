@@ -333,7 +333,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
             console.log("syncing argocd application in stage environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${stagingEnvironmentName}`)
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`)
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
 

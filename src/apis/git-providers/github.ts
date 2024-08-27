@@ -23,7 +23,7 @@ export class GitHubProvider extends Utils {
      */
     public async checkIfRepositoryExists(organization: string, name: string): Promise<boolean> {
         try {
-            const repositoryResponse = await this.octokit.repos.get({owner: organization, repo: name})
+            const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name })
 
             return repositoryResponse.status === 200
         } catch (error) {
@@ -44,7 +44,7 @@ export class GitHubProvider extends Utils {
             if (await this.checkIfRepositoryExists(organization, name)) {
                 await this.deleteRepository(organization, name)
                 return true
-            } 
+            }
             return false
         } catch (error) {
             console.log(error)
@@ -59,7 +59,7 @@ export class GitHubProvider extends Utils {
      */
     public async deleteRepository(organization: string, name: string): Promise<boolean> {
         try {
-            const repositoryResponse = await this.octokit.request('DELETE /repos/'+organization+'/'+`${name}`, {
+            const repositoryResponse = await this.octokit.request('DELETE /repos/' + organization + '/' + `${name}`, {
                 owner: organization,
                 repo: `${name}`,
                 headers: {
@@ -69,7 +69,7 @@ export class GitHubProvider extends Utils {
             return repositoryResponse.status === 204
         } catch (error) {
             console.log(error)
-    
+
             return false
         }
     }
@@ -82,9 +82,9 @@ export class GitHubProvider extends Utils {
      */
     public async checkIfFolderExistsInRepository(organization: string, name: string, folderPath: string): Promise<boolean> {
         try {
-            const response = await this.octokit.repos.getContent({ owner: organization, repo: name, path: folderPath});
+            const response = await this.octokit.repos.getContent({ owner: organization, repo: name, path: folderPath });
 
-            return response.status === 200 
+            return response.status === 200
         } catch (error) {
             const e = error as AxiosError
             console.error(`Failed to fetch folderPath: ${folderPath}, from repository: ${organization}/${name}, request status: ${e.status}, message: ${e.message}`)
@@ -101,21 +101,24 @@ export class GitHubProvider extends Utils {
      * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
      * @throws Any error that occurs during the execution of the function.
      */
-    public async createEmptyCommit(gitOrg: string, gitRepository: string):Promise<string | undefined> {
+    public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
             const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' })
 
-            const currentCommit = await this.octokit.git.getCommit({owner: gitOrg, repo: gitRepository,
+            const currentCommit = await this.octokit.git.getCommit({
+                owner: gitOrg, repo: gitRepository,
                 commit_sha: baseBranchRef.data.object.sha,
             });
 
-            const newCommit = await this.octokit.git.createCommit({owner: gitOrg, repo: gitRepository,
+            const newCommit = await this.octokit.git.createCommit({
+                owner: gitOrg, repo: gitRepository,
                 message: 'Automatic commit generated from tests',
                 tree: currentCommit.data.tree.sha,
                 parents: [currentCommit.data.sha],
             });
 
-            await this.octokit.git.updateRef({owner: gitOrg, repo: gitRepository,
+            await this.octokit.git.updateRef({
+                owner: gitOrg, repo: gitRepository,
                 ref: `heads/main`,
                 sha: newCommit.data.sha,
             });
@@ -126,17 +129,87 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    public async createAgentCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: 'Jenkinsfile',
+                ref: `main`,
+              });
+          
+            //   // Decode the base64 content
+               const content = Buffer.from(responseContent.data.content, "base64").toString();
+          
+            // Step 2: Modify the content
+              const updatedContent = content.replace(
+                /agent\s+any/,
+                "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
+              );
+          
+            // Step 3: Create a commit with the new content
+              await this.octokit.repos.createOrUpdateFileContents({
+                owner: gitOrg, repo: gitRepository,
+                path: 'Jenkinsfile',
+                message: "Update Jenkinsfile to use Kubernetes agent",
+                content: Buffer.from(updatedContent).toString("base64"),
+                sha: responseContent.data.sha, // The current commit SHA of the file
+                ref: `heads/main`,
+              });
+          
+            console.log("Jenkinsfile updated successfully!");
+            return "true";
+
+        } catch (error) {
+            console.error("An error occurred while updating the Jenkinsfile:", error);
+        }
+    }
+
+    public async enableACSJenkins(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                ref: `main`,
+              });
+          
+            //   // Decode the base64 content
+               const content = Buffer.from(responseContent.data.content, "base64").toString();
+          
+            // Step 2: Modify the content
+              const updatedContent = content.replace(
+                "export DISABLE_ACS=false",
+                "export DISABLE_ACS=true"
+              );
+          
+            // Step 3: Create a commit with the new content
+              await this.octokit.repos.createOrUpdateFileContents({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                message: "Enable ACS scan in Jenkins",
+                content: Buffer.from(updatedContent).toString("base64"),
+                sha: responseContent.data.sha, // The current commit SHA of the file
+                ref: `main`,
+              });
+          
+            console.log("env.sh updated successfully!");
+            return "true";
+
+        } catch (error) {
+            console.error("An error occurred while updating the Jenkinsfile:", error);
+        }
+    }
+
     public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number | undefined> {
         const baseBranch = "main"; // Specify the base branch
         const newBranch = generateRandomChars(5); // Specify the new branch name
-    
+
         try {
             const { data: latestCommit } = await this.octokit.repos.getBranch({
                 owner,
                 repo,
                 branch: baseBranch
             });
-    
+
             // Step 2: Create a new branch based on the latest commit of the base branch
             await this.octokit.git.createRef({
                 owner,
@@ -144,7 +217,7 @@ export class GitHubProvider extends Utils {
                 ref: `refs/heads/${newBranch}`,
                 sha: latestCommit.commit.sha
             });
-    
+
             await this.octokit.repos.createOrUpdateFileContents({
                 owner,
                 repo,
@@ -165,7 +238,7 @@ export class GitHubProvider extends Utils {
             });
 
             return pullRequest.number
-    
+
         } catch (error) {
             console.error("Error:", error);
         }
@@ -226,7 +299,7 @@ export class GitHubProvider extends Utils {
     /**
      * name
      */
-    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string):Promise<number| undefined> {
+    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number | undefined> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
@@ -238,7 +311,33 @@ export class GitHubProvider extends Utils {
 
             const decodedData = Buffer.from(content, 'base64')
             let decodedContent = decodedData.toString()
-    
+
+            const pattern = /- image: (.*)/;
+            decodedContent = decodedContent.replace(pattern, `- image: ${image}`);
+
+            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA)
+
+        } catch (error) {
+            throw new Error(`Error: ${error}`);
+        }
+    }
+
+    /**
+    * name
+    */
+    public async promoteGitopsImagePipelinesEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string, pipelinesFork: string): Promise<number | undefined> {
+        try {
+            const response = await this.octokit.repos.getContent({
+                owner,
+                repo,
+                path: `components/${componentName}/overlays/${environment}/deployment-patch.yaml`
+            });
+
+            const { content, sha: fileSHA } = { ...response.data };
+
+            const decodedData = Buffer.from(content, 'base64')
+            let decodedContent = decodedData.toString()
+
             const pattern = /- image: (.*)/;
             decodedContent = decodedContent.replace(pattern, `- image: ${image}`);
 
