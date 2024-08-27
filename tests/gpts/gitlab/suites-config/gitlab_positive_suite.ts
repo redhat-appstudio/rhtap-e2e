@@ -3,9 +3,12 @@ import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { generateRandomChars } from "../../../../src/utils/generator";
+<<<<<<< HEAD
 import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+=======
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
+>>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -49,43 +52,15 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-    
-            if (gitLabOrganization === '') {
-                throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-    
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-    
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-    
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
     
         /**
-            * Creates a task in Developer Hub to generate a new component using specified git and kube options.
-            * 
-            * @param {string} templateRef Refers to the Developer Hub template name.
-            * @param {object} values Set of options to create the component.
-            * @param {string} values.branch Default git branch for the component.
-            * @param {string} values.gitlabServer GitLab server URL.
-            * @param {string} values.hostType Type of host (e.g., GitLab).
-            * @param {string} values.imageName Registry image name for the component to be pushed.
-            * @param {string} values.imageOrg Registry organization name for the component to be pushed.
-            * @param {string} values.imageRegistry Image registry provider. Default is Quay.io.
-            * @param {string} values.name Name of the repository to be created in GitLab.
-            * @param {string} values.namespace Kubernetes namespace where ArgoCD will create component manifests.
-            * @param {string} values.owner Developer Hub username who initiates the task.
-            * @param {string} values.repoName Name of the GitLab repository.
-            * @param {string} values.repoOwner Owner of the GitLab repository.
+        * Creates a task in Developer Hub to generate a new component using specified git and kube options.
+        * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
+<<<<<<< HEAD
             const taskCreatorOptions: ScaffolderScaffoldOptions = {
                 templateRef: `template:default/${softwareTemplateName}`,
                 values: {
@@ -103,6 +78,9 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
                     ciType: "tekton"
                 }
             };
+=======
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
+>>>>>>> b70f53b (RHTAP-2015 Jenkins tests for GitLab)
         
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

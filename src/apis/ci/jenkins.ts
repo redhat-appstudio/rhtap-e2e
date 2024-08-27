@@ -93,12 +93,8 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
-            if (error.response && error.response.status === 404) {
-                return false;
-            } else {
-                console.error('Error checking job existence:', error);
-                throw error;
-            }
+            console.error('Error checking job existence:', error);
+            throw error;
         }
     }
 
@@ -152,8 +148,13 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForBuildToFinish waits for a build to finish and get its result
+<<<<<<< HEAD
     public async waitForBuildToFinish(jobName: string, buildNumber: number) {
         const url = `${this.jenkinsUrl}/job/${jobName}/${buildNumber}/api/json`;
+=======
+    public async waitForBuildToFinish(jobName: string, buildNumber: number): Promise<string | null>{
+        const url = `${this.JENKINS_URL}/job/${jobName}/${buildNumber}/api/json`;
+>>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
 
         while (true) {
             try {
@@ -163,11 +164,11 @@ export class JenkinsCI extends Utils {
                     await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
                 } else {
                     console.log(`Build #${buildNumber} finished with status: ${response.data.result}`);
-                    break;
+                    return response.data.result;
                 }
             } catch (error) {
                 console.error('Error checking build status:', error);
-                break;
+                return null;
             }
         }
     }
