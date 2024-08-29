@@ -7,7 +7,7 @@ module.exports = {
     globals: {
         suites: {
             softwareTemplates: {
-                templates:  [ 'go', 'nodejs', 'dotnet-basic', 'java-springboot', 'python', 'java-quarkus'],
+                templates:  ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
                 github: {
                     active: true,
                     tekton: true,

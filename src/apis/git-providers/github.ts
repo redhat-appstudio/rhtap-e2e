@@ -135,27 +135,27 @@ export class GitHubProvider extends Utils {
                 owner: gitOrg, repo: gitRepository,
                 path: 'Jenkinsfile',
                 ref: `main`,
-              });
-          
-            //   // Decode the base64 content
-               const content = Buffer.from(responseContent.data.content, "base64").toString();
-          
+            });
+
+            // Decode the base64 content
+            const content = Buffer.from(responseContent.data.content, "base64").toString();
+
             // Step 2: Modify the content
-              const updatedContent = content.replace(
+            const updatedContent = content.replace(
                 /agent\s+any/,
                 "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
-              );
-          
+            );
+
             // Step 3: Create a commit with the new content
-              await this.octokit.repos.createOrUpdateFileContents({
+            await this.octokit.repos.createOrUpdateFileContents({
                 owner: gitOrg, repo: gitRepository,
                 path: 'Jenkinsfile',
                 message: "Update Jenkinsfile to use Kubernetes agent",
                 content: Buffer.from(updatedContent).toString("base64"),
                 sha: responseContent.data.sha, // The current commit SHA of the file
                 ref: `heads/main`,
-              });
-          
+            });
+
             console.log("Jenkinsfile updated successfully!");
             return "true";
 
@@ -170,27 +170,27 @@ export class GitHubProvider extends Utils {
                 owner: gitOrg, repo: gitRepository,
                 path: 'rhtap/env.sh',
                 ref: `main`,
-              });
-          
+            });
+
             //   // Decode the base64 content
-               const content = Buffer.from(responseContent.data.content, "base64").toString();
-          
+            const content = Buffer.from(responseContent.data.content, "base64").toString();
+
             // Step 2: Modify the content
-              const updatedContent = content.replace(
+            const updatedContent = content.replace(
                 "export DISABLE_ACS=false",
                 "export DISABLE_ACS=true"
-              );
-          
+            );
+
             // Step 3: Create a commit with the new content
-              await this.octokit.repos.createOrUpdateFileContents({
+            await this.octokit.repos.createOrUpdateFileContents({
                 owner: gitOrg, repo: gitRepository,
                 path: 'rhtap/env.sh',
                 message: "Enable ACS scan in Jenkins",
                 content: Buffer.from(updatedContent).toString("base64"),
                 sha: responseContent.data.sha, // The current commit SHA of the file
                 ref: `main`,
-              });
-          
+            });
+
             console.log("env.sh updated successfully!");
             return "true";
 
