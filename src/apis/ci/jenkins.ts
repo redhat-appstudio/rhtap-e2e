@@ -151,7 +151,7 @@ export class JenkinsCI extends Utils {
                 return null;
             }
         } catch (error) {
-            // console.error('Error getting build number:', error);
+            console.error('Error getting build number:', error);
             return null;
         }
     }

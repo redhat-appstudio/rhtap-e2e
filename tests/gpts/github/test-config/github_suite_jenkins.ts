@@ -151,11 +151,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * my application. Also verifies if the repository contains a Jenkinsfile.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains Jenkinsfile`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)
-            expect(repositoryExists).toBe(true)
-
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')
-            expect(tektonFolderExists).toBe(true)
+            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true)
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true)
         }, 120000)
 
         /**
@@ -183,7 +180,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Jenkins job to finish
          */
         it(`Trigger and wait for ${gptTemplate} jenkins job`, async () => {
-            const queueItemUrl = await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
             await jenkinsClient.waitForBuildToFinish(repositoryName, 1);
@@ -202,10 +199,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
-            const queueItemUrl = await jenkinsClient.buildJenkinsJob(repositoryName);
-
+            await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
-
             await new Promise(resolve => setTimeout(resolve, 5000));
             await jenkinsClient.waitForBuildToFinish(repositoryName, 2);
         }, 240000);
@@ -216,15 +211,11 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it('container component is successfully synced by gitops in development environment', async () => {
             console.log("syncing argocd application in development environment")
             await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
-
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
-
             const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
-
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
-
             expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
         }, 900000)
 

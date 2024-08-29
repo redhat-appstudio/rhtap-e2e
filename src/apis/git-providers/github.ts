@@ -321,30 +321,4 @@ export class GitHubProvider extends Utils {
             throw new Error(`Error: ${error}`);
         }
     }
-
-    /**
-    * name
-    */
-    public async promoteGitopsImagePipelinesEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string, pipelinesFork: string): Promise<number | undefined> {
-        try {
-            const response = await this.octokit.repos.getContent({
-                owner,
-                repo,
-                path: `components/${componentName}/overlays/${environment}/deployment-patch.yaml`
-            });
-
-            const { content, sha: fileSHA } = { ...response.data };
-
-            const decodedData = Buffer.from(content, 'base64')
-            let decodedContent = decodedData.toString()
-
-            const pattern = /- image: (.*)/;
-            decodedContent = decodedContent.replace(pattern, `- image: ${image}`);
-
-            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA)
-
-        } catch (error) {
-            throw new Error(`Error: ${error}`);
-        }
-    }
 }
