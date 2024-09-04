@@ -12,10 +12,11 @@ load_envs() {
 
     declare -A config_envs=(
         [APPLICATION_ROOT_NAMESPACE]="rhtap-app"
+        [ARTIFACT_DIR]="$(mktemp -d)"
         [GITHUB_ORGANIZATION]="rhtap-rhdh-qe"
         [GITLAB_ORGANIZATION]="rhtap-qe"
         [GIT_REPO]="${GIT_REPO:-""}"
-        [GIT_REVISION]="${GIT_REVISION:-""}"
+        [GIT_REVISION]="${GIT_REVISION:-"main"}"
         [GIT_URL]="${GIT_URL:-""}"
         [IMAGE_REGISTRY]="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o  'jsonpath={.spec.host}')"
         [NODE_TLS_REJECT_UNAUTHORIZED]=0
