@@ -5,9 +5,6 @@ metadata:
   name: rhtap-e2e-runner
 spec:
   params:
-    - name: test-name
-      type: string
-      description: The name of the test being executed.
     - name: ocp-login-command
       type: string
       description: Command to log in to the OpenShift cluster where the tests will be executed.
@@ -23,77 +20,58 @@ spec:
       type: string
       default: "main"
       description: The revision (branch or tag) of the Git repository to checkout.
-    - name: oras-container
+    - name: oci-container
       type: string
       description: The URI of the OCI container registry to store test artifacts.
       default: "quay.io/flacatus/rhtap-e2e-artifacts"
+    - name: rhtap-e2e-container
+      type: string
+      default: "quay.io/rhtap/rhtap-e2e:latest"
+    - name: job-spec
+      type: string
+      description: "The job specification containing details of the test execution."
   volumes:
     - name: rhtap-cli-volume
       secret: 
         secretName: rhtap-cli-install
-    - name: oras-credentials-volume
+    - name: konflux-test-infra-volume
       secret:
-        secretName: oras-credentials
+        secretName: konflux-test-infra
   steps:
     - name: e2e-test
-      image: quay.io/flacatus/yarn-qe-tools:latest
+      image: $(params.rhtap-e2e-container)
       workingDir: /workspace
       volumeMounts:
         - name: rhtap-cli-volume
           mountPath: /usr/local/rhtap-cli-install
         - name: oras-credentials-volume
           mountPath: /usr/local/oras-credentials
+      env:
+        - name: OCI_CONTAINER
+          value: $(params.oci-container)
+        - name: GIT_REVISION
+          value: $(params.git-revision)
+        - name: GIT_REPO
+          value: $(params.git-repo)
+        - name: GIT_URL
+          value: $(params.git-url)
+        - name: KONFLUX_CI
+          value: "true"
+        - name: JOB_SPEC
+          value: $(params.job-spec)
       script: |
         #!/bin/sh
-        set -o errexit
-        set -o nounset
-        set -o pipefail
 
-        export RED_HAT_DEVELOPER_HUB_URL GITHUB_TOKEN \
-            GITHUB_ORGANIZATION QUAY_IMAGE_ORG APPLICATION_ROOT_NAMESPACE NODE_TLS_REJECT_UNAUTHORIZED GITLAB_TOKEN \
-            GITLAB_ORGANIZATION QUAY_USERNAME QUAY_PASSWORD IMAGE_REGISTRY
-
-        QUAY_USERNAME=$(cat /usr/local/oras-credentials/quay-username)
-        QUAY_PASSWORD=$(cat /usr/local/oras-credentials/quay-password)
-
-        function saveArtifacts() {
-          local EXIT_CODE=$?
-          cd /workspace
-          oras login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
-
-          echo '{"doc": "README.md"}' > config.json
-
-          oras push "$(params.oras-container)" --config config.json:application/vnd.acme.rocket.config.v1+json \
-            ./test-artifacts/:application/vnd.acme.rocket.docs.layer.v1+tar
-
-          exit $EXIT_CODE
-        }
-
-        trap saveArtifacts EXIT
-
-        export ARTIFACT_DIR="/workspace/test-artifacts"
-        mkdir -p $ARTIFACT_DIR
-
-        echo -e "INFO: Login to the ephemeral cluster..."
+        # Log into OpenShift
         $(params.ocp-login-command)
 
-        GITLAB_TOKEN=$(cat /usr/local/rhtap-cli-install/gitlab_token)
-        GITLAB_ORGANIZATION="rhtap-qe"
-        APPLICATION_ROOT_NAMESPACE="rhtap-app"
-        QUAY_IMAGE_ORG="rhtap"
-        GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-        GITHUB_TOKEN=$(cat /usr/local/rhtap-cli-install/gihtub_token)
-        RED_HAT_DEVELOPER_HUB_URL=https://"$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
-        IMAGE_REGISTRY=$(kubectl -n rhtap-quay get route rhtap-quay-quay -o  'jsonpath={.spec.host}')
+        if [ "$GIT_REPO" = "e2e-tests" ]; then
+          export SOURCE_REPO_URL="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url' | sed 's#https://github.com/##')"
+          export SOURCE_REPO_BRANCH="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_branch')"
 
-        cd "$(mktemp -d)"
-        echo -e "INFO: Cloning repository '$(params.git-repo)' with revision '$(params.git-revision)' from URL '$(params.git-url)'"
-        git clone "$(params.git-url)" .
-
-        if [ "$(params.git-repo)" = "rhtap-e2e" ]; then
-          git checkout "$(params.git-revision)"
+          echo -e "[INFO] Running e2e tests from source: $SOURCE_REPO_URL and branch $SOURCE_REPO_BRANCH"
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/$SOURCE_REPO_URL/$SOURCE_REPO_BRANCH/integration-tests/scripts/rhtap-e2e-runner.sh)"
+        else
+          echo -e "[INFO] Running e2e tests from source: konflux-ci/e2e-tests and branch main"
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/konflux-ci/e2e-tests/main/integration-tests/scripts/rhtap-e2e-runner.sh)"
         fi
-
-        NODE_TLS_REJECT_UNAUTHORIZED=0
-        yarn && yarn test tests/gpts/github/quarkus.test.ts
-
