@@ -129,6 +129,14 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    /**
+     * Commits a Jenkins agent configuration for testing to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the file will be committed.
+     * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
+     * @throws Any error that occurs during the execution of the function.
+     */
     public async createAgentCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
             const responseContent = await this.octokit.repos.getContent({
@@ -164,6 +172,14 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    /**
+     * Enables ACS scan for testing to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the file will be committed.
+     * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
+     * @throws Any error that occurs during the execution of the function.
+     */
     public async enableACSJenkins(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
             const responseContent = await this.octokit.repos.getContent({

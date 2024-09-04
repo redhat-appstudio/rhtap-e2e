@@ -33,14 +33,13 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const jenkinsClient = new JenkinsCI();
-
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
 
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
+        let jenkinsClient: JenkinsCI;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -48,8 +47,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
-            gitHubClient = new GitHubProvider()
-            kubeClient = new Kubernetes()
+            gitHubClient = new GitHubProvider();
+            kubeClient = new Kubernetes();
+            jenkinsClient = new JenkinsCI();
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

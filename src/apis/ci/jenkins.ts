@@ -36,7 +36,7 @@ export class JenkinsCI extends Utils {
         });
     }
 
-    // Function to create a new Jenkins job
+    // createJenkinsJob creates a new Jenkins job
     public async createJenkinsJob(gitProvider: string, organization: string, jobName: string) {
         const url = `${this.JENKINS_URL}/createItem?name=${jobName}`;
         const jobConfigXml = `
@@ -85,7 +85,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    // Function to check if a job exists
+    // jobExists checks if a job exists
     public async jobExists(jobName: string): Promise<boolean> {
         const url = `${this.JENKINS_URL}/job/${jobName}/api/json`;
         try {
@@ -107,7 +107,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    // Function to wait until a job is created
+    // waitForJobCreation waits until a job is created
     public async waitForJobCreation(jobName: string) {
         console.log(`Waiting for job '${jobName}' to be created...`);
         while (true) {
@@ -119,7 +119,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    // Function to trigger a build for a Jenkins job
+    // buildJenkinsJob triggers a build for a Jenkins job
     public async buildJenkinsJob(jobName: string): Promise<string | null> {
         const url = `${this.JENKINS_URL}/job/${jobName}/build`;
         try {
@@ -137,7 +137,7 @@ export class JenkinsCI extends Utils {
         return null;
     }
 
-    // Function to get the build number from the queue item URL
+    // getBuildNumber gets the build number from the queue item URL
     public async getBuildNumber(queueItemUrl: string): Promise<number | null> {
         const url = `${this.JENKINS_URL}${queueItemUrl}api/json`;
         try {
@@ -156,7 +156,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    // Function to wait for a build to finish and get its result
+    // waitForBuildToFinish waits for a build to finish and get its result
     public async waitForBuildToFinish(jobName: string, buildNumber: number) {
         const url = `${this.JENKINS_URL}/job/${jobName}/${buildNumber}/api/json`;
 
@@ -177,7 +177,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    // Function to get the latest build number for a Jenkins job
+    // getLatestBuildNumber gets the latest build number for a Jenkins job
     public async getLatestBuildNumber(jobName: string): Promise<number | null> {
         const url = `${this.JENKINS_URL}/job/${jobName}/api/json?tree=lastBuild[number]`;
 
