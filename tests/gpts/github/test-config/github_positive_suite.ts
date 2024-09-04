@@ -29,6 +29,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
 
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
@@ -94,7 +95,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                     hostType: 'GitHub',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
-                    imageRegistry: 'quay.io',
+                    imageRegistry: imageRegistry,
                     name: repositoryName,
                     namespace: componentRootNamespace,
                     owner: "user:guest",
