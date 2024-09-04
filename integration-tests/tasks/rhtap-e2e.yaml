@@ -27,37 +27,37 @@ spec:
       type: string
       description: The URI of the OCI container registry to store test artifacts.
       default: "quay.io/flacatus/rhtap-e2e-artifacts"
+  volumes:
+    - name: rhtap-cli-volume
+      secret: 
+        secretName: rhtap-cli-install
+    - name: oras-credentials-volume
+      secret:
+        secretName: oras-credentials
   steps:
     - name: e2e-test
       image: quay.io/flacatus/yarn-qe-tools:latest
       workingDir: /workspace
-      env:
-        - name: TEST_NAME
-          value: $(params.test-name)
-        - name: GIT_REPO
-          value: $(params.git-repo)
-        - name: GIT_URL
-          value: $(params.git-url)
-        - name: GIT_REVISION
-          value: $(params.git-revision)
-        - name: QUAY_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: "oras-credentials"
-              key: "quay-username"
-        - name: QUAY_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oras-credentials
-              key: "quay-password"
-        - name: RHTAP_E2E_CONFIGURATION
-          valueFrom:
-            secretKeyRef:
-              name: rhtap-e2e-config
-              key: config.env
+      volumeMounts:
+        - name: rhtap-cli-volume
+          mountPath: /usr/local/rhtap-cli-install
+        - name: oras-credentials-volume
+          mountPath: /usr/local/oras-credentials
       script: |
         #!/bin/sh
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
+        export RED_HAT_DEVELOPER_HUB_URL GITHUB_TOKEN \
+            GITHUB_ORGANIZATION QUAY_IMAGE_ORG APPLICATION_ROOT_NAMESPACE NODE_TLS_REJECT_UNAUTHORIZED GITLAB_TOKEN \
+            GITLAB_ORGANIZATION QUAY_USERNAME QUAY_PASSWORD IMAGE_REGISTRY
+
+        QUAY_USERNAME=$(cat /usr/local/oras-credentials/quay-username)
+        QUAY_PASSWORD=$(cat /usr/local/oras-credentials/quay-password)
+
         function saveArtifacts() {
+          local EXIT_CODE=$?
           cd /workspace
           oras login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
 
@@ -77,9 +77,16 @@ spec:
         echo -e "INFO: Login to the ephemeral cluster..."
         $(params.ocp-login-command)
 
-        cd "$(mktemp -d)"
-        export RED_HAT_DEVELOPER_HUB_URL=https://"$(oc get route redhat-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
+        GITLAB_TOKEN=$(cat /usr/local/rhtap-cli-install/gitlab_token)
+        GITLAB_ORGANIZATION="rhtap-qe"
+        APPLICATION_ROOT_NAMESPACE="rhtap-app"
+        QUAY_IMAGE_ORG="rhtap"
+        GITHUB_ORGANIZATION="rhtap-rhdh-qe"
+        GITHUB_TOKEN=$(cat /usr/local/rhtap-cli-install/gihtub_token)
+        RED_HAT_DEVELOPER_HUB_URL=https://"$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
+        IMAGE_REGISTRY=$(kubectl -n rhtap-quay get route rhtap-quay-quay -o  'jsonpath={.spec.host}')
 
+        cd "$(mktemp -d)"
         echo -e "INFO: Cloning repository '$(params.git-repo)' with revision '$(params.git-revision)' from URL '$(params.git-url)'"
         git clone "$(params.git-url)" .
 
@@ -87,9 +94,6 @@ spec:
           git checkout "$(params.git-revision)"
         fi
 
-        echo "$RHTAP_E2E_CONFIGURATION" > config.sh
-        chmod +x config.sh
-        source ./config.sh
+        NODE_TLS_REJECT_UNAUTHORIZED=0
+        yarn && yarn test tests/gpts/github/quarkus.test.ts
 
-        yarn
-        yarn test
