@@ -1,54 +1,89 @@
 #!/bin/sh
 
-        set -o errexit
-        set -o nounset
-        set -o pipefail
+set -euo pipefail
 
-        export RED_HAT_DEVELOPER_HUB_URL GITHUB_TOKEN \
-            GITHUB_ORGANIZATION QUAY_IMAGE_ORG APPLICATION_ROOT_NAMESPACE NODE_TLS_REJECT_UNAUTHORIZED GITLAB_TOKEN \
-            GITLAB_ORGANIZATION QUAY_USERNAME QUAY_PASSWORD IMAGE_REGISTRY
+log() {
+    echo -e "[$(date +'%Y-%m-%d %H:%M:%S')] [$1] $2"
+}
 
-        QUAY_USERNAME=$(cat /usr/local/oras-credentials/quay-username)
-        QUAY_PASSWORD=$(cat /usr/local/oras-credentials/quay-password)
+load_envs() {
+    local rhtap_secrets_file="/usr/local/rhtap-cli-install"
+    local konflux_infra_secrets_file="/usr/local/konflux-test-infra"
 
-        function saveArtifacts() {
-          local EXIT_CODE=$?
-          cd /workspace
-          oras login -u $QUAY_USERNAME -p $QUAY_PASSWORD quay.io
+    declare -A config_envs=(
+        [APPLICATION_ROOT_NAMESPACE]="rhtap-app"
+        [GITHUB_ORGANIZATION]="rhtap-rhdh-qe"
+        [GITLAB_ORGANIZATION]="rhtap-qe"
+        [GIT_REPO]="${GIT_REPO:-""}"
+        [GIT_REVISION]="${GIT_REVISION:-""}"
+        [GIT_URL]="${GIT_URL:-""}"
+        [IMAGE_REGISTRY]="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o  'jsonpath={.spec.host}')"
+        [NODE_TLS_REJECT_UNAUTHORIZED]=0
+        [OCI_CONTAINER]="${OCI_CONTAINER:-""}"
+        [OCI_STORAGE_TOKEN]="$(jq -r '."quay-token"' ${konflux_infra_secrets_file}/oci-storage)"
+        [OCI_STORAGE_USERNAME]="$(jq -r '."quay-username"' ${konflux_infra_secrets_file}/oci-storage)"
+        [RED_HAT_DEVELOPER_HUB_URL]=https://"$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
+    )
 
-          echo '{"doc": "README.md"}' > config.json
+    declare -A load_envs_from_file=(
+        [GITLAB_TOKEN]="${rhtap_secrets_file}/gitlab_token"
+        [GITHUB_TOKEN]="${rhtap_secrets_file}/github_token"
+    )
 
-          oras push "$(params.oras-container)" --config config.json:application/vnd.acme.rocket.config.v1+json \
-            ./test-artifacts/:application/vnd.acme.rocket.docs.layer.v1+tar
+    for var in "${!config_envs[@]}"; do
+        export "$var"="${config_envs[$var]}"
+    done
 
-          exit $EXIT_CODE
-        }
-
-        trap saveArtifacts EXIT
-
-        export ARTIFACT_DIR="/workspace/test-artifacts"
-        mkdir -p $ARTIFACT_DIR
-
-        echo -e "INFO: Login to the ephemeral cluster..."
-        $(params.ocp-login-command)
-
-        GITLAB_TOKEN=$(cat /usr/local/rhtap-cli-install/gitlab_token)
-        GITLAB_ORGANIZATION="rhtap-qe"
-        APPLICATION_ROOT_NAMESPACE="rhtap-app"
-        QUAY_IMAGE_ORG="rhtap"
-        GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-        GITHUB_TOKEN=$(cat /usr/local/rhtap-cli-install/gihtub_token)
-        RED_HAT_DEVELOPER_HUB_URL=https://"$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
-        IMAGE_REGISTRY=$(kubectl -n rhtap-quay get route rhtap-quay-quay -o  'jsonpath={.spec.host}')
-
-        cd "$(mktemp -d)"
-        echo -e "INFO: Cloning repository '$(params.git-repo)' with revision '$(params.git-revision)' from URL '$(params.git-url)'"
-        git clone "$(params.git-url)" .
-
-        if [ "$(params.git-repo)" = "rhtap-e2e" ]; then
-          git checkout "$(params.git-revision)"
+    for var in "${!load_envs_from_file[@]}"; do
+        local file="${load_envs_from_file[$var]}"
+        if [[ -f "$file" ]]; then
+            export "$var"="$(<"$file")"
+        else
+            log "ERROR" "Secret file for $var not found at $file"
         fi
+    done
+}
 
-        NODE_TLS_REJECT_UNAUTHORIZED=0
-        yarn && yarn test tests/gpts/github/quarkus.test.ts
+post_actions() {
+    local exit_code=$?
+    local temp_annotation_file="$(mktemp)"
 
+    cd "$ARTIFACT_DIR"
+
+    # Fetch the manifest annotations for the container
+    if ! MANIFESTS=$(oras manifest fetch "${OCI_CONTAINER}" | jq .annotations); then
+        log "ERROR" "Failed to fetch manifest from ${OCI_STORAGE_CONTAINER}"
+        exit 1
+    fi
+
+    jq -n --argjson manifest "$MANIFESTS" '{ "$manifest": $manifest }' > "${temp_annotation_file}"
+
+    oras pull "${OCI_CONTAINER}"
+
+    local attempt=1
+    while ! oras push "$OCI_CONTAINER" --username="${OCI_STORAGE_USERNAME}" --password="${OCI_STORAGE_TOKEN}" --annotation-file "${temp_annotation_file}" ./:application/vnd.acme.rocket.docs.layer.v1+tar; do
+        if [[ $attempt -ge 5 ]]; then
+            log "ERROR" "oras push failed after $attempt attempts."
+            exit 1
+        fi
+        log "WARNING" "oras push failed (attempt $attempt). Retrying in 5 seconds..."
+        sleep 5
+        ((attempt++))
+    done
+
+    exit "$exit_code"
+}
+
+trap post_actions EXIT
+
+cd "$(mktemp -d)"
+
+log "INFO" "Cloning repository '${GIT_REPO}' with revision '${GIT_REVISION}' from URL '${GIT_URL}'"
+
+git clone "${GIT_URL}" .
+
+if [ "${GIT_REPO}" = "rhtap-e2e" ]; then
+    git checkout "${GIT_REVISION}"
+fi
+
+yarn && yarn test tests/gpts/github/quarkus.test.ts

@@ -8,22 +8,10 @@ spec:
     - name: ocp-login-command
       type: string
       description: Command to log in to the OpenShift cluster where the tests will be executed.
-    - name: git-repo
-      type: string
-      default: "rhtap-e2e"
-      description: The name of the Git repository containing the E2E tests.
-    - name: git-url
-      type: string
-      default: "https://github.com/redhat-appstudio/rhtap-e2e.git"
-      description: The URL of the Git repository containing the E2E tests.
-    - name: git-revision
-      type: string
-      default: "main"
-      description: The revision (branch or tag) of the Git repository to checkout.
     - name: oci-container
       type: string
       description: The URI of the OCI container registry to store test artifacts.
-      default: "quay.io/flacatus/rhtap-e2e-artifacts"
+      default: "quay.io/konflux-test-storage/rhtap-team/rhtap-e2e"
     - name: rhtap-e2e-container
       type: string
       default: "quay.io/rhtap/rhtap-e2e:latest"
@@ -40,38 +28,35 @@ spec:
   steps:
     - name: e2e-test
       image: $(params.rhtap-e2e-container)
-      workingDir: /workspace
       volumeMounts:
         - name: rhtap-cli-volume
           mountPath: /usr/local/rhtap-cli-install
-        - name: oras-credentials-volume
-          mountPath: /usr/local/oras-credentials
+        - name:  konflux-test-infra-volume
+          mountPath: /usr/local/konflux-test-infra
       env:
         - name: OCI_CONTAINER
           value: $(params.oci-container)
-        - name: GIT_REVISION
-          value: $(params.git-revision)
-        - name: GIT_REPO
-          value: $(params.git-repo)
-        - name: GIT_URL
-          value: $(params.git-url)
-        - name: KONFLUX_CI
-          value: "true"
         - name: JOB_SPEC
           value: $(params.job-spec)
       script: |
         #!/bin/sh
 
+        set -o errexit
+        set -o nounset
+        set -o pipefail
+
         # Log into OpenShift
         $(params.ocp-login-command)
 
-        if [ "$GIT_REPO" = "e2e-tests" ]; then
+        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.git_repo')"
+
+        if [ "$GIT_REPO" = "rhtap-e2e" ]; then
           export SOURCE_REPO_URL="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url' | sed 's#https://github.com/##')"
           export SOURCE_REPO_BRANCH="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_branch')"
 
           echo -e "[INFO] Running e2e tests from source: $SOURCE_REPO_URL and branch $SOURCE_REPO_BRANCH"
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/$SOURCE_REPO_URL/$SOURCE_REPO_BRANCH/integration-tests/scripts/rhtap-e2e-runner.sh)"
         else
-          echo -e "[INFO] Running e2e tests from source: konflux-ci/e2e-tests and branch main"
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/konflux-ci/e2e-tests/main/integration-tests/scripts/rhtap-e2e-runner.sh)"
+          echo -e "[INFO] Running e2e tests from source: redhat-appstudio/rhtap-e2e and branch main"
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/redhat-appstudio/rhtap-e2e/main/integration-tests/scripts/rhtap-e2e-runner.sh)"
         fi
