@@ -2,7 +2,6 @@ FROM registry.access.redhat.com/ubi9/ubi:9.4-1181 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
-LABEL konflux.additional-tags="latest"
 
 # renovate: datasource=repology depName=homebrew/openshift-cli
 ARG OC_VERSION=4.14.8
