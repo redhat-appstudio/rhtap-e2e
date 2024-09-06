@@ -38,7 +38,7 @@ export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export GITLAB_ORGANIZATION="rhtap-qe"
-export QUAY_IMAGE_ORG="rhtap_qe"
+export QUAY_IMAGE_ORG="rhtap"
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
