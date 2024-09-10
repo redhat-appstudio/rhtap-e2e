@@ -42,7 +42,6 @@ export class DeveloperHubClient extends Utils {
     async createDeveloperHubTask(componentCreateOptions: ScaffolderScaffoldOptions): Promise<TaskIdReponse> {
         try {
             const response: AxiosResponse<TaskIdReponse> = await this.axiosInstance.post(`${this.RHDHUrl}/api/scaffolder/v2/tasks`, componentCreateOptions);
-
             return response.data;
         } catch (error) {
             console.error(error);

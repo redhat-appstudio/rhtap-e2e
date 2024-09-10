@@ -7,7 +7,7 @@ const pythonTemplateName = 'python';
 const runPythonBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.github.active) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.github.active && configuration.github.tekton) {
 
         gitHubBasicGoldenPathTemplateTests(pythonTemplateName)
     } else {

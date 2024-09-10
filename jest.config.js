@@ -10,6 +10,8 @@ module.exports = {
                 templates: ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
                 github: {
                     active: true,
+                    tekton: true,
+                    jenkins: false,
                     host: 'https://api.github.com',
                     registriesConfig: {
                         quay: {
@@ -20,6 +22,8 @@ module.exports = {
                 },
                 gitlab: {
                     active: true,
+                    tekton: true,
+                    jenkins: false,
                     host: 'https://gitlab.com',
                     registriesConfig: {
                         quay: {
