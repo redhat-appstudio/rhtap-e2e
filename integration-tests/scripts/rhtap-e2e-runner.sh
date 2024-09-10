@@ -86,4 +86,4 @@ else
     git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
 fi
 
-yarn && yarn test tests/gpts/github/quarkus.test.ts
+yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
