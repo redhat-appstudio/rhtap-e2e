@@ -1,10 +1,6 @@
 #!/bin/sh
 
-set -euo pipefail
-
-log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] [$1] $2"
-}
+set -e
 
 #JOB_SPEC env:
 # {
@@ -21,48 +17,57 @@ log() {
 #         "source_repo_branch": "fix_pr"
 #     }
 # }
-# Ensure JOB_SPEC is set
-: "${JOB_SPEC:?JOB_SPEC environment variable must be set}"
+# Check if the JOB_SPEC environment variable is set.
+if [ -z "${JOB_SPEC}" ]; then
+    echo "Error: JOB_SPEC environment variable must be set."
+    exit 1
+fi
 
 # Important variables to start tests
-ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
-GIT_REPO="${GIT_REPO:-$(echo "$JOB_SPEC" | jq -r '.git.git_repo')}"
-GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha')}"
-GIT_URL="${GIT_URL:-$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')}"
-
-APPLICATION_ROOT_NAMESPACE="rhtap-app"
-GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-GITLAB_ORGANIZATION="rhtap-qe"
-IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
-OCI_CONTAINER="${OCI_CONTAINER:-""}"
-OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
-OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
-RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
+export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
+export GIT_REPO="${GIT_REPO:-$(echo "$JOB_SPEC" | jq -r '.git.git_repo')}"
+export GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha')}"
+export GIT_URL="${GIT_URL:-$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')}"
 
 # Load secrets from files
-GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token 2>/dev/null || { log "ERROR" "GITLAB_TOKEN not found"; exit 1; })"
-GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token 2>/dev/null || { log "ERROR" "GITHUB_TOKEN not found"; exit 1; })"
+export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)"
+export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
+export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
+export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
+
+export APPLICATION_ROOT_NAMESPACE="rhtap-app"
+export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
+export GITLAB_ORGANIZATION="rhtap-qe"
+export QUAY_IMAGE_ORG="rhtap"
+export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
+export OCI_CONTAINER="${OCI_CONTAINER:-""}"
+export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
 
 post_actions() {
     local exit_code=$?
-    local temp_annotation_file
+    local temp_annotation_file="$(mktemp)"
 
-    temp_annotation_file="$(mktemp)"
     cd "$ARTIFACT_DIR"
 
-    MANIFESTS=$(oras manifest fetch "${OCI_CONTAINER}" | jq .annotations) || {
-        log "ERROR" "Failed to fetch manifest annotations"
+    # Fetch the manifest annotations for the container
+    if ! MANIFESTS=$(oras manifest fetch "${OCI_CONTAINER}" | jq .annotations); then
+        echo -e "[ERROR] Failed to fetch manifest from ${OCI_STORAGE_CONTAINER}"
         exit 1
-    }
+    fi
 
-    jq -n --argjson manifest "$MANIFESTS" '{ "manifest": $manifest }' > "${temp_annotation_file}"
+    jq -n --argjson manifest "$MANIFESTS" '{ "$manifest": $manifest }' > "${temp_annotation_file}"
+
     oras pull "${OCI_CONTAINER}"
 
-    for attempt in {1..5}; do
-        oras push "$OCI_CONTAINER" --username="$OCI_STORAGE_USERNAME" --password="$OCI_STORAGE_TOKEN" --annotation-file "$temp_annotation_file" ./:application/vnd.acme.rocket.docs.layer.v1+tar && break
-        log "WARNING" "oras push failed (attempt $attempt). Retrying..."
+    local attempt=1
+    while ! oras push "$OCI_CONTAINER" --username="${OCI_STORAGE_USERNAME}" --password="${OCI_STORAGE_TOKEN}" --annotation-file "${temp_annotation_file}" ./:application/vnd.acme.rocket.docs.layer.v1+tar; do
+        if [[ $attempt -ge 5 ]]; then
+            echo -e "[ERROR] oras push failed after $attempt attempts."
+            exit 1
+        fi
+        echo -e "[WARNING] oras push failed (attempt $attempt). Retrying in 5 seconds..."
         sleep 5
-        [ $attempt -eq 5 ] && { log "ERROR" "oras push failed after $attempt attempts"; exit 1; }
+        ((attempt++))
     done
 
     exit "$exit_code"
@@ -71,10 +76,14 @@ post_actions() {
 trap post_actions EXIT
 
 cd "$(mktemp -d)"
-log "INFO" "Cloning ${GIT_REPO} at ${GIT_REVISION} from ${GIT_URL}"
-git clone "${GIT_URL}" .
 
-[ "$GIT_REPO" = "rhtap-e2e" ] && git checkout "$GIT_REVISION"
+if [[ "${GIT_REPO}" = "rhtap-e2e" ]]; then
+    echo -e "INFO: Cloning repository '$GIT_REPO' with revision '$GIT_REVISION' from URL '$GIT_URL'"
+    git clone "${GIT_URL}" .
+    git checkout "${GIT_REVISION}"
+else
+    echo -e "INFO: Cloning repository 'redhat-appstudio/rhtap-e2e' with revision 'main'"
+    git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
+fi
 
-log "INFO" "Starting tests"
 yarn && yarn test tests/gpts/github/quarkus.test.ts
