@@ -7,9 +7,8 @@ const nodejsTemplateName = 'nodejs';
 const runNodeJSBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.github.active) {
-
-        gitHubBasicGoldenPathTemplateTests(nodejsTemplateName)
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.github.active && configuration.github.tekton) {
+        gitHubBasicGoldenPathTemplateTests(nodejsTemplateName);
     } else {
         skipSuite(nodejsTemplateName)
     }

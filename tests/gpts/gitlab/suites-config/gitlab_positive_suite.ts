@@ -37,6 +37,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
     
         beforeAll(async ()=> {
             backstageClient = new DeveloperHubClient();
@@ -91,7 +92,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
                     hostType: 'GitLab',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
-                    imageRegistry: 'quay.io',
+                    imageRegistry: imageRegistry,
                     name: repositoryName,
                     namespace: componentRootNamespace,
                     owner: "user:guest",

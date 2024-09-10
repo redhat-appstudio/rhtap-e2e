@@ -45,6 +45,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
@@ -117,7 +118,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                     hostType: 'GitHub',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
-                    imageRegistry: 'quay.io',
+                    imageRegistry: imageRegistry,
                     name: repositoryName,
                     namespace: componentRootNamespace,
                     owner: "user:guest",
@@ -333,7 +334,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
             console.log("syncing argocd application in stage environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${stagingEnvironmentName}`)
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`)
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
 
