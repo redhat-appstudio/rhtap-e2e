@@ -55,6 +55,7 @@ spec:
 
         if [ "$GIT_REPO" = "rhtap-e2e" ]; then
           export SOURCE_REPO_URL="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')"
+          export SOURCE_REPO_URL="$(echo "$SOURCE_REPO_URL" | sed 's|https://github.com/||')"
           export SOURCE_REPO_BRANCH="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_branch')"
 
           echo "[INFO] SOURCE_REPO_URL is set to $SOURCE_REPO_URL"
