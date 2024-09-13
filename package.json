@@ -35,7 +35,7 @@
     "@backstage/plugin-scaffolder-react": "^1.7.0",
     "@gitbeaker/rest": "^39.34.3",
     "@janus-idp/shared-react": "^2.4.0",
-    "@kubernetes/client-node": "^0.20.0",
+    "@kubernetes/client-node": "^0.22.0",
     "@octokit/rest": "^20.0.2",
     "axios": "^1.6.8",
     "jest-html-reporters": "^3.1.7",
