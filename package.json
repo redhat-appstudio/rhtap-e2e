@@ -31,13 +31,13 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@backstage/plugin-scaffolder-common": "^1.5.1",
-    "@backstage/plugin-scaffolder-react": "^1.7.0",
+    "@backstage/plugin-scaffolder-common": "^1.5.5",
+    "@backstage/plugin-scaffolder-react": "^1.11.0",
     "@gitbeaker/rest": "^39.34.3",
     "@janus-idp/shared-react": "^2.4.0",
-    "@kubernetes/client-node": "^0.20.0",
+    "@kubernetes/client-node": "^0.21.0",
     "@octokit/rest": "^20.0.2",
-    "axios": "^1.6.8",
+    "axios": "^1.7.5",
     "jest-html-reporters": "^3.1.7",
     "unique-names-generator": "^4.7.1"
   }
