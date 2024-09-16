@@ -45,5 +45,6 @@ module.exports = {
             "expand": true,
             "pageTitle": "Red Hat Trusted Application Pipeline e2e report",
         }],
-    ]
+    ],
+    runner: "groups"
 };

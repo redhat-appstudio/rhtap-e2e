@@ -2,6 +2,15 @@ import { gitLabSoftwareTemplatesAdvancedScenarios } from "./suites-config/gitlab
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts"
 
+/**
+ * Tests Quarkus template in GitLab with Tekton
+ * 
+ * @group tekton
+ * @group quarkus
+ * @group gitlab
+ * @group advanced
+ */
+
 const quarkusTemplateName = 'java-quarkus';
 
 const runQuarkusBasicTests = () => {

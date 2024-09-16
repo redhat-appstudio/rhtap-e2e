@@ -2,6 +2,15 @@ import { gitHubJenkinsBasicGoldenPathTemplateTests } from "./test-config/github_
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 
+/**
+ * Tests Go template in GitHub with Jenkins
+ * 
+ * @group jenkins
+ * @group go
+ * @group github
+ * @group basic
+ */
+
 const golangTemplateName = 'go';
 const stringOnRoute =  'Hello World!';
 
