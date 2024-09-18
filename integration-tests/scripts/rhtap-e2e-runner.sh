@@ -77,13 +77,8 @@ trap post_actions EXIT
 
 cd "$(mktemp -d)"
 
-if [[ "${GIT_REPO}" = "rhtap-e2e" ]]; then
-    echo -e "INFO: Cloning repository '$GIT_REPO' with revision '$GIT_REVISION' from URL '$GIT_URL'"
-    git clone "${GIT_URL}" .
-    git checkout "${GIT_REVISION}"
-else
-    echo -e "INFO: Cloning repository 'redhat-appstudio/rhtap-e2e' with revision 'main'"
-    git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
-fi
+echo -e "cloning"
+
+git clone -b lester https://github.com/flacatus/rhtap-e2e.git .
 
 yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts

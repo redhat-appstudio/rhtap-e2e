@@ -58,7 +58,7 @@ export class DeveloperHubClient extends Utils {
      */
     public async getGoldenPathTemplates(): Promise<TemplateEntityV1beta3[]> {
         try {
-            const response: AxiosResponse<TemplateEntityV1beta3[]> = await this.axiosInstance.get(`${this.RHDHUrl}/api/catalog/entities?filter=kind=template`);
+            const response: AxiosResponse<TemplateEntityV1beta3[]> = await this.axiosInstance.get(`${this.RHDHUrl}/api/catalog/entities/by-query?filter=kind=template`);
 
             return response.data;
         } catch (error) {

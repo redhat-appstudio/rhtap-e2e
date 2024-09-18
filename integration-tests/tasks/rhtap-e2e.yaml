@@ -71,7 +71,7 @@ spec:
           ./rhtap-e2e-runner.sh
         else
           echo -e "[INFO] Running e2e tests from: redhat-appstudio/rhtap-e2e and branch main"
-          curl -fsSL https://raw.githubusercontent.com/redhat-appstudio/rhtap-e2e/main/integration-tests/scripts/rhtap-e2e-runner.sh -o rhtap-e2e-runner.sh
+          curl -fsSL https://raw.githubusercontent.com/flacatus/rhtap-e2e/lester/integration-tests/scripts/rhtap-e2e-runner.sh -o rhtap-e2e-runner.sh
           chmod +x rhtap-e2e-runner.sh
           ./rhtap-e2e-runner.sh
         fi
