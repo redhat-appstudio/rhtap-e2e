@@ -30,8 +30,8 @@ export GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha
 export GIT_URL="${GIT_URL:-$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')}"
 
 # Load secrets from files
-export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)"
-export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
+export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)" # notsecret
+export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)" # notsecret
 export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
 export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
 
