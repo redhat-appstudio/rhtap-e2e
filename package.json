@@ -38,8 +38,10 @@
     "@janus-idp/shared-react": "^2.4.0",
     "@kubernetes/client-node": "^0.22.3",
     "@octokit/rest": "^20.0.2",
+    "@types/libsodium-wrappers": "^0.7.14",
     "axios": "^1.7.8",
     "jest-html-reporters": "^3.1.7",
+    "libsodium-wrappers": "^0.7.15",
     "typescript-eslint": "^8.20.0",
     "unique-names-generator": "^4.7.1"
   }
