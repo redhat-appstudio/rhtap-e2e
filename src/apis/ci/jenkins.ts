@@ -14,7 +14,6 @@ export class JenkinsCI extends Utils {
      */
     constructor(jenkinsURL: string, jenkinsUsername: string, jenkinsToken: string) {
         super();
-
         this.jenkinsUrl = jenkinsURL;
         this.jenkinsUsername = jenkinsUsername;
         this.jenkinsApiToken = jenkinsToken;
