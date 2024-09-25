@@ -17,14 +17,14 @@ export class DeveloperHubClient extends Utils {
      * 
      * @throws {Error} Throws an error if the 'RED_HAT_DEVELOPER_HUB_URL' environment variable is not set.
      */
-    constructor() {
+    constructor(developerHubUrl: string) {
         super();
 
-        if (!process.env.RED_HAT_DEVELOPER_HUB_URL) {
+        if (!developerHubUrl) {
             throw new Error("Cannot initialize DeveloperHubClient, missing 'RED_HAT_DEVELOPER_HUB_URL' environment variable");
         }
 
-        this.RHDHUrl = process.env.RED_HAT_DEVELOPER_HUB_URL;
+        this.RHDHUrl = developerHubUrl;
         this.axiosInstance = axios.create({
             httpAgent: new https.Agent({
                 rejectUnauthorized: false

@@ -24,8 +24,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
-        const backstageClient = new DeveloperHubClient();
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const developmentEnvironmentName = 'development';
@@ -37,6 +36,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
 
         let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
         let jenkinsClient: JenkinsCI;
@@ -47,9 +47,27 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
-            gitHubClient = new GitHubProvider();
             kubeClient = new Kubernetes();
-            jenkinsClient = new JenkinsCI();
+            if (process.env.GITHUB_TOKEN){
+                gitHubClient = new GitHubProvider(process.env.GITHUB_TOKEN);
+            } else{
+                gitHubClient = new GitHubProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "rhtap-github-integration", "token"));
+            }
+
+            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
+                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
+            } else{
+                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
+            }
+
+            if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN){
+                jenkinsClient = new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
+            } else{
+                const jenkinsURL = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL")
+                const jenkinsUsername = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__USERNAME")
+                const jenkinsToken = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__TOKEN")
+                jenkinsClient = new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
+            }
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
@@ -225,7 +243,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await jenkinsClient.deleteJenkinsJob(repositoryName);
             }
         })
     })

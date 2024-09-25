@@ -29,8 +29,7 @@ import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
 
-        const backstageClient =  new DeveloperHubClient();
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
@@ -48,6 +47,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
 
@@ -61,8 +61,17 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * resources
         */
         beforeAll(async()=> {
-            gitHubClient = new GitHubProvider()
-            kubeClient = new Kubernetes()
+            kubeClient = new Kubernetes();
+            if (process.env.GITHUB_TOKEN){
+                gitHubClient = new GitHubProvider(process.env.GITHUB_TOKEN);
+            } else{
+                gitHubClient = new GitHubProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "rhtap-github-integration", "token"));
+            }
+            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
+                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
+            } else{
+                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
+            }
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

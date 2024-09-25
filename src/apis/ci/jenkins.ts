@@ -11,18 +11,13 @@ export class JenkinsCI extends Utils {
     /**
      * Constructs a new instance of DeveloperHubClient.
      * 
-     * @throws {Error} Throws an error if the 'JENKINS_URL' environment variable is not set.
      */
-    constructor() {
+    constructor(jenkinsURL: string, jenkinsUsername: string, jenkinsToken: string) {
         super();
 
-        if (!process.env.JENKINS_URL) {
-            throw new Error("Cannot initialize DeveloperHubClient, missing 'JENKINS_URL' environment variable");
-        }
-
-        this.JENKINS_URL = process.env.JENKINS_URL;
-        this.JENKINS_USER = process.env.JENKINS_USERNAME!;
-        this.JENKINS_API_TOKEN = process.env.JENKINS_TOKEN!;
+        this.JENKINS_URL = jenkinsURL;
+        this.JENKINS_USER = jenkinsUsername;
+        this.JENKINS_API_TOKEN = jenkinsToken;
 
         this.axiosInstance = axios.create({
             baseURL: this.JENKINS_URL,
@@ -196,4 +191,23 @@ export class JenkinsCI extends Utils {
             return null;
         }
     }
+
+    public async deleteJenkinsJob(jobName: string) {
+        const url = `${this.JENKINS_URL}/job/${jobName}/doDelete`;
+    
+        try {
+            const response = await this.axiosInstance.post(url);
+    
+            if (response.status === 200) {
+                console.log(`Job '${jobName}' deleted successfully.`);
+            } else {
+                console.error(`Failed to delete job. Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error deleting job:', error);
+        }
+    }
+
+
+
 }

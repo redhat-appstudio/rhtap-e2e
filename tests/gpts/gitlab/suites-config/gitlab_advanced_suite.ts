@@ -43,7 +43,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const productionEnvironmentName = 'prod';
         const quayImageName = "rhtap-qe";
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -56,9 +56,17 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
         
         beforeAll(async ()=> {
-            backstageClient = new DeveloperHubClient();
-            gitLabProvider = new GitLabProvider()
-            kubeClient = new Kubernetes()
+            kubeClient = new Kubernetes();
+            if (process.env.GITLAB_TOKEN){
+                gitLabProvider = new GitLabProvider(process.env.GITLAB_TOKEN);
+            } else{
+                gitLabProvider = new GitLabProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "GITLAB__TOKEN"));
+            }
+            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
+                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
+            } else{
+                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
+            }
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
