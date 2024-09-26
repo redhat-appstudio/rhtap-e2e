@@ -9,8 +9,8 @@ import * as https from 'https';
  * A client for interacting with the Red Hat Developer Hub backend.
  */
 export class DeveloperHubClient extends Utils {
-    private RHDHUrl: string;
-    private axiosInstance : Axios;
+    private readonly RHDHUrl: string;
+    private readonly axiosInstance : Axios;
 
     /**
      * Constructs a new instance of DeveloperHubClient.

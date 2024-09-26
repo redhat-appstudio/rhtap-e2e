@@ -3,10 +3,10 @@ import { Utils } from '../git-providers/utils';
 
 export class JenkinsCI extends Utils {
     // Jenkins server details
-    private JENKINS_URL: string;
-    private JENKINS_USER: string;
-    private JENKINS_API_TOKEN: string;
-    private axiosInstance: Axios;
+    private readonly JENKINS_URL: string;
+    private readonly JENKINS_USER: string;
+    private readonly JENKINS_API_TOKEN: string;
+    private readonly axiosInstance: Axios;
 
     /**
      * Constructs a new instance of DeveloperHubClient.
