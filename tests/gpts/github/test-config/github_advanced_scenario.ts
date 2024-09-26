@@ -6,7 +6,7 @@ import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -30,7 +30,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
@@ -55,23 +54,18 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let gitopsPromotionPRNumber: number;
         let extractedBuildImage: string;
 
+        let RHTAPRootNamespace: string;
+
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
         beforeAll(async()=> {
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
-            if (process.env.GITHUB_TOKEN){
-                gitHubClient = new GitHubProvider(process.env.GITHUB_TOKEN);
-            } else{
-                gitHubClient = new GitHubProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "rhtap-github-integration", "token"));
-            }
-            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
-                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
-            } else{
-                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
-            }
+            gitHubClient = await getGitHubClient(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

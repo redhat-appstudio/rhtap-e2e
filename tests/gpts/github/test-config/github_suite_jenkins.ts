@@ -6,7 +6,7 @@ import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub, waitForStringInPageContent } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 
 /**
@@ -25,7 +25,6 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const developmentEnvironmentName = 'development';
 
@@ -34,6 +33,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
 
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+
+        let RHTAPRootNamespace: string;
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
@@ -47,27 +48,11 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
-            if (process.env.GITHUB_TOKEN){
-                gitHubClient = new GitHubProvider(process.env.GITHUB_TOKEN);
-            } else{
-                gitHubClient = new GitHubProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "rhtap-github-integration", "token"));
-            }
-
-            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
-                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
-            } else{
-                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
-            }
-
-            if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN){
-                jenkinsClient = new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
-            } else{
-                const jenkinsURL = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL")
-                const jenkinsUsername = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__USERNAME")
-                const jenkinsToken = await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "JENKINS__TOKEN")
-                jenkinsClient = new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
-            }
+            gitHubClient = await getGitHubClient(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
+            jenkinsClient = await getJenkinsCI(kubeClient);
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

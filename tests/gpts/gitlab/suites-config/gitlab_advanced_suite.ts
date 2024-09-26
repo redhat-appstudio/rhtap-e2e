@@ -5,7 +5,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -38,13 +38,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         let gitopsPromotionMergeRequestNumber: number;
         let pipelineAsCodeRoute: string;
 
+        let RHTAPRootNamespace: string;
+
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
         const quayImageName = "rhtap-qe";
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
@@ -56,17 +57,10 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
         
         beforeAll(async ()=> {
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
-            if (process.env.GITLAB_TOKEN){
-                gitLabProvider = new GitLabProvider(process.env.GITLAB_TOKEN);
-            } else{
-                gitLabProvider = new GitLabProvider(await kubeClient.getDeveloperHubSecret(RHTAPRootNamespace, "developer-hub-rhtap-env", "GITLAB__TOKEN"));
-            }
-            if (process.env.RED_HAT_DEVELOPER_HUB_URL){
-                backstageClient =  new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
-            } else{
-                backstageClient =  new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(RHTAPRootNamespace));
-            }
+            gitLabProvider = await getGitLabProvider(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
