@@ -296,11 +296,12 @@ export class Kubernetes extends Utils {
 
 
     /**
-     * Reads logs from all containers within a specified pod in a given namespace and writes them to artifact files.
+     * Gets value of the key in secret in namespace.
      * 
-     * @param {string} podName - The name of the pod.
-     * @param {string} namespace - The namespace where the pod is located.
-     * @returns {Promise<void>} A Promise that resolves once the logs are read and written to artifact files.
+     * @param {string} namespace - The namespace where the secret is located.
+     * @param {string} secretName - The name of the secret.
+     * @param {string} keyName - The kay of the secret.
+     * @returns {Promise<string>} Returns secret value.
      */
     public async getDeveloperHubSecret(namespace: string, secretName: string, keyName: string): Promise<string> {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
@@ -325,10 +326,10 @@ export class Kubernetes extends Utils {
     }
 
     /**
-    * Reads logs from all containers within a specified pod in a given namespace and writes them to artifact files.
+    * Gets route for developer hub.
     * 
-    * @param {string} namespace - The namespace where the pod is located.
-    * @returns {Promise<void>} A Promise that resolves once the logs are read and written to artifact files.
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
     */
     public async getDeveloperHubRoute(namespace: string): Promise<string> {
         // Custom resource definition (CRD) API for OpenShift Route (route.openshift.io)
