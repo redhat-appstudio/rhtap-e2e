@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.4-1181 as builder
+FROM registry.access.redhat.com/ubi9/ubi:9.4-1214.1725849297 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
