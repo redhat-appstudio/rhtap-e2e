@@ -203,11 +203,16 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
                 const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
-                const image_name = doc.spec.pipelineSpec.tasks[2].taskSpec.steps[1].image
-            console.log(image_name)
-            expect(image_name).not.toBe(undefined)
-            }
-            
+                const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
+                console.log(index)
+                const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
+                const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
+                if (image_index)
+                {
+                    console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[image_index].image )
+                }
+            expect(image_index).not.toBe(undefined)
+            } 
         }, 900000)        
 
         /**
