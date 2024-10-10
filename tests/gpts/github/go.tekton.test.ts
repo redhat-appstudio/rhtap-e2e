@@ -4,6 +4,15 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 
 const golangTemplateName = 'go';
 
+/**
+ * Tests Go template in GitHub with Tekton
+ * 
+ * @group tekton
+ * @group go
+ * @group github
+ * @group basic
+ */
+
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
