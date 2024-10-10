@@ -6,7 +6,7 @@ import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { beforeChecks, checkComponentInBackstage, cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -64,23 +64,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             gitHubClient = new GitHubProvider()
             kubeClient = new Kubernetes()
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await beforeChecks(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient)
         })
 
         /**
@@ -136,20 +120,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits for the specified component task to be processed by Developer Hub and retrieves logs upon completion.
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            // Retrieve the processed task from Developer Hub
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("failed to create backstage tasks. creating logs...")
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await checkComponentInBackstage(backstageClient, repositoryName, developerHubTask)
         }, 600000);
 
         /**
