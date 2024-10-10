@@ -7,8 +7,8 @@ set -o pipefail
 export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 
 # Load secrets from files
-export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)"
-export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
+export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)" # notsecret
+export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)" # notsecret
 export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
 export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
 

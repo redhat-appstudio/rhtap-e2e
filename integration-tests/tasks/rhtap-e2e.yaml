@@ -8,13 +8,12 @@ spec:
     - name: ocp-login-command
       type: string
       description: Command to log in to the OpenShift cluster where the tests will be executed.
-    - name: oci-container
+    - name: artifacts-storage
       type: string
       description: The URI of the OCI container registry to store test artifacts.
       default: "quay.io/konflux-test-storage/rhtap-team/rhtap-e2e"
-    - name: rhtap-e2e-container
+    - name: rhtap-e2e-image
       type: string
-      default: "quay.io/rhtap/rhtap-e2e:latest"
     - name: job-spec
       type: string
       description: "The job specification containing details of the test execution."
@@ -27,7 +26,7 @@ spec:
         secretName: konflux-test-infra
   steps:
     - name: e2e-test
-      image: $(params.rhtap-e2e-container)
+      image: $(params.rhtap-e2e-image)
       workingDir: /workspace
       volumeMounts:
         - name: rhtap-cli-volume
@@ -35,13 +34,16 @@ spec:
         - name:  konflux-test-infra-volume
           mountPath: /usr/local/konflux-test-infra
       env:
-        - name: OCI_CONTAINER
-          value: $(params.oci-container)
+        - name: ARTIFACTS_STORAGE
+          value: $(params.artifacts-storage)
         - name: JOB_SPEC
           value: $(params.job-spec)
       script: |
         # Log into OpenShift
         $(params.ocp-login-command)
+
+        # for debugging purpose
+        echo "ARTIFACTS_STORAGE=$ARTIFACTS_STORAGE"
 
         echo "[DEBUG] JOB_SPEC: $JOB_SPEC"
 
