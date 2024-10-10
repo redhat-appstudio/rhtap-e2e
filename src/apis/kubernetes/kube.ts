@@ -16,7 +16,6 @@ const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
  */
 export class Kubernetes extends Utils {
 
-    
     private readonly kubeConfig
 
     /**
@@ -57,7 +56,7 @@ export class Kubernetes extends Utils {
      * @param {number} timeoutMs - The duration to wait in milliseconds.
      * @returns {Promise<void>} A Promise that resolves once the specified duration has elapsed.
      */
-    public async getTaskRunsFromPipelineRun(pipelineRunName: string):Promise<TaskRunKind[]> {
+    public async getTaskRunsFromPipelineRun(pipelineRunName: string): Promise<TaskRunKind[]> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
             const { body: taskRunList } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'taskruns');
@@ -114,9 +113,9 @@ export class Kubernetes extends Utils {
                     // Append container name before the logs
                     const logsWithContainerInfo = `Container: ${container.name}\n${response.body}\n\n`;
                     const logFilePath = path.join('taskruns-logs', podName)
-                    await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo )
+                    await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo)
                 }
-    
+
             } else {
                 console.error(`Pod ${podName} in namespace ${namespace} does not have spec or containers defined.`);
             }
@@ -188,12 +187,12 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
-    
+
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const { body } = await customObjectsApi.getNamespacedCustomObject('tekton.dev', 'v1', namespace, 'pipelineruns', name);
                 const pr = body as PipelineRunKind;
-    
+
                 if (pr.status && pr.status.conditions) {
                     const pipelineHasFinishedSuccessfully = pr.status.conditions.some(
                         (condition) => condition.status === 'True' && condition.type === 'Succeeded'
@@ -201,7 +200,7 @@ export class Kubernetes extends Utils {
                     const pipelineHasFailed = pr.status.conditions.some(
                         (condition) => condition.status === 'False' && condition.reason === 'Failed'
                     );
-    
+
                     if (pipelineHasFinishedSuccessfully) {
                         console.log(`Pipeline run '${name}' finished successfully.`);
                         return true;
@@ -214,13 +213,12 @@ export class Kubernetes extends Utils {
                 console.error('Error fetching pipeline run: retrying', error);
                 // You might handle specific errors differently here
             }
-    
+
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
-    
         throw new Error(`Timeout reached waiting for pipeline run '${name}' to finish.`);
-    }   
+    }
 
     /**
      * Waits for an Argo CD application to become healthy.
@@ -235,7 +233,7 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
-    
+
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPRootNamespace, 'applications', name);
@@ -243,7 +241,7 @@ export class Kubernetes extends Utils {
 
                 if (application.status && application.status.sync && application.status.sync.status &&
                     application.status.health && application.status.health.status) {
-    
+
                     if (application.status.sync.status === 'Synced' && application.status.health.status === 'Healthy') {
                         return true;
                     }
@@ -255,7 +253,7 @@ export class Kubernetes extends Utils {
             } catch (error) {
                 console.info('Error fetching argo application : retrying');
             }
-        
+
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
@@ -285,14 +283,80 @@ export class Kubernetes extends Utils {
             const options = { headers: { 'Content-Type': 'application/merge-patch+json' } };
 
             // Patch the app
-            await k8sCoreApi.patchNamespacedCustomObject('argoproj.io','v1alpha1', namespace, 'applications', applicationName,  patchObject, undefined, undefined, undefined, options);
+            await k8sCoreApi.patchNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName, patchObject, undefined, undefined, undefined, options);
 
             // Delete the app
-            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io','v1alpha1', namespace, 'applications', applicationName)
+            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName)
 
             console.log(`App ${applicationName} patched and deleted successfully.`);
         } catch (error) {
             throw new Error(`Error when deleting application '${applicationName}' from namespace '${namespace}': '${error}'`);
+        }
+    }
+
+
+    /**
+     * Gets value of the key in secret in namespace.
+     * 
+     * @param {string} namespace - The namespace where the secret is located.
+     * @param {string} secretName - The name of the secret.
+     * @param {string} keyName - The kay of the secret.
+     * @returns {Promise<string>} Returns secret value.
+     */
+    public async getDeveloperHubSecret(namespace: string, secretName: string, keyName: string): Promise<string> {
+        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
+        try {
+            // Fetch the secret from the specified namespace
+            const secret = await k8sApi.readNamespacedSecret(secretName, namespace);
+
+            // Check if the key exists in the secret data
+            if (secret.body.data && secret.body.data[keyName]) {
+                // Decode the base64 encoded secret value
+                const secretValue = Buffer.from(secret.body.data[keyName], 'base64').toString('utf-8');
+                return secretValue;
+            } else {
+                console.error(`Key ${keyName} not found in secret ${secretName}`);
+                return "";
+            }
+
+        } catch (err) {
+            console.error(`Error fetching secret ${secretName}: ${err}`);
+            return "";
+        }
+    }
+
+    /**
+    * Gets route for developer hub.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getDeveloperHubRoute(namespace: string): Promise<string> {
+        // Custom resource definition (CRD) API for OpenShift Route (route.openshift.io)
+        const k8sCustomApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
+        try {
+            // Get the route object from the OpenShift cluster
+            const route = await k8sCustomApi.getNamespacedCustomObject(
+                'route.openshift.io',
+                'v1',                
+                namespace,            
+                'routes',             
+                'backstage-developer-hub'
+            );
+
+            // Extract the host from the route object
+            const routeSpec = (route.body as any).spec;
+            const host = routeSpec.host;
+
+            if (host) {
+                return `https://${host}`;
+            } else {
+                console.error(`Host not found in route backstage-developer-hub`);
+                return "";
+            }
+        } catch (err) {
+            console.error(`Error fetching route backstage-developer-hub: ${err}`);
+            return "";
         }
     }
 }
