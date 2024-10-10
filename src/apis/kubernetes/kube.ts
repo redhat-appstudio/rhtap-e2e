@@ -1,4 +1,4 @@
-import { CoreV1Api, CustomObjectsApi, KubeConfig, V1ObjectMeta } from "@kubernetes/client-node";
+import { CoreV1Api, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, V1ObjectMeta } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
 import { Utils } from "../git-providers/utils";
@@ -221,6 +221,30 @@ export class Kubernetes extends Utils {
     
         throw new Error(`Timeout reached waiting for pipeline run '${name}' to finish.`);
     }   
+
+    /**
+     * Accepts the pipelinerun name and fetches pipelinerun yaml output.
+     * Returns the yaml value in the variable 'doc'
+     * @param {string} namespace - The namespace default value is rhtap-app-development.
+     * @param {string} name - The name of the pipelinerun
+     * @throws This function does not throw directly, but may throw errors during API calls or retries.
+     */
+    public async pipelinerunfromName(name: string,namespace: string) {
+        try {
+            const k8sCoreApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
+            const plr = await k8sCoreApi.getNamespacedCustomObject(
+                'tekton.dev',
+                'v1',
+                namespace,
+                'pipelineruns',
+                name
+            );
+            const plr_yaml = dumpYaml(plr.body);
+            const doc = loadYaml(plr_yaml)
+            return doc
+        }
+        catch (error) { console.error('Error fetching PipelineRuns: ', error); }
+    }
 
     /**
      * Waits for an Argo CD application to become healthy.
