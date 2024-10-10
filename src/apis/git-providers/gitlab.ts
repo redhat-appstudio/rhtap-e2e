@@ -47,6 +47,24 @@ export class GitLabProvider extends Utils {
     }
 
     /**
+     * checkIfRepositoryHaveFile
+     */
+    public async checkIfRepositoryHaveFile(repositoryID: number, filePath: string): Promise<boolean> {
+        try {
+            await this.gitlab.RepositoryFiles.show(repositoryID, filePath, 'main');
+            return true;
+        } catch (error: any) {
+            if (error.response && error.response.status === 404) {
+                console.log('File does not exist.');
+                return false;
+            } else {
+                console.error('Error checking file existence:', error);
+                return false;
+            }
+        }
+    }
+
+    /**
      * name
      */
     public async createCommit(repositoryID: number, branchName: string) {
@@ -68,6 +86,55 @@ export class GitLabProvider extends Utils {
         } catch (error) {
             console.log(error)
             throw new Error("Failed to create commit in Gitlab. Check bellow error");
+        }
+    }
+
+
+    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
+        let stringToFind = "agent any";
+        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
+    }
+
+    public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
+        let stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') Uncomment this when using GitLab */"
+        let replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
+    }
+
+    public async enableACSJenkins(repositoryID: number, branchName: string): Promise<boolean> {
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update ACS scan for Gitlab', `DISABLE_ACS=true`, `DISABLE_ACS=false`);
+    }
+
+    public async commitReplacementStringInFile(repositoryID: number, branchName: string, filePath: string, commitMessage: string, textToReplace: string, replacement: string): Promise<boolean> {
+        try {
+            // Get the current content of the file
+            const file = await this.gitlab.RepositoryFiles.show(repositoryID, filePath, branchName);
+            const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
+    
+            // Replace specific text
+            const updatedContent = fileContent.replace(textToReplace,replacement);
+    
+            // Encode the updated content to base64
+            const encodedContent = Buffer.from(updatedContent).toString('base64');
+    
+            // Create a commit to update the file
+            await this.gitlab.RepositoryFiles.edit(
+                repositoryID,
+                filePath,
+                branchName,
+                encodedContent,
+                commitMessage,
+                {
+                    encoding: 'base64',
+                }
+            );
+    
+            console.log(`${filePath} updated successfully for username.`);
+            return true;
+        } catch (error: any) {
+            console.error('Error updating ${filePath}:', error);
+            return false;
         }
     }
 
