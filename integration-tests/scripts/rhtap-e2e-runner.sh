@@ -52,4 +52,4 @@ post_actions() {
 
 trap post_actions EXIT
 
-yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
+yarn && yarn test
