@@ -52,4 +52,9 @@ post_actions() {
 
 trap post_actions EXIT
 
-yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
+## This is a temporary workaround, when the pipeline is triggered from the rhtap-cli repository, it just runs the quarkus tests
+if [ "$GIT_REPO" = "rhtap-cli" ]; then
+    yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
+else
+    yarn && yarn test
+fi
