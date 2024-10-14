@@ -24,7 +24,6 @@ if [ "$GIT_REPO" = "rhtap-cli" ]; then
 else
     export QUAY_IMAGE_ORG="rhtap_qe"
 fi
-export QUAY_IMAGE_ORG="rhtap_qe"
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
