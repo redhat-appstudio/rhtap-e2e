@@ -5,18 +5,17 @@ export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly extractImagePatternFromGitopsManifest;
 
-    constructor() {
+    constructor(gitlabToken: string) {
         super()
 
-        if (!process.env.GITLAB_TOKEN) {
-            throw new Error("missed environment GITLAB_TOKEN");
-            
+        if (!gitlabToken) {
+            throw new Error("Missing environment variable GITLAB_TOKEN");    
         }
 
         this.extractImagePatternFromGitopsManifest = /- image: (.*)/;
         this.gitlab = new Gitlab({
             host: 'https://gitlab.com',
-            token: process.env.GITLAB_TOKEN
+            token: gitlabToken
         })
     }
 
