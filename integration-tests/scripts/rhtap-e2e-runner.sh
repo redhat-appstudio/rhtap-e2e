@@ -15,7 +15,15 @@ export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export GITLAB_ORGANIZATION="rhtap-qe"
-export QUAY_IMAGE_ORG="rhtap_qe"
+
+#TODO: This is a temporary workaround. We need to find a way to get the git repository name from the pipeline
+#when the pipeline is triggered from the rhtap-cli repository, which is a full installation of the rhtap-cli, the image should be pushed to the rhtap organization
+#otherwise, the image should be pushed to the rhtap_qe organization
+if [ "$GIT_REPO" = "rhtap-cli" ]; then
+    export QUAY_IMAGE_ORG="rhtap"
+else
+    export QUAY_IMAGE_ORG="rhtap_qe"
+fi
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
@@ -52,4 +60,9 @@ post_actions() {
 
 trap post_actions EXIT
 
-yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
+## This is a temporary workaround, when the pipeline is triggered from the rhtap-cli repository, it just runs the quarkus tests
+if [ "$GIT_REPO" = "rhtap-cli" ]; then
+    yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
+else
+    yarn && yarn test
+fi
