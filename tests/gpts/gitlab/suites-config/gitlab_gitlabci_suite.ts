@@ -50,7 +50,6 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
-            pipelineAsCodeRoute = `https://${componentRoute}`;
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
@@ -139,8 +138,8 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
             expect(gitlabRepositoryID).toBeDefined()
 
-            // const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.gitlab-ci.yml')
-            // expect(tektonFolderExists).toBe(true)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.gitlab-ci.yml')
+            expect(tektonFolderExists).toBe(true)
         })
 
         /**
@@ -150,8 +149,8 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.gitlab-ci.yml' folder`, async () => {
             const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
 
-            // const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(repositoryID, '.gitlab-ci.yml')
-            // expect(tektonFolderExists).toBe(true)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(repositoryID, '.gitlab-ci.yml')
+            expect(tektonFolderExists).toBe(true)
         })
 
         /**

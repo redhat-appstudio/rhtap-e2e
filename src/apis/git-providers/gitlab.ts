@@ -54,10 +54,11 @@ export class GitLabProvider extends Utils {
         while (true) {
             try {
                 const file = await this.gitlab.Repositories.allRepositoryTrees(repositoryID)
-
-                return file.some((folder) => {
-                    return folder.path === folderPath && folder.type === 'tree'
-                })
+                if (file) {
+                    return file.some((folder) => {
+                        return folder.path === folderPath && folder.type === 'tree'
+                    })
+                }
 
                 await this.sleep(5000); // Wait 5 seconds before checking again
             } catch (error) {
