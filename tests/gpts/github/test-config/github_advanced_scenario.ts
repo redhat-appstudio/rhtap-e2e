@@ -6,7 +6,7 @@ import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -29,9 +29,7 @@ import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
 
-        const backstageClient =  new DeveloperHubClient();
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
@@ -48,6 +46,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
 
@@ -55,14 +54,18 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let gitopsPromotionPRNumber: number;
         let extractedBuildImage: string;
 
+        let RHTAPRootNamespace: string;
+
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
         beforeAll(async()=> {
-            gitHubClient = new GitHubProvider()
-            kubeClient = new Kubernetes()
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            gitHubClient = await getGitHubClient(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
