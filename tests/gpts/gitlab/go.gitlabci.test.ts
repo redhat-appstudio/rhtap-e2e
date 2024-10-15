@@ -1,14 +1,15 @@
-import { gitLabProviderBasicTests } from "./suites-config/gitlab_positive_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts";
+import { gitLabProviderGitLabCITests } from "./suites-config/gitlab_gitlabci_suite.ts";
 const golangTemplateName = 'go';
+const stringOnRoute =  'Hello World!';
 
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
 
-        gitLabProviderBasicTests(golangTemplateName);
+        gitLabProviderGitLabCITests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);
     }
