@@ -1,12 +1,9 @@
 import { GitLabProvider } from "../../src/apis/git-providers/gitlab";
 import { GitHubProvider } from "../../src/apis/git-providers/github";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
-<<<<<<< HEAD
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
-=======
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -61,7 +58,6 @@ export async function waitForStringInPageContent(
     return false;
 }
 
-<<<<<<< HEAD
 export async function getRHTAPRootNamespace() {
     return process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
 }
@@ -101,8 +97,6 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
-
-=======
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes){
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
@@ -206,4 +200,3 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
             };
             return taskCreatorOptions;
         }
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)

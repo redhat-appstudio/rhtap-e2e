@@ -4,12 +4,8 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-<<<<<<< HEAD
-import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
-=======
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub } from "../../../../src/utils/test.utils";
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+
 
 /**
  * 1. Components get created in Red Hat Developer Hub

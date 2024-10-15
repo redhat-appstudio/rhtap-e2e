@@ -4,11 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-<<<<<<< HEAD
-import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
-=======
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:

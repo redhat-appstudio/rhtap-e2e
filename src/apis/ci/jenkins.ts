@@ -148,13 +148,8 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForBuildToFinish waits for a build to finish and get its result
-<<<<<<< HEAD
     public async waitForBuildToFinish(jobName: string, buildNumber: number) {
         const url = `${this.jenkinsUrl}/job/${jobName}/${buildNumber}/api/json`;
-=======
-    public async waitForBuildToFinish(jobName: string, buildNumber: number): Promise<string | null>{
-        const url = `${this.JENKINS_URL}/job/${jobName}/${buildNumber}/api/json`;
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
 
         while (true) {
             try {

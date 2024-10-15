@@ -4,11 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-<<<<<<< HEAD
-import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
-=======
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
->>>>>>> d704417 (RHTAP-2015 Jenkins tests for GitLab)
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.

@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, waitForStringInPageContent } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 
@@ -32,9 +32,9 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         let jenkinsClient: JenkinsCI;
 
         let gitlabRepositoryID: number;
+        let RHTAPRootNamespace: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
         const developmentNamespace = `${componentRootNamespace}-development`;
 
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
@@ -45,10 +45,12 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
-            backstageClient = new DeveloperHubClient();
-            gitLabProvider = new GitLabProvider()
-            kubeClient = new Kubernetes()
-            jenkinsClient = new JenkinsCI();
+            kubeClient = new Kubernetes();
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            backstageClient = await getDeveloperHubClient(kubeClient);
+            jenkinsClient = await getJenkinsCI(kubeClient);
+            gitLabProvider = await getGitLabProvider(kubeClient);
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
