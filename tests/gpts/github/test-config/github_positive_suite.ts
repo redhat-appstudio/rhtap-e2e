@@ -95,7 +95,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 templateRef: `template:default/${gptTemplate}`,
                 values: {
                     branch: 'main',
-                    githubServer: 'github.com',
+                    ghHost: 'github.com',
                     hostType: 'GitHub',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
@@ -104,7 +104,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: githubOrganization, 
+                    ghOwner: githubOrganization, 
                     ciType: "tekton"
                 }
             };
