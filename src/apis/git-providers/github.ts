@@ -6,13 +6,13 @@ import { generateRandomChars } from "../../utils/generator";
 export class GitHubProvider extends Utils {
     private readonly octokit: Octokit
 
-    constructor() {
+    constructor(githubToken: string) {
         super()
 
         this.octokit = new Octokit({
             baseUrl: 'https://api.github.com',
             userAgent: 'rhtap-e2e',
-            auth: process.env.GITHUB_TOKEN,
+            auth: githubToken,
         })
     }
 
