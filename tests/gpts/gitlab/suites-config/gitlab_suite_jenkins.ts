@@ -34,7 +34,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         let gitlabRepositoryID: number;
         let RHTAPRootNamespace: string;
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
 
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
