@@ -199,7 +199,25 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 expect(finished).toBe(true)
             }
         }, 900000)
-
+  
+         /**
+         * Check if the pipelinerun yaml has the rh-syft image path mentioned
+         */
+         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async ()=> {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
+                const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
+                console.log(index)
+                const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
+                const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
+                if (image_index)
+                {
+                    console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[image_index].image )
+                }
+            expect(image_index).not.toBe(undefined)
+            } 
+        }, 900000)        
 
         /**
         * Deletes created applications
