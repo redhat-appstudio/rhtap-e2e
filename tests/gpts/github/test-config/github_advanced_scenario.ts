@@ -82,27 +82,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {            
-<<<<<<< HEAD
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    branch: 'main',
-                    ghHost: 'github.com',
-                    hostType: 'GitHub',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    ghOwner: githubOrganization,
-                    ciType: "tekton"
-                }
-            };
-=======
             const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
->>>>>>> b70f53b (RHTAP-2015 Jenkins tests for GitLab)
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

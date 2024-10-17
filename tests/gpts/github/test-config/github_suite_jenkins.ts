@@ -70,27 +70,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-<<<<<<< HEAD
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    name: repositoryName,
-                    owner: "user:guest",
-                    hostType: 'GitHub',
-                    ghOwner: githubOrganization,
-                    repoName: repositoryName,
-                    branch: 'main',
-                    ghHost: 'github.com',
-                    ciType: 'jenkins',
-                    imageRegistry: 'quay.io',
-                    imageOrg: quayImageOrg,
-                    imageName: quayImageName,
-                    namespace: componentRootNamespace,
-                }
-            };
-=======
             const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
->>>>>>> b70f53b (RHTAP-2015 Jenkins tests for GitLab)
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

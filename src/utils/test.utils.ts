@@ -97,7 +97,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
-export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes){
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -115,7 +115,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
     }
 }
 
-export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes){
+export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -135,24 +135,24 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
     }
 }
 
-        /**
-            * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
-            * 
-            * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-            * @param {string} quayImageName Registry image name for the component to be pushed.
-            * @param {string} quayImageOrg Registry organization name for the component to be pushed.
-            * @param {string} imageRegistry Image registry provider. Default is Quay.io.
-            * @param {string} repositoryName Name of the GitLab repository.
-            * @param {string} gitLabOrganization Owner of the GitLab repository.
-            * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
-            * @param {string} ciType CI Type: "jenkins" "tekton"
-        */
-export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string) : Promise<ScaffolderScaffoldOptions>{
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    * 
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} quayImageName Registry image name for the component to be pushed.
+    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} repositoryName Name of the GitLab repository.
+    * @param {string} gitLabOrganization Owner of the GitLab repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
             branch: 'main',
-            gitlabServer: 'gitlab.com',
+            glHost: 'gitlab.com',
             hostType: 'GitLab',
             imageName: quayImageName,
             imageOrg: quayImageOrg,
@@ -161,42 +161,42 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
             namespace: componentRootNamespace,
             owner: "user:guest",
             repoName: repositoryName,
-            repoOwner: gitLabOrganization,
+            glOwner: gitLabOrganization,
             ciType: ciType
         }
     };
     return taskCreatorOptions;
 }
 
-        /**
-            * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
-            * 
-            * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-            * @param {string} quayImageName Registry image name for the component to be pushed.
-            * @param {string} quayImageOrg Registry organization name for the component to be pushed.
-            * @param {string} imageRegistry Image registry provider. Default is Quay.io.
-            * @param {string} repositoryName Name of the GitHub repository.
-            * @param {string} gitLabOrganization Owner of the GitHub repository.
-            * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
-            * @param {string} ciType CI Type: "jenkins" "tekton"
-        */
-        export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string) : Promise<ScaffolderScaffoldOptions>{
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${softwareTemplateName}`,
-                values: {
-                    branch: 'main',
-                    githubServer: 'github.com',
-                    hostType: 'GitHub',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    repoOwner: gitLabOrganization,
-                    ciType: ciType
-                }
-            };
-            return taskCreatorOptions;
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    * 
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} quayImageName Registry image name for the component to be pushed.
+    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} repositoryName Name of the GitHub repository.
+    * @param {string} gitLabOrganization Owner of the GitHub repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+    const taskCreatorOptions: ScaffolderScaffoldOptions = {
+        templateRef: `template:default/${softwareTemplateName}`,
+        values: {
+            branch: 'main',
+            ghHost: 'github.com',
+            hostType: 'GitHub',
+            imageName: quayImageName,
+            imageOrg: quayImageOrg,
+            imageRegistry: imageRegistry,
+            name: repositoryName,
+            namespace: componentRootNamespace,
+            owner: "user:guest",
+            repoName: repositoryName,
+            ghOwner: gitLabOrganization,
+            ciType: ciType
         }
+    };
+    return taskCreatorOptions;
+}

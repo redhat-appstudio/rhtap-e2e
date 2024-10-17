@@ -72,27 +72,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-<<<<<<< HEAD
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${softwareTemplateName}`,
-                values: {
-                    branch: 'main',
-                    glHost: 'gitlab.com',
-                    hostType: 'GitLab',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    glOwner: gitLabOrganization, 
-                    ciType: "tekton"
-                }
-            };
-=======
             const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
->>>>>>> b70f53b (RHTAP-2015 Jenkins tests for GitLab)
 
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);
