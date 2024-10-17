@@ -5,7 +5,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -27,9 +27,10 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     
         let gitlabRepositoryID: number;
         let pipelineAsCodeRoute: string;
+
+        let RHTAPRootNamespace: string;
         
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
     
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
@@ -37,11 +38,13 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
     
         beforeAll(async ()=> {
-            backstageClient = new DeveloperHubClient();
-            gitLabProvider = new GitLabProvider()
-            kubeClient = new Kubernetes()
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            gitLabProvider = await getGitLabProvider(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
@@ -87,16 +90,16 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
                 templateRef: `template:default/${softwareTemplateName}`,
                 values: {
                     branch: 'main',
-                    gitlabServer: 'gitlab.com',
+                    glHost: 'gitlab.com',
                     hostType: 'GitLab',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
-                    imageRegistry: 'quay.io',
+                    imageRegistry: imageRegistry,
                     name: repositoryName,
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: gitLabOrganization, 
+                    glOwner: gitLabOrganization, 
                     ciType: "tekton"
                 }
             };
@@ -135,7 +138,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
     
         /**
             * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
@@ -146,7 +149,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(repositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
     
         /**
             * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.

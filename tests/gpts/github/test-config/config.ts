@@ -4,6 +4,8 @@ interface softwareTemplatesConfig {
     templates: string[];
     github: {
         active: boolean;
+        tekton: boolean;
+        jenkins: boolean;
         host: string;
         registriesConfig: {
             quay: {
@@ -14,6 +16,8 @@ interface softwareTemplatesConfig {
     };
     gitlab: {
         active: boolean;
+        tekton: boolean;
+        jenkins: boolean;
         host: string;
         registriesConfig: {
             quay: {
