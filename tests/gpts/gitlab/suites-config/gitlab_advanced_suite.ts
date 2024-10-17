@@ -106,7 +106,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 templateRef: `template:default/${softwareTemplateName}`,
                 values: {
                     branch: 'main',
-                    gitlabServer: 'gitlab.com',
+                    glHost: 'gitlab.com',
                     hostType: 'GitLab',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
@@ -115,7 +115,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: gitLabOrganization, 
+                    glOwner: gitLabOrganization, 
                     ciType: "tekton"
                 }
             };
@@ -153,7 +153,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
 
         /**
             * Verifies if Red Hat Developer Hub created a repository from the specified template in GitLab.
@@ -165,7 +165,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
 
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabGitopsRepositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
 
         /**
             * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
