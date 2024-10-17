@@ -117,7 +117,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 templateRef: `template:default/${gptTemplate}`,
                 values: {
                     branch: 'main',
-                    githubServer: 'github.com',
+                    ghHost: 'github.com',
                     hostType: 'GitHub',
                     imageName: quayImageName,
                     imageOrg: quayImageOrg,
@@ -126,7 +126,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                     namespace: componentRootNamespace,
                     owner: "user:guest",
                     repoName: repositoryName,
-                    repoOwner: githubOrganization,
+                    ghOwner: githubOrganization,
                     ciType: "tekton"
                 }
             };
