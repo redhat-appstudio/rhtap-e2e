@@ -349,6 +349,43 @@ export class Kubernetes extends Utils {
         }
     }
 
+    public async getSecretPartialName(namespace: string, partialSecretName: string, key: string, decode: boolean = true): Promise<string> {
+        try {
+            const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
+
+            // List all secrets
+            const secretList = await k8sApi.listNamespacedSecret(namespace);
+
+            // Filter secrets
+            const matchingSecrets = secretList.body.items.filter(secret => secret.metadata?.name?.startsWith(partialSecretName));
+
+            if (matchingSecrets.length === 0) {
+                console.error(`No secrets found with prefix ${partialSecretName}`);
+                return "";
+            }
+
+            // Use first match
+            const secret = matchingSecrets[0];
+
+            // Check if the key exists in the secret data
+            if (secret.data && secret.data[key]) {
+                // Decode the base64 encoded secret value
+                if (decode) {
+                    return Buffer.from(secret.data[key], 'base64').toString('utf-8');
+                } else {
+                    return secret.data[key];
+                }
+
+            } else {
+                console.error(`Key ${key} not found in secret ${secret.metadata?.name}`);
+                return "";
+            }
+        } catch (err) {
+            console.error(`Error fetching secret with partial name ${partialSecretName}: ${err}`);
+            return "";
+        }
+    }
+
     /**
     * Gets route for developer hub.
     * 
@@ -362,9 +399,9 @@ export class Kubernetes extends Utils {
             // Get the route object from the OpenShift cluster
             const route = await k8sCustomApi.getNamespacedCustomObject(
                 'route.openshift.io',
-                'v1',                
-                namespace,            
-                'routes',             
+                'v1',
+                namespace,
+                'routes',
                 'backstage-developer-hub'
             );
 
@@ -383,4 +420,74 @@ export class Kubernetes extends Utils {
             return "";
         }
     }
+
+    /**
+* Gets route for rekor server(TAS).
+* 
+* @param {string} namespace - The namespace where the route is located.
+* @returns {Promise<string>}  - returns route URL.
+*/
+    public async getCosignPublicKey(): Promise<string> {
+        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", true);
+    }
+
+    /**
+* Gets route for rekor server(TAS).
+* 
+* @param {string} namespace - The namespace where the route is located.
+* @returns {Promise<string>}  - returns route URL.
+*/
+    public async getCosignPrivateKey(): Promise<string> {
+        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", true);
+    }
+
+    /**
+* Gets route for rekor server(TAS).
+* 
+* @param {string} namespace - The namespace where the route is located.
+* @returns {Promise<string>}  - returns route URL.
+*/
+    public async getCosignPassword(): Promise<string> {
+        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "password", false);
+    }
+
+    /**
+    * Gets route for rekor server(TAS).
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getACSEndpoint(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "endpoint");
+    }
+
+    /**
+    * Gets route for rekor server(TAS).
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getACSToken(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "token");
+    }
+
+    /**
+    * Gets rekor URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getRekorServerUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "rekor_url");
+    }
+
+    /**
+    * Gets TUF URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+        public async getTUFUrl(namespace: string): Promise<string> {
+            return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+        }
 }

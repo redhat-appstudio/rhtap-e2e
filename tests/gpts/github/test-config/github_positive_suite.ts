@@ -47,7 +47,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-
             if (componentRootNamespace === '') {
                 throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
             }

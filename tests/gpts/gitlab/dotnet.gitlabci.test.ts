@@ -1,15 +1,15 @@
-import { gitLabProviderBasicTests } from "./suites-config/gitlab_positive_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts";
+import { gitLabProviderGitLabCITests } from "./suites-config/gitlab_gitlabci_suite.ts";
 
 const dotNetTemplateName = 'dotnet-basic';
+const stringOnRoute =  'Welcome';
 
 const runDotNetBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
-
-        gitLabProviderBasicTests(dotNetTemplateName)
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+        gitLabProviderGitLabCITests(dotNetTemplateName, stringOnRoute);
     } else {
         skipSuite(dotNetTemplateName)
     }
