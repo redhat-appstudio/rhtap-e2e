@@ -93,12 +93,8 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
-            if (error.response && error.response.status === 404) {
-                return false;
-            } else {
-                console.error('Error checking job existence:', error);
-                throw error;
-            }
+            console.error('Error checking job existence:', error);
+            throw error;
         }
     }
 
@@ -163,11 +159,11 @@ export class JenkinsCI extends Utils {
                     await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
                 } else {
                     console.log(`Build #${buildNumber} finished with status: ${response.data.result}`);
-                    break;
+                    return response.data.result;
                 }
             } catch (error) {
                 console.error('Error checking build status:', error);
-                break;
+                return null;
             }
         }
     }

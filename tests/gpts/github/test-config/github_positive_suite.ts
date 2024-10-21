@@ -4,8 +4,8 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -48,23 +48,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             backstageClient = await getDeveloperHubClient(kubeClient);
 
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
@@ -91,23 +75,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    branch: 'main',
-                    ghHost: 'github.com',
-                    hostType: 'GitHub',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    ghOwner: githubOrganization, 
-                    ciType: "tekton"
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

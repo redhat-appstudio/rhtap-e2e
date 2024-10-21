@@ -7,7 +7,7 @@ const dotNetTemplateName = 'dotnet-basic';
 const runDotNetBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.gitlab.active) {
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
 
         gitLabProviderBasicTests(dotNetTemplateName)
     } else {

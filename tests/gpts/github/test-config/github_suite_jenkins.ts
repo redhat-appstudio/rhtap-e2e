@@ -5,14 +5,13 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
- * 3. Red Hat Developer Hub created GitHub repositories with Jenkinsfiles
+ * 3. Check if Red Hat Developer Hub created GitHub repositories with Jenkinsfiles
  * 4. Commit Jenkins agent settings and enable ACS
  * 5. Creates job in Jenkins
  * 6. Trigger Jenkins Job and wait for finish 
@@ -33,6 +32,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
 
         const quayImageName = "rhtap-qe";
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let RHTAPRootNamespace: string;
 
@@ -54,23 +54,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
@@ -84,35 +68,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          * 
-         * @param templateRef Refers to the Developer Hub template name.
-         * @param values Set of options to create the component.
-         * @param owner Developer Hub username who initiates the task.
-         * @param name Name of the repository to be created in GitHub.
-         * @param branch Default git branch for the component.
-         * @param repoUrl Complete URL of the git provider where the component will be created.
-         * @param imageRegistry Image registry provider. Default is Quay.io.
-         * @param namespace Kubernetes namespace where ArgoCD will create component manifests.
-         * @param imageName Registry image name for the component to be pushed.
-         * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    name: repositoryName,
-                    owner: "user:guest",
-                    hostType: 'GitHub',
-                    ghOwner: githubOrganization,
-                    repoName: repositoryName,
-                    branch: 'main',
-                    ghHost: 'github.com',
-                    ciType: 'jenkins',
-                    imageRegistry: 'quay.io',
-                    imageOrg: quayImageOrg,
-                    imageName: quayImageName,
-                    namespace: componentRootNamespace,
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -186,7 +144,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 1);
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
         }, 240000);
 
         /**
@@ -205,7 +165,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 2);
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
         }, 240000);
 
         /**

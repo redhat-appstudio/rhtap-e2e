@@ -7,7 +7,7 @@ const pythonTemplateName = 'python';
 const runPythonBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.gitlab.active) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
 
         gitLabProviderBasicTests(pythonTemplateName)
     } else {
