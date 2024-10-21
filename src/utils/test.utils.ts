@@ -3,6 +3,7 @@ import { GitHubProvider } from "../../src/apis/git-providers/github";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
+import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -96,4 +97,106 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+    if (componentRootNamespace === '') {
+        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
 
+    if (gitLabOrganization === '') {
+        throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (quayImageOrg === '') {
+        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (!await kubeClient.namespaceExists(developmentNamespace)) {
+        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+    }
+}
+
+export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+    if (componentRootNamespace === '') {
+        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (githubOrganization === '') {
+        throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (quayImageOrg === '') {
+        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
+
+    if (!namespaceExists) {
+        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+    }
+}
+
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    * 
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} quayImageName Registry image name for the component to be pushed.
+    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} repositoryName Name of the GitLab repository.
+    * @param {string} gitLabOrganization Owner of the GitLab repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+    const taskCreatorOptions: ScaffolderScaffoldOptions = {
+        templateRef: `template:default/${softwareTemplateName}`,
+        values: {
+            branch: 'main',
+            glHost: 'gitlab.com',
+            hostType: 'GitLab',
+            imageName: quayImageName,
+            imageOrg: quayImageOrg,
+            imageRegistry: imageRegistry,
+            name: repositoryName,
+            namespace: componentRootNamespace,
+            owner: "user:guest",
+            repoName: repositoryName,
+            glOwner: gitLabOrganization,
+            ciType: ciType
+        }
+    };
+    return taskCreatorOptions;
+}
+
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    * 
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} quayImageName Registry image name for the component to be pushed.
+    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} repositoryName Name of the GitHub repository.
+    * @param {string} gitLabOrganization Owner of the GitHub repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+    const taskCreatorOptions: ScaffolderScaffoldOptions = {
+        templateRef: `template:default/${softwareTemplateName}`,
+        values: {
+            branch: 'main',
+            ghHost: 'github.com',
+            hostType: 'GitHub',
+            imageName: quayImageName,
+            imageOrg: quayImageOrg,
+            imageRegistry: imageRegistry,
+            name: repositoryName,
+            namespace: componentRootNamespace,
+            owner: "user:guest",
+            repoName: repositoryName,
+            ghOwner: gitLabOrganization,
+            ciType: ciType
+        }
+    };
+    return taskCreatorOptions;
+}
