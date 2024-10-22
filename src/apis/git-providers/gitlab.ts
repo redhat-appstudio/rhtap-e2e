@@ -32,7 +32,7 @@ export class GitLabProvider extends Utils {
             try {
                 const projects = await this.gitlab.Projects.show(`${namespace}/${repoName}`);
                 if (projects) {
-                    console.info(`Repository with name '${repoName}' found in namespace '${namespace}'
+                    console.info(`Repository with name '${repoName}' found in organization '${namespace}'
                         created at '${projects.created_at}' url: gitlab.com/${namespace}/${repoName}`);
                     return projects.id
                 }
@@ -61,7 +61,6 @@ export class GitLabProvider extends Utils {
                 await this.sleep(5000); // Wait 5 seconds before checking again
             } catch (error) {
                 console.error('Error checking for folder creation:', error);
-                throw error;
             }
         }
     }
@@ -338,25 +337,21 @@ export class GitLabProvider extends Utils {
         }
     }
 
-        public async getLatestPipeline(projectId: number) {
-            try {
-                // const response = await this.gitlab.Pipelines.show(projectId, 'latest');
-                // console.log('Pipeline triggered successfully:', response);
-                // return response;
-
-                const pipelines = await this.gitlab.Pipelines.all(projectId);
-                if (pipelines.length === 0) {
-                  console.log(`No pipelines found!`);
-                  return null;
-                }
-                const latestPipeline = pipelines.sort((a, b) => b.id - a.id)[0];
-                console.log(`Latest pipeline ID: ${latestPipeline.id} Status: ${latestPipeline.status}`);
-                return latestPipeline;
-            } catch (error) {
-                console.error('Error triggering pipeline:', error);
-                throw error;
+    public async getLatestPipeline(projectId: number) {
+        try {
+            const pipelines = await this.gitlab.Pipelines.all(projectId);
+            if (pipelines.length === 0) {
+                console.log(`No pipelines found!`);
+                return null;
             }
+            const latestPipeline = pipelines.sort((a, b) => b.id - a.id)[0];
+            console.log(`Latest pipeline ID: ${latestPipeline.id} Status: ${latestPipeline.status}`);
+            return latestPipeline;
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+            throw error;
         }
+    }
 
     // Trigger a GitLab pipeline
     public async triggerPipeline(projectId: number, branchName: string, triggerToken: string) {
@@ -388,7 +383,6 @@ export class GitLabProvider extends Utils {
                 await this.sleep(5000); // Wait 5 seconds before checking again
             } catch (error) {
                 console.error('Error checking for pipeline creation:', error);
-                throw error;
             }
         }
     }
@@ -413,7 +407,6 @@ export class GitLabProvider extends Utils {
                 await this.sleep(5000); // Wait 5 seconds
             } catch (error) {
                 console.error('Error checking pipeline status:', error);
-                throw error;
             }
         }
     }
@@ -466,7 +459,7 @@ export class GitLabProvider extends Utils {
             const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
 
             // Replace specific text
-            const updatedContent = fileContent.replace(textToReplace,replacement);
+            const updatedContent = fileContent.replace(textToReplace, replacement);
 
             // Encode the updated content to base64
             const encodedContent = Buffer.from(updatedContent).toString('base64');

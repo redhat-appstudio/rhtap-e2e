@@ -334,7 +334,7 @@ export class Kubernetes extends Utils {
             const secret = await k8sApi.readNamespacedSecret(secretName, namespace);
 
             // Check if the key exists in the secret data
-            if (secret.body.data && secret.body.data[keyName]) {
+            if (secret.body.data && secret.body?.data[keyName]) {
                 // Decode the base64 encoded secret value
                 const secretValue = Buffer.from(secret.body.data[keyName], 'base64').toString('utf-8');
                 return secretValue;
@@ -428,7 +428,7 @@ export class Kubernetes extends Utils {
 * @returns {Promise<string>}  - returns route URL.
 */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", true);
+        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
     }
 
     /**
@@ -438,7 +438,7 @@ export class Kubernetes extends Utils {
 * @returns {Promise<string>}  - returns route URL.
 */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", true);
+        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", false);
     }
 
     /**

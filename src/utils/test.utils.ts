@@ -3,7 +3,12 @@ import { GitHubProvider } from "../../src/apis/git-providers/github";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
+<<<<<<< HEAD
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
+=======
+import { syncArgoApplication } from "./argocd";
+import { TaskIdReponse } from "../../src/apis/backstage/types";
+>>>>>>> ada4e54 (RHTAP-3056 GitLab CI tests fixes and refactoring.)
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -97,10 +102,66 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
+<<<<<<< HEAD
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
+=======
+export async function getCosignPassword(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_PASSWORD) {
+        return process.env.COSIGN_SECRET_PASSWORD;
+    } else {
+        return await kubeClient.getCosignPassword();
+    }
+}
+
+export async function getCosignPrivateKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_KEY) {
+        return process.env.COSIGN_SECRET_KEY;
+    } else {
+        return await kubeClient.getCosignPrivateKey();
+    }
+}
+
+export async function getCosignPublicKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_PUBLIC_KEY) {
+        return process.env.COSIGN_PUBLIC_KEY;
+    } else {
+        return await kubeClient.getCosignPublicKey();
+    }
+}
+
+export async function waitForComponentCreation(backstageClient: DeveloperHubClient, repositoryName: string, developerHubTask: TaskIdReponse) {
+    const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+
+    if (taskCreated.status !== 'completed') {
+        console.log("Failed to create backstage task. Creating logs...");
+
+        try {
+            const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+        } catch (error) {
+            throw new Error(`Failed to write logs to artifact directory: ${error}`);
+        }
+    } else {
+        console.log("Task created successfully in backstage");
+    }
+}
+
+export async function waitForArgoSyncAndRouteContent(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, developmentNamespace: string, developmentEnvironmentName: string, repositoryName: string, stringOnRoute: string) {
+    console.log("syncing argocd application in development environment")
+    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${developmentEnvironmentName}`)
+    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
+    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
+    if (!isReady) {
+        throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+    }
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
+
+}
+
+>>>>>>> ada4e54 (RHTAP-3056 GitLab CI tests fixes and refactoring.)
 
     if (gitLabOrganization === '') {
         throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
