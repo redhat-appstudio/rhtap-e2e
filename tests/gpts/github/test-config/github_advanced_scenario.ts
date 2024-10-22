@@ -66,10 +66,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            kubeClient = new Kubernetes();
-            gitHubClient = await getGitHubClient(kubeClient);
-            backstageClient = await getDeveloperHubClient(kubeClient);
 
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
