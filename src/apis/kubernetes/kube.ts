@@ -422,37 +422,28 @@ export class Kubernetes extends Utils {
     }
 
     /**
-* Gets route for rekor server(TAS).
-* 
-* @param {string} namespace - The namespace where the route is located.
-* @returns {Promise<string>}  - returns route URL.
-*/
+    * Gets cosign public key.
+    */
     public async getCosignPublicKey(): Promise<string> {
         return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
     }
 
     /**
-* Gets route for rekor server(TAS).
-* 
-* @param {string} namespace - The namespace where the route is located.
-* @returns {Promise<string>}  - returns route URL.
-*/
+    * Gets cosign private key.
+    */
     public async getCosignPrivateKey(): Promise<string> {
         return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", false);
     }
 
     /**
-* Gets route for rekor server(TAS).
-* 
-* @param {string} namespace - The namespace where the route is located.
-* @returns {Promise<string>}  - returns route URL.
-*/
+    * Gets cosign password.
+    */
     public async getCosignPassword(): Promise<string> {
         return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "password", false);
     }
 
     /**
-    * Gets route for rekor server(TAS).
+    * Gets ACS endpoint.
     * 
     * @param {string} namespace - The namespace where the route is located.
     * @returns {Promise<string>}  - returns route URL.
@@ -462,10 +453,10 @@ export class Kubernetes extends Utils {
     }
 
     /**
-    * Gets route for rekor server(TAS).
+    * Gets ACS token.
     * 
     * @param {string} namespace - The namespace where the route is located.
-    * @returns {Promise<string>}  - returns route URL.
+    * @returns {Promise<string>}  - returns token.
     */
     public async getACSToken(namespace: string): Promise<string> {
         return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "token");
