@@ -12,6 +12,7 @@ import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptions
  * 3. Red Hat Developer Hub creates a GitLab repository.
  * 4. Performs a commit in the created GitLab repository to trigger a push PipelineRun.
  * 5. Waits for PipelineRun to start and finish successfully.
+ * 6. Check deployment of new image.
  * 
  * @param softwareTemplateName The name of the software template.
  */
@@ -61,15 +62,15 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 120000);
 
         /**
-            * Waits for the ${softwareTemplateName} component creation task to be completed in Developer Hub.
-            * If the task is not completed within the timeout, it writes logs to the specified directory.
+        * Waits for the ${softwareTemplateName} component creation task to be completed in Developer Hub.
+        * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
             await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
-            * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
+        * Checks if Red Hat Developer Hub created the repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.gitlab-ci.yml' file`, async () => {
             gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
@@ -80,8 +81,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 60000)
 
         /**
-            * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
-            * The repository should contain the source code of the application and a '.tekton' folder.
+        * Verifies if Red Hat Developer Hub created a gitops repository from the specified template in GitHub.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.gitlab-ci.yml' file`, async () => {
             const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
@@ -91,16 +91,16 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 60000)
 
         /**
-            * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
+        * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
         */
         it(`wait ${softwareTemplateName} argocd to be synced in the cluster`, async () => {
             expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
         }, 600000);
 
         /**
-        * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
+        * Setup env cvariables for gitlab runner in repository settings.
         */
-        it(`Setup creds for ${softwareTemplateName} pipeline`, async () => {
+        it(`Setup creds for ${softwareTemplateName} pipeline in repository`, async () => {
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
@@ -114,9 +114,9 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
 
 
         /**
-         * Creates commits to update Jenkins agent and enable ACS scan
+         * Cancel initial pipeline(runs without correct env wars) and update RHTAP env file in repository with correct URLs
          */
-        it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
+        it(`Commit updated RHTAP env file for ${softwareTemplateName} and enable ACS scan`, async () => {
             // Kill initial pipeline to save time
             await gitLabProvider.killInitialPipeline(gitlabRepositoryID);
             // Update env file for GitLab CI vars
@@ -124,9 +124,9 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 120000)
 
         /**
-        * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
+        * Waits for pipeline after commit RHTAP ENV
         */
-        it(`Wait for a pipeline run`, async () => {
+        it(`Wait for a pipeline run to finish`, async () => {
             const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
             await gitLabProvider.waitForPipelineToBeCreated(gitlabRepositoryID, "main", response.sha);
 

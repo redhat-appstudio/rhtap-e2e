@@ -20,7 +20,7 @@ export class GitLabProvider extends Utils {
         })
     }
 
-    // Function to find a repository by name
+    // Get GitLab token
     public async getGitlabToken(): Promise<string> {
         return this.gitlabToken;
     }
@@ -37,7 +37,7 @@ export class GitLabProvider extends Utils {
                     return projects.id
                 }
 
-                await this.sleep(5000); // Wait 5 seconds before checking again
+                await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (error) {
                 console.info(`Failed to check if repository ${repoName} exists`);
             }
@@ -48,7 +48,7 @@ export class GitLabProvider extends Utils {
      * checkIfRepositoryHaveFolder
      */
     public async checkIfRepositoryHaveFolder(repositoryID: number, folderPath: string): Promise<boolean> {
-        //Added wait: it should improve stability of Gitlab test - sometimes request from tests could be faster, than GitLab responses
+        //RHTAPBUGS-1327: Added wait: it should improve stability of Gitlab test - sometimes request from tests could be faster, than GitLab responses
         while (true) {
             try {
                 const file = await this.gitlab.Repositories.allRepositoryTrees(repositoryID)
@@ -58,7 +58,7 @@ export class GitLabProvider extends Utils {
                     })
                 }
 
-                await this.sleep(5000); // Wait 5 seconds before checking again
+                await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (error) {
                 console.error('Error checking for folder creation:', error);
             }
@@ -192,7 +192,7 @@ export class GitLabProvider extends Utils {
                 repositoryID,
                 webHookUrl,
                 {
-                    //token: process.env.GITLAB_WEBHOOK_SECRET || '',
+                    token: process.env.GITLAB_WEBHOOK_SECRET || '',
                     pushEvents: true,
                     mergeRequestsEvents: true,
                     tagPushEvents: true,
@@ -268,18 +268,6 @@ export class GitLabProvider extends Utils {
         } catch (error) {
             console.log(error)
             throw new Error("Failed to delete project. Check bellow error");
-        }
-    }
-
-    // Function to create a pipeline trigger token
-    public async createPipelineTriggerToken(projectId: number, description: string) {
-        try {
-            const trigger = await this.gitlab.PipelineTriggerTokens.create(projectId, description);
-            console.log(`Pipeline trigger token created successfully: ${trigger.token}`);
-            return trigger;
-        } catch (error) {
-            console.error('Error creating pipeline trigger token:', error);
-            throw error;
         }
     }
 
