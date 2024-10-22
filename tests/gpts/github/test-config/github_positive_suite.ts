@@ -47,28 +47,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-<<<<<<< HEAD
-
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
-=======
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
->>>>>>> 745a31e (RHTAP-3056 GitLab CI tests)
         })
 
         /**

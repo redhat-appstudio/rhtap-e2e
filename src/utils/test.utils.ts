@@ -3,12 +3,9 @@ import { GitHubProvider } from "../../src/apis/git-providers/github";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
-<<<<<<< HEAD
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
-=======
 import { syncArgoApplication } from "./argocd";
 import { TaskIdReponse } from "../../src/apis/backstage/types";
->>>>>>> ada4e54 (RHTAP-3056 GitLab CI tests fixes and refactoring.)
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -102,12 +99,6 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
-<<<<<<< HEAD
-export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
-    if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-    }
-=======
 export async function getCosignPassword(kubeClient: Kubernetes) {
     if (process.env.COSIGN_SECRET_PASSWORD) {
         return process.env.COSIGN_SECRET_PASSWORD;
@@ -161,7 +152,10 @@ export async function waitForArgoSyncAndRouteContent(kubeClient: Kubernetes, bac
 
 }
 
->>>>>>> ada4e54 (RHTAP-3056 GitLab CI tests fixes and refactoring.)
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+    if (componentRootNamespace === '') {
+        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
 
     if (gitLabOrganization === '') {
         throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");

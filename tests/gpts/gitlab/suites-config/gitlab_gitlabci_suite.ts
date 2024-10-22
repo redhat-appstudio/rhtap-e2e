@@ -3,9 +3,8 @@ import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { cleanAfterTestGitLab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForArgoSyncAndRouteContent, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForArgoSyncAndRouteContent, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -48,60 +47,14 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (gitLabOrganization === '') {
-                throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.
-            * 
-            * @param {string} templateRef Refers to the Developer Hub template name.
-            * @param {object} values Set of options to create the component.
-            * @param {string} values.branch Default git branch for the component.
-            * @param {string} values.gitlabServer GitLab server URL.
-            * @param {string} values.hostType Type of host (e.g., GitLab).
-            * @param {string} values.imageName Registry image name for the component to be pushed.
-            * @param {string} values.imageOrg Registry organization name for the component to be pushed.
-            * @param {string} values.imageRegistry Image registry provider. Default is Quay.io.
-            * @param {string} values.name Name of the repository to be created in GitLab.
-            * @param {string} values.namespace Kubernetes namespace where ArgoCD will create component manifests.
-            * @param {string} values.owner Developer Hub username who initiates the task.
-            * @param {string} values.repoName Name of the GitLab repository.
-            * @param {string} values.repoOwner Owner of the GitLab repository.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${softwareTemplateName}`,
-                values: {
-                    branch: 'main',
-                    glHost: 'gitlab.com',
-                    hostType: 'GitLab',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    glOwner: gitLabOrganization,
-                    ciType: "gitlabci"
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "gitlabci");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -145,8 +98,8 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 600000);
 
         /**
-    * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
-*/
+        * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
+        */
         it(`Setup creds for ${softwareTemplateName} pipeline`, async () => {
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
