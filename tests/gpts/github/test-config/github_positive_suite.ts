@@ -47,7 +47,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
