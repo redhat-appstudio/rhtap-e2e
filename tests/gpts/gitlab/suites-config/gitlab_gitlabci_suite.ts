@@ -5,8 +5,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { cleanAfterTestGitLab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
-import { syncArgoApplication } from "../../../../src/utils/argocd";
+import { cleanAfterTestGitLab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForArgoSyncAndRouteContent, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -113,20 +112,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -162,9 +148,9 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
     * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
 */
         it(`Setup creds for ${softwareTemplateName} pipeline`, async () => {
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await kubeClient.getCosignPublicKey());
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await kubeClient.getCosignPrivateKey());
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await kubeClient.getCosignPassword());
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "QUAY_IO_CREDS_PSW", process.env.QUAY_PASSWORD || '');
@@ -199,14 +185,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            console.log("syncing argocd application in development environment")
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
-            if (!isReady) {
-                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
-            }
-            expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
+            await waitForArgoSyncAndRouteContent(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000)
 
         /**

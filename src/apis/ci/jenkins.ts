@@ -92,8 +92,22 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
+<<<<<<< HEAD
             console.error('Error checking job existence:', error);
             throw error;
+=======
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 404) {
+                    return false;
+                } else {
+                    console.error('Axios error checking job existence:', error);
+                    throw error;
+                }
+            } else {
+                console.error('Error checking job existence:', error);
+                throw error;
+            }
+>>>>>>> ada4e54 (RHTAP-3056 GitLab CI tests fixes and refactoring.)
         }
     }
 
@@ -206,7 +220,4 @@ export class JenkinsCI extends Utils {
             console.error('Error deleting job:', error);
         }
     }
-
-
-
 }
