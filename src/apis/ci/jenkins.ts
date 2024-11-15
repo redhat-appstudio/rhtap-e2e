@@ -148,14 +148,17 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForBuildToFinish waits for a build to finish and get its result
-    public async waitForBuildToFinish(jobName: string, buildNumber: number) {
+    public async waitForBuildToFinish(jobName: string, buildNumber: number, timeoutMs: number) {
         const url = `${this.jenkinsUrl}/job/${jobName}/${buildNumber}/api/json`;
 
-        while (true) {
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const response = await this.axiosInstance.post(url);
                 if (response.data.building) {
-                    console.log(`Build #${buildNumber} is still in progress...`);
+                    console.log(`Build #${buildNumber} of job ${jobName} is still in progress...`);
                     await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
                 } else {
                     console.log(`Build #${buildNumber} finished with status: ${response.data.result}`);
@@ -163,8 +166,9 @@ export class JenkinsCI extends Utils {
                 }
             } catch (error) {
                 console.error('Error checking build status:', error);
-                return null;
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
             }
+            totalTimeMs += retryInterval;
         }
     }
 

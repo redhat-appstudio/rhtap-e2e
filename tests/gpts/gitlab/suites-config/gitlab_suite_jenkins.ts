@@ -23,7 +23,6 @@ import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
  */
 export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(2);
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -134,8 +133,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 1);
-        }, 240000);
+            await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 240000);
+        }, 300000);
 
 
         /**
@@ -152,8 +151,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 2);
-        }, 240000);
+            await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 240000);
+        }, 300000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
