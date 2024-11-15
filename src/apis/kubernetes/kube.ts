@@ -383,4 +383,24 @@ export class Kubernetes extends Utils {
             return "";
         }
     }
+
+        /**
+    * Gets TUF URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+        public async getTUFUrl(namespace: string): Promise<string> {
+            return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+        }
+
+            /**
+    * Gets rekor URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getRekorServerUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "rekor_url");
+    }
 }

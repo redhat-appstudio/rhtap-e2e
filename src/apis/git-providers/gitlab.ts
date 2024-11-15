@@ -4,6 +4,7 @@ import { Utils } from "./utils";
 export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly extractImagePatternFromGitopsManifest;
+    private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(gitlabToken: string) {
         super()
@@ -106,7 +107,7 @@ export class GitLabProvider extends Utils {
 
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
         let stringToFind = "agent any";
-        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 

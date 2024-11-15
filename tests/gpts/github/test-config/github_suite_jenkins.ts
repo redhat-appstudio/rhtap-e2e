@@ -5,8 +5,8 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
-import { syncArgoApplication } from '../../../../src/utils/argocd';
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { Utils } from '../../../../src/apis/git-providers/utils';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -121,6 +121,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it(`Commit updated agent ${gptTemplate} and enable ACS scan`, async () => {
             expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined)
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined)
+            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
         }, 120000)
 
         /**
@@ -134,10 +136,13 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName);
             await jenkinsClient.waitForJobCreation(repositoryName);
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
         }, 120000);
 
         /**
          * Trigger and wait for Jenkins job to finish
+         * First run must be triggered manually:
+         * https://stackoverflow.com/questions/56714213/jenkins-not-triggered-by-github-webhook#comment109322558_60625199 
          */
         it(`Trigger and wait for ${gptTemplate} jenkins job`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName);
@@ -161,8 +166,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
-            console.log('Waiting for the build to start...');
+            new Utils().sleep(5000);
             await new Promise(resolve => setTimeout(resolve, 5000));
             const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
             expect(jobStatus).not.toBe(undefined);
@@ -173,14 +177,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            console.log("syncing argocd application in development environment")
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
-            if (!isReady) {
-                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
-            }
-            expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
+           await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000)
 
 
