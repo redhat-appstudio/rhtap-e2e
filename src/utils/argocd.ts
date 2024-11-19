@@ -37,17 +37,23 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
     `;
 
     // Execute the shell script commands
-    exec(scriptCommands, (error, stdout: any, stderr: any) => {
-        if (error) {
-            console.error(`Error executing commands: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            console.error(`Commands STDERR: ${stderr}`);
-            return;
-        }
-
-        console.log(`succesfully synced application ${applicationName} in cluster`);
-        console.log(stdout)
-    });
+    try {
+        await new Promise<void>((done, failed) => {
+            exec(scriptCommands, (error, stdout: any, stderr: any) => {
+                if (error) {
+                    console.error(`Error executing commands: ${error.message}`);
+                    failed(error);
+                }
+                if (stderr) {
+                    console.error(`Commands STDERR: ${stderr}`);
+                }
+        
+                console.log(`succesfully synced application ${applicationName} in cluster`);
+                console.log(stdout);
+                done()
+            });
+        })
+    } catch (error) {
+        fail(error)
+    }
 }

@@ -21,7 +21,6 @@ import { syncArgoApplication } from '../../../../src/utils/argocd';
  */
 export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
@@ -144,10 +143,10 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1);
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 240000);
+        }, 600000);
 
         /**
          * Creates an empty commit
@@ -165,10 +164,10 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2);
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 240000);
+        }, 600000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
