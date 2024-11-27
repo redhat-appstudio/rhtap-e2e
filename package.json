@@ -27,7 +27,7 @@
     "jest-junit": "^16.0.0",
     "jest-runner-groups": "^2.2.0",
     "jest-stare": "^2.5.1",
-    "prettier": "^2.5.1",
+    "prettier": "^3.0.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.3.3"
   },
@@ -38,7 +38,7 @@
     "@janus-idp/shared-react": "^2.4.0",
     "@kubernetes/client-node": "^0.22.3",
     "@octokit/rest": "^20.0.2",
-    "axios": "^1.6.8",
+    "axios": "^1.7.8",
     "jest-html-reporters": "^3.1.7",
     "unique-names-generator": "^4.7.1"
   }
