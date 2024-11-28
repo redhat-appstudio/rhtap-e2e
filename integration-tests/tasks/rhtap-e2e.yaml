@@ -45,7 +45,7 @@ spec:
 
         echo "[DEBUG] JOB_SPEC: $JOB_SPEC"
 
-        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.git_repo')"
+        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.repo')"
         echo "[INFO] GIT_REPO is set to $GIT_REPO"
 
         if [ -z "$GIT_REPO" ]; then
