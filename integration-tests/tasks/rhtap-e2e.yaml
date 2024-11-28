@@ -45,12 +45,17 @@ spec:
 
         echo "[DEBUG] JOB_SPEC: $JOB_SPEC"
 
-        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.repo')"
+        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.repo // empty')"
         echo "[INFO] GIT_REPO is set to $GIT_REPO"
 
         if [ -z "$GIT_REPO" ]; then
-          echo "[ERROR] GIT_REPO is not set in JOB_SPEC"
-          exit 1
+        # TODO - when fully switched to test-metadata v0.2, delete next 'if'
+          echo "\$JOB_SPEC \`.git.repo\` is empty. Trying \`.git.git_repo\`"
+          GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.git_repo // empty')"
+          if [ -z "$GIT_REPO" ]; then
+            echo "[ERROR] GIT_REPO is not set in JOB_SPEC"
+            exit 1
+          fi 
         fi
 
         if [ "$GIT_REPO" = "rhtap-e2e" ]; then
