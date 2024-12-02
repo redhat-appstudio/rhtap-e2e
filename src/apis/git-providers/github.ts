@@ -337,4 +337,77 @@ export class GitHubProvider extends Utils {
             throw new Error(`Error: ${error}`);
         }
     }
+
+    // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
+    public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
+        console.log(`Waiting for the latest job in workflow '${workflow_id}' to finish...`);
+
+        const startTime = Date.now();
+
+        while (true) {
+            // Check for timeout
+            if (Date.now() - startTime > timeout) {
+                throw new Error(`Timeout: The latest job did not finish within the specified time.`);
+            }
+
+            try {
+                // Fetch the latest workflow runs
+                const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
+                    owner,
+                    repo,
+                    workflow_id,
+                    per_page: 1, // We only need the latest run
+                });
+
+                if (workflowRuns.total_count === 0) {
+                    console.log('No workflow runs found, retrying...');
+                    await this.sleep(5000);
+                    continue;
+                }
+
+                // Get the latest workflow run
+                const latestRun = workflowRuns.workflow_runs[0];
+
+                // Check if the run is still in progress
+                if (latestRun.status === 'completed') {
+                    console.log(`Latest job in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
+                    return latestRun.conclusion; // Return only the status of the job
+                } else {
+                    console.log(`Latest job in workflow '${workflow_id}' is still in progress, retrying...`);
+                }
+            } catch (error) {
+                console.error('Error fetching workflow run details:', error);
+                throw error;
+            }
+
+            // Wait 5 seconds before checking again
+            await this.sleep(5000);
+        }
+    }
+
+
+    // Function to get the workflow ID for a specific workflow name or filename in a repository
+    public async getWorkflowId(owner: string, repo: string, workflowName: string): Promise<number> {
+        try {
+            // Fetch all workflows in the repository
+            const { data: workflows } = await this.octokit.rest.actions.listRepoWorkflows({
+                owner,
+                repo,
+            });
+
+            // Find the workflow that matches the provided name or filename
+            const workflow = workflows.workflows.find(wf => wf.name === workflowName || wf.path === workflowName);
+
+            if (workflow) {
+                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id}`);
+                return workflow.id;
+            } else {
+                console.log(`Workflow '${workflowName}' not found`);
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error fetching workflows:', error);
+            throw error;
+        }
+    }
 }
