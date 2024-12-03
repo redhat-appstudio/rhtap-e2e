@@ -99,30 +99,6 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
-export async function getCosignPassword(kubeClient: Kubernetes) {
-    if (process.env.COSIGN_SECRET_PASSWORD) {
-        return process.env.COSIGN_SECRET_PASSWORD;
-    } else {
-        return await kubeClient.getCosignPassword();
-    }
-}
-
-export async function getCosignPrivateKey(kubeClient: Kubernetes) {
-    if (process.env.COSIGN_SECRET_KEY) {
-        return process.env.COSIGN_SECRET_KEY;
-    } else {
-        return await kubeClient.getCosignPrivateKey();
-    }
-}
-
-export async function getCosignPublicKey(kubeClient: Kubernetes) {
-    if (process.env.COSIGN_PUBLIC_KEY) {
-        return process.env.COSIGN_PUBLIC_KEY;
-    } else {
-        return await kubeClient.getCosignPublicKey();
-    }
-}
-
 export async function waitForComponentCreation(backstageClient: DeveloperHubClient, repositoryName: string, developerHubTask: TaskIdReponse) {
     const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
 
@@ -140,16 +116,15 @@ export async function waitForComponentCreation(backstageClient: DeveloperHubClie
     }
 }
 
-export async function waitForArgoSyncAndRouteContent(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, developmentNamespace: string, developmentEnvironmentName: string, repositoryName: string, stringOnRoute: string) {
+export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string){
     console.log("syncing argocd application in development environment")
-    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${developmentEnvironmentName}`)
-    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
+    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`)
+    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName)
     const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
     if (!isReady) {
         throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
     }
     expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
-
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
