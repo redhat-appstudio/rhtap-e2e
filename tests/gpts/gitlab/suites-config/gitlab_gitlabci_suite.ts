@@ -133,8 +133,8 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         * Waits for pipeline after commit RHTAP ENV
         */
         it(`Wait for a pipeline run to finish`, async () => {
+            await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, 2, 10000);
             const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
-            await gitLabProvider.waitForPipelineToBeCreated(gitlabRepositoryID, "main", response.sha);
 
             const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id, 540000);
             expect(pipelineResult).toBe("success");

@@ -271,6 +271,27 @@ export class GitLabProvider extends Utils {
         }
     }
 
+    public async waitForPipelinesToBeCreated(projectId: number, pipelinesCount: number, timeoutMs: number) {
+        console.log(`Waiting for new pipeline to be created...`);
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
+            try {
+                const pipelines = await this.gitlab.Pipelines.all(projectId);
+                if(pipelines.length == pipelinesCount){
+                    return;
+                }
+
+                await this.sleep(5000); // Wait 5 seconds
+            } catch (error) {
+                console.error('Error checking pipeline count:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
+            }
+            totalTimeMs += retryInterval;
+        }
+    }
+
     public async getLatestPipeline(projectId: number) {
         try {
             const pipelines = await this.gitlab.Pipelines.all(projectId);
@@ -296,28 +317,6 @@ export class GitLabProvider extends Utils {
         } catch (error) {
             console.error('Error triggering pipeline:', error);
             throw error;
-        }
-    }
-
-    // Wait until the pipeline is created
-    public async waitForPipelineToBeCreated(projectId: number, ref: string, sha: string) {
-        console.log(`Waiting for the pipeline with ref '${ref}' and sha '${sha}' to be created...`);
-
-        while (true) {
-            try {
-                const pipelines = await this.gitlab.Pipelines.all(projectId, { ref });
-
-                // Check if the pipeline with the matching ref and sha is created
-                const pipeline = pipelines.find(pipeline => pipeline.sha === sha);
-                if (pipeline) {
-                    console.log(`Pipeline created: ID ${pipeline.id}`);
-                    return pipeline;
-                }
-
-                await this.sleep(5000); // Wait 5 seconds before checking again
-            } catch (error) {
-                console.error('Error checking for pipeline creation:', error);
-            }
         }
     }
 
