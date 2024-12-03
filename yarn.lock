@@ -2053,7 +2053,7 @@
   resolved "https://registry.yarnpkg.com/@jsep-plugin/regex/-/regex-1.0.4.tgz#cb2fc423220fa71c609323b9ba7f7d344a755fcc"
   integrity sha512-q7qL4Mgjs1vByCaTnDFcBnV9HS7GVPJX5vyVoCgZHNSC9rjwIlmbXG5sUuorR5ndfHAIlJ8pVStxvjXHbNvtUg==
 
-"@kubernetes/client-node@^0.22.1":
+"@kubernetes/client-node@^0.22.1", "@kubernetes/client-node@^0.22.3":
   version "0.22.3"
   resolved "https://registry.yarnpkg.com/@kubernetes/client-node/-/client-node-0.22.3.tgz#0b38f4be09ab28b73b31bcf2df680f9c899242b8"
   integrity sha512-dG8uah3+HDJLpJEESshLRZlAZ4PgDeV9mZXT0u1g7oy4KMRzdZ7n5g0JEIlL6QhK51/2ztcIqURAnjfjJt6Z+g==
@@ -3101,7 +3101,7 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.13.2.tgz#0aa167216965ac9474ccfa83892cfb6b3e1e52ef"
   integrity sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==
 
-axios@^1.6.8:
+axios@^1.7.8:
   version "1.7.8"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.8.tgz#1997b1496b394c21953e68c14aaa51b7b5de3d6e"
   integrity sha512-Uu0wb7KNqK2t5K+YQyVCLM76prD5sRFjKHbJYCP1J7JFGEQ6nN7HWn9+04LAeiJ3ji54lgS/gZCH1oxyrf1SPw==

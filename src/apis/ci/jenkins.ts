@@ -14,7 +14,6 @@ export class JenkinsCI extends Utils {
      */
     constructor(jenkinsURL: string, jenkinsUsername: string, jenkinsToken: string) {
         super();
-
         this.jenkinsUrl = jenkinsURL;
         this.jenkinsUsername = jenkinsUsername;
         this.jenkinsApiToken = jenkinsToken;
@@ -93,8 +92,17 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
-            console.error('Error checking job existence:', error);
-            throw error;
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 404) {
+                    return false;
+                } else {
+                    console.error('Axios error checking job existence:', error);
+                    throw error;
+                }
+            } else {
+                console.error('Error checking job existence:', error);
+                throw error;
+            }
         }
     }
 
@@ -207,7 +215,4 @@ export class JenkinsCI extends Utils {
             console.error('Error deleting job:', error);
         }
     }
-
-
-
 }
