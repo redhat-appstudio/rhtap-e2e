@@ -469,7 +469,7 @@ export class GitLabProvider extends Utils {
                 return null;
             }
 
-            for (var pipeline of pipelines){
+            for (const pipeline of pipelines){
                 await this.gitlab.Pipelines.cancel(repositoryID, pipeline.id);
                 console.log(`Initial pipeline (ID: ${pipeline.id}) has been canceled.`);
             }
