@@ -16,14 +16,11 @@ export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export GITLAB_ORGANIZATION="rhtap-qe"
 
-#TODO: This is a temporary workaround. We need to find a way to get the git repository name from the pipeline
-#when the pipeline is triggered from the rhtap-cli repository, which is a full installation of the rhtap-cli, the image should be pushed to the rhtap organization
-#otherwise, the image should be pushed to the rhtap_qe organization
-if [ "$GIT_REPO" = "rhtap-cli" ]; then
-    export QUAY_IMAGE_ORG="rhtap"
-else
-    export QUAY_IMAGE_ORG="rhtap_qe"
-fi
+#TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
+# Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` org in case of public quay.io and `rhtap` or in case of in-cluster quay.
+export QUAY_IMAGE_ORG="rhtap"
+
+
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
