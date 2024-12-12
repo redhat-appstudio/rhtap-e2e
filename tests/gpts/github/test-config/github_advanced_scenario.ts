@@ -5,8 +5,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -29,9 +28,7 @@ import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
 
-        const backstageClient =  new DeveloperHubClient();
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
@@ -48,6 +45,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
 
@@ -55,32 +53,20 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let gitopsPromotionPRNumber: number;
         let extractedBuildImage: string;
 
+        let RHTAPRootNamespace: string;
+
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
         beforeAll(async()=> {
-            gitHubClient = new GitHubProvider()
-            kubeClient = new Kubernetes()
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            gitHubClient = await getGitHubClient(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
@@ -94,39 +80,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
 
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
-         * 
-         * @param {string} templateRef Refers to the Developer Hub template name.
-         * @param {object} values Set of options to create the component.
-         * @param {string} values.branch Default git branch for the component.
-         * @param {string} values.githubServer GitHub server URL.
-         * @param {string} values.hostType Type of host (e.g., GitHub).
-         * @param {string} values.imageName Registry image name for the component to be pushed.
-         * @param {string} values.imageOrg Registry organization name for the component to be pushed.
-         * @param {string} values.imageRegistry Image registry provider. Default is Quay.io.
-         * @param {string} values.name Name of the repository to be created in GitHub.
-         * @param {string} values.namespace Kubernetes namespace where ArgoCD will create component manifests.
-         * @param {string} values.owner Developer Hub username who initiates the task.
-         * @param {string} values.repoName Name of the GitHub repository.
-         * @param {string} values.repoOwner Owner of the GitHub repository.
          */
         it(`creates ${gptTemplate} component`, async () => {            
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    branch: 'main',
-                    githubServer: 'github.com',
-                    hostType: 'GitHub',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    repoOwner: githubOrganization,
-                    ciType: "tekton"
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

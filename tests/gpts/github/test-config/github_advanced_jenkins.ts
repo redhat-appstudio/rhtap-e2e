@@ -6,7 +6,6 @@ import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
-import { Utils } from '../../../../src/apis/git-providers/utils';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -19,12 +18,18 @@ import { Utils } from '../../../../src/apis/git-providers/utils';
  * 8. Trigger Jenkins Job and wait for finish
  * 9. Check if the application is deployed in development namespace and pod is synched
  */
-export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
+export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
+        jest.retryTimes(2);
+
+        const developmentEnvironmentName = 'development';
+        const stagingEnvironmentName = 'stage';
+        const productionEnvironmentName = 'prod';
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
-        const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
+        const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
+        const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
@@ -33,13 +38,15 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
-        let RHTAPRootNamespace: string;
-
-        let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
+        let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
         let jenkinsClient: JenkinsCI;
+
+        let RHTAPRootNamespace: string;
+        let extractedBuildImage: string;
+        let gitopsPromotionPRNumber: number;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -47,11 +54,11 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
-            gitHubClient = await getGitHubClient(kubeClient);
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
+            gitHubClient = await getGitHubClient(kubeClient);
 
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
@@ -119,10 +126,14 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Creates commits to update Jenkins agent and enable ACS scan
          */
         it(`Commit updated agent ${gptTemplate} and enable ACS scan`, async () => {
-            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined)
-            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined)
+            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName + "-gitops", await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName + "-gitops", await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
         }, 120000)
 
         /**
@@ -139,12 +150,16 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
         }, 120000);
 
+        it(`creates ${gptTemplate} GitOps jenkins job and wait for creation`, async () => {
+            await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName + "-gitops");
+            await jenkinsClient.waitForJobCreation(repositoryName + "-gitops");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
+        }, 120000);
+
         /**
          * Trigger and wait for Jenkins job to finish
-         * First run must be triggered manually:
-         * https://stackoverflow.com/questions/56714213/jenkins-not-triggered-by-github-webhook#comment109322558_60625199 
          */
-        it(`Trigger and wait for ${gptTemplate} jenkins job`, async () => {
+        it(`Build and wait for ${gptTemplate} jenkins job`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -166,7 +181,6 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
-            new Utils().sleep(5000);
             await new Promise(resolve => setTimeout(resolve, 5000));
             const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
             expect(jobStatus).not.toBe(undefined);
@@ -177,9 +191,111 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-           await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace,developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000)
 
+        /**
+         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         */
+        it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
+            await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
+            console.log('Waiting for the build to start...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 1, 540000);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
+        }, 600000);
+
+        /**
+        * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
+        */
+        it('trigger pull request promotion to promote from development to stage environment', async () => {
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
+
+            if (getImage !== undefined) {
+                extractedBuildImage = getImage
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
+            if (gitopsPromotionPR !== undefined) {
+                gitopsPromotionPRNumber = gitopsPromotionPR
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+        })
+
+        /**
+         * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
+         */
+        it(`merge gitops pull request to sync new image in stage environment`, async () => {
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
+        }, 120000)
+
+
+        /**
+         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         */
+        it(`Wait for ${gptTemplate} jenkins job to finish for promotion from development to stage`, async () => {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(`${repositoryName}-gitops`, 2, 540000);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
+        }, 600000);
+
+
+        /**
+         * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
+         */
+        it('container component is successfully synced by gitops in staging environment', async () => {
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000)
+
+
+        /**
+        * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
+        */
+        it('trigger pull request promotion to promote from stage to production environment', async () => {
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
+
+            if (getImage !== undefined) {
+                extractedBuildImage = getImage
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
+            if (gitopsPromotionPR !== undefined) {
+                gitopsPromotionPRNumber = gitopsPromotionPR
+            } else {
+                throw new Error("Failed to create a pr");
+            }
+        })
+
+        /**
+         * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
+         */
+        it(`merge gitops pull request to sync new image in production environment`, async () => {
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
+        }, 120000)
+
+        /**
+        * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+        */
+        it(`Trigger job and wait for ${gptTemplate} jenkins job to finish promotion pipeline for production environment`, async () => {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 3, 540000);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
+        }, 600000);
+
+        /**
+         * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in prod environment
+         */
+        it('container component is successfully synced by gitops in prod environment', async () => {
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000)
 
         /**
         * Deletes created applications
@@ -188,6 +304,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
                 await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
                 await jenkinsClient.deleteJenkinsJob(repositoryName);
+                await jenkinsClient.deleteJenkinsJob(repositoryName + "-gitops");
             }
         })
     })

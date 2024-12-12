@@ -5,14 +5,15 @@ import { generateRandomChars } from "../../utils/generator";
 
 export class GitHubProvider extends Utils {
     private readonly octokit: Octokit
+    private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
-    constructor() {
+    constructor(githubToken: string) {
         super()
 
         this.octokit = new Octokit({
             baseUrl: 'https://api.github.com',
             userAgent: 'rhtap-e2e',
-            auth: process.env.GITHUB_TOKEN,
+            auth: githubToken,
         })
     }
 
@@ -151,7 +152,7 @@ export class GitHubProvider extends Utils {
             // Step 2: Modify the content
             const updatedContent = content.replace(
                 /agent\s+any/,
-                "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
+                "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
             );
 
             // Step 3: Create a commit with the new content
@@ -215,6 +216,92 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    /**
+    * Enables ACS scan for testing to the main branch of a specified Git repository.
+    * 
+    * @param {string} gitOrg - The name of the GitHub organization.
+    * @param {string} gitRepository - The name of the repository where the file will be committed.
+    * @returns {Promise<string | undefined>} A Promise resolving to the "true" if commit was successful, otherwise undefined.
+    * @throws Any error that occurs during the execution of the function.
+    */
+    public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                ref: `main`,
+            });
+
+            //   // Decode the base64 content
+            const content = Buffer.from(responseContent.data.content, "base64").toString();
+
+            // Step 2: Modify the content
+            const updatedContent = content.replace(
+                "http://tuf.rhtap-tas.svc", // NOSONAR
+                tufURL
+            );
+
+            // Step 3: Create a commit with the new content
+            await this.octokit.repos.createOrUpdateFileContents({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                message: "Update TUF mirror in environment file",
+                content: Buffer.from(updatedContent).toString("base64"),
+                sha: responseContent.data.sha, // The current commit SHA of the file
+                ref: `main`,
+            });
+
+            console.log("env.sh updated successfully!");
+            return "true";
+
+        } catch (error) {
+            console.error("An error occurred while updating the enviroment file:", error);
+        }
+    }
+
+    /**
+     * Enables ACS scan for testing to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the file will be committed.
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+     * @throws Any error that occurs during the execution of the function.
+     */
+    public async updateRekorHost(gitOrg: string, gitRepository: string, rekorHost: string): Promise<string | undefined> {
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                ref: `main`,
+            });
+
+            //   // Decode the base64 content
+            const content = Buffer.from(responseContent.data.content, "base64").toString();
+
+            // Step 2: Modify the content
+            const updatedContent = content.replace(
+                "http://rekor-server.rhtap-tas.svc",// NOSONAR
+                rekorHost
+            );
+
+            // Step 3: Create a commit with the new content
+            await this.octokit.repos.createOrUpdateFileContents({
+                owner: gitOrg, repo: gitRepository,
+                path: 'rhtap/env.sh',
+                message: "Update rekor URL in environment file",
+                content: Buffer.from(updatedContent).toString("base64"),
+                sha: responseContent.data.sha, // The current commit SHA of the file
+                ref: `main`,
+            });
+
+            console.log("env.sh updated successfully!");
+            return "true";
+
+        } catch (error) {
+            console.error("An error occurred while updating the enviroment file", error);
+        }
+    }
+
     public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number | undefined> {
         const baseBranch = "main"; // Specify the base branch
         const newBranch = generateRandomChars(5); // Specify the new branch name
@@ -261,7 +348,10 @@ export class GitHubProvider extends Utils {
     }
 
     /**
-     * name
+     * Merge GitHub pull request.
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} pull_request - PR number.
      */
     public async mergePullRequest(owner: string, repo: string, pull_request: number) {
         try {
@@ -277,6 +367,13 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    /**
+     * Extract image from GitOps repository for promotion.
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} componentName - component name.
+     * @param {string} environment - environment name(development, stage, prod).
+     */
     public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string | undefined> {
         try {
             const response = await this.octokit.repos.getContent({
@@ -313,7 +410,12 @@ export class GitHubProvider extends Utils {
     }
 
     /**
-     * name
+     * Promote image to environment,
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} componentName - component name.
+     * @param {string} environment - environment name(development, stage, prod).
+     * @param {string} image - image name.
      */
     public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number | undefined> {
         try {
@@ -337,4 +439,38 @@ export class GitHubProvider extends Utils {
             throw new Error(`Error: ${error}`);
         }
     }
+
+    /**
+     * Function to create a GitHub webhook for push events(for Jenkins for example)
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} webhookUrl - webhook URL.
+     */
+    public async createWebhook(owner: string, repo: string, webhookUrl: string) {
+        console.log(owner + repo + webhookUrl);
+        try {
+            const response = await this.octokit.rest.repos.createWebhook({
+                owner,
+                repo,
+                active: true,
+                config: {
+                    url: webhookUrl,
+                    content_type: "form",  // content_type: "json"
+                    insecure_ssl: '1'
+                },
+                events: [
+                    'push',
+                    'pull_request'
+                ],
+            });
+
+            console.log(`Webhook created successfully! ID: ${response.data.id}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating webhook:', error);
+            throw error;
+        }
+    }
+
+
 }

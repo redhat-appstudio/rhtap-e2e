@@ -1,33 +1,10 @@
-#!/bin/sh
-
-set -e
-
-#JOB_SPEC env:
-# {
-#     "container_image": "quay.io/rhtap/rhtap-cli@sha256:d2c1a65eda860ff667b30bffde2ec325c1ea7375ae2a68d4defd7aedbd0effdf",
-#     "konflux_component": "rhtap-cli",
-#     "git": {
-#         "pull_request_number": 195,
-#         "pull_request_author": "flacatus",
-#         "git_org": "redhat-appstudio",
-#         "git_repo": "rhtap-cli",
-#         "commit_sha": "ff9aacf8c902f1d6a5004e258522771d48f2b629",
-#         "event_type": "pull_request",
-#         "source_repo_url": "https://github.com/flacatus/rhtap-cli",
-#         "source_repo_branch": "fix_pr"
-#     }
-# }
-# Check if the JOB_SPEC environment variable is set.
-if [ -z "${JOB_SPEC}" ]; then
-    echo "Error: JOB_SPEC environment variable must be set."
-    exit 1
-fi
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
 
 # Important variables to start tests
 export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
-export GIT_REPO="${GIT_REPO:-$(echo "$JOB_SPEC" | jq -r '.git.git_repo')}"
-export GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha')}"
-export GIT_URL="${GIT_URL:-$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')}"
 
 # Load secrets from files
 export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)"
@@ -38,7 +15,12 @@ export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export GITLAB_ORGANIZATION="rhtap-qe"
+
+#TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
+# Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` org in case of public quay.io and `rhtap` or in case of in-cluster quay.
 export QUAY_IMAGE_ORG="rhtap"
+
+
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
@@ -75,15 +57,9 @@ post_actions() {
 
 trap post_actions EXIT
 
-cd "$(mktemp -d)"
-
-if [[ "${GIT_REPO}" = "rhtap-e2e" ]]; then
-    echo -e "INFO: Cloning repository '$GIT_REPO' with revision '$GIT_REVISION' from URL '$GIT_URL'"
-    git clone "${GIT_URL}" .
-    git checkout "${GIT_REVISION}"
+## This is a temporary workaround, when the pipeline is triggered from the rhtap-cli repository, it just runs the quarkus tests
+if [ "$GIT_REPO" = "rhtap-cli" ]; then
+    yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
 else
-    echo -e "INFO: Cloning repository 'redhat-appstudio/rhtap-e2e' with revision 'main'"
-    git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
+    yarn && yarn test
 fi
-
-yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts

@@ -4,8 +4,8 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
-import { cleanAfterTestGitHub } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -19,9 +19,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
-        const backstageClient =  new DeveloperHubClient();
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
@@ -32,8 +30,11 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
+
+        let RHTAPRootNamespace: string;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -41,26 +42,13 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async()=> {
-            gitHubClient = new GitHubProvider()
-            kubeClient = new Kubernetes()
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            gitHubClient = await getGitHubClient(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
 
-            if (githubOrganization === '') {
-                throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
@@ -87,23 +75,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${gptTemplate}`,
-                values: {
-                    branch: 'main',
-                    githubServer: 'github.com',
-                    hostType: 'GitHub',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    repoOwner: githubOrganization, 
-                    ciType: "tekton"
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -195,7 +167,25 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 expect(finished).toBe(true)
             }
         }, 900000)
-
+  
+         /**
+         * Check if the pipelinerun yaml has the rh-syft image path mentioned
+         */
+         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async ()=> {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
+                const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
+                console.log(index)
+                const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
+                const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
+                if (image_index)
+                {
+                    console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[image_index].image )
+                }
+            expect(image_index).not.toBe(undefined)
+            } 
+        }, 900000)        
 
         /**
         * Deletes created applications

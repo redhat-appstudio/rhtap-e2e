@@ -3,42 +3,37 @@ import { Utils } from '../git-providers/utils';
 
 export class JenkinsCI extends Utils {
     // Jenkins server details
-    private JENKINS_URL: string;
-    private JENKINS_USER: string;
-    private JENKINS_API_TOKEN: string;
-    private axiosInstance: Axios;
+    private readonly jenkinsUrl: string;
+    private readonly jenkinsUsername: string;
+    private readonly jenkinsApiToken: string;
+    private readonly axiosInstance: Axios;
 
     /**
      * Constructs a new instance of DeveloperHubClient.
      * 
-     * @throws {Error} Throws an error if the 'JENKINS_URL' environment variable is not set.
      */
-    constructor() {
+    constructor(jenkinsURL: string, jenkinsUsername: string, jenkinsToken: string) {
         super();
 
-        if (!process.env.JENKINS_URL) {
-            throw new Error("Cannot initialize DeveloperHubClient, missing 'JENKINS_URL' environment variable");
-        }
-
-        this.JENKINS_URL = process.env.JENKINS_URL;
-        this.JENKINS_USER = process.env.JENKINS_USERNAME!;
-        this.JENKINS_API_TOKEN = process.env.JENKINS_TOKEN!;
+        this.jenkinsUrl = jenkinsURL;
+        this.jenkinsUsername = jenkinsUsername;
+        this.jenkinsApiToken = jenkinsToken;
 
         this.axiosInstance = axios.create({
-            baseURL: this.JENKINS_URL,
+            baseURL: this.jenkinsUrl,
             headers: {
                 "Content-Type": "application/xml",
             },
             auth: {
-                username: this.JENKINS_USER,
-                password: this.JENKINS_API_TOKEN,
+                username: this.jenkinsUsername,
+                password: this.jenkinsApiToken,
             },
         });
     }
 
     // createJenkinsJob creates a new Jenkins job
     public async createJenkinsJob(gitProvider: string, organization: string, jobName: string) {
-        const url = `${this.JENKINS_URL}/createItem?name=${jobName}`;
+        const url = `${this.jenkinsUrl}/createItem?name=${jobName}`;
         const jobConfigXml = `
         <flow-definition plugin="workflow-job@2.40">
             <actions/>
@@ -46,7 +41,11 @@ export class JenkinsCI extends Utils {
             <keepDependencies>false</keepDependencies>
             <properties>
                 <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-                    <triggers/>
+                    <triggers>
+                        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.1">
+                        <spec/>
+                        </com.cloudbees.jenkins.GitHubPushTrigger>
+                    </triggers>
                 </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
             </properties>
             <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.89">
@@ -87,7 +86,7 @@ export class JenkinsCI extends Utils {
 
     // jobExists checks if a job exists
     public async jobExists(jobName: string): Promise<boolean> {
-        const url = `${this.JENKINS_URL}/job/${jobName}/api/json`;
+        const url = `${this.jenkinsUrl}/job/${jobName}/api/json`;
         try {
             const response = await this.axiosInstance.post(url);
             if (response.status === 200) {
@@ -98,12 +97,8 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
-            if (error.response && error.response.status === 404) {
-                return false;
-            } else {
-                console.error('Error checking job existence:', error);
-                throw error;
-            }
+            console.error('Error checking job existence:', error);
+            throw error;
         }
     }
 
@@ -121,7 +116,7 @@ export class JenkinsCI extends Utils {
 
     // buildJenkinsJob triggers a build for a Jenkins job
     public async buildJenkinsJob(jobName: string): Promise<string | null> {
-        const url = `${this.JENKINS_URL}/job/${jobName}/build`;
+        const url = `${this.jenkinsUrl}/job/${jobName}/build`;
         try {
             const response = await this.axiosInstance.post(url);
             if (response.status === 201) {
@@ -139,7 +134,7 @@ export class JenkinsCI extends Utils {
 
     // getBuildNumber gets the build number from the queue item URL
     public async getBuildNumber(queueItemUrl: string): Promise<number | null> {
-        const url = `${this.JENKINS_URL}${queueItemUrl}api/json`;
+        const url = `${this.jenkinsUrl}${queueItemUrl}api/json`;
         try {
             const response = await this.axiosInstance.post(url);
             if (response.data.executable) {
@@ -157,29 +152,33 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForBuildToFinish waits for a build to finish and get its result
-    public async waitForBuildToFinish(jobName: string, buildNumber: number) {
-        const url = `${this.JENKINS_URL}/job/${jobName}/${buildNumber}/api/json`;
+    public async waitForBuildToFinish(jobName: string, buildNumber: number, timeoutMs: number) {
+        const url = `${this.jenkinsUrl}/job/${jobName}/${buildNumber}/api/json`;
 
-        while (true) {
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const response = await this.axiosInstance.post(url);
                 if (response.data.building) {
-                    console.log(`Build #${buildNumber} is still in progress...`);
+                    console.log(`Build #${buildNumber} of job ${jobName} is still in progress...`);
                     await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
                 } else {
                     console.log(`Build #${buildNumber} finished with status: ${response.data.result}`);
-                    break;
+                    return response.data.result;
                 }
             } catch (error) {
                 console.error('Error checking build status:', error);
-                break;
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
             }
+            totalTimeMs += retryInterval;
         }
     }
 
     // getLatestBuildNumber gets the latest build number for a Jenkins job
     public async getLatestBuildNumber(jobName: string): Promise<number | null> {
-        const url = `${this.JENKINS_URL}/job/${jobName}/api/json?tree=lastBuild[number]`;
+        const url = `${this.jenkinsUrl}/job/${jobName}/api/json?tree=lastBuild[number]`;
 
         try {
             const response = await this.axiosInstance.post(url);
@@ -196,4 +195,25 @@ export class JenkinsCI extends Utils {
             return null;
         }
     }
+
+    public async deleteJenkinsJob(jobName: string) {
+        const url = `${this.jenkinsUrl}/job/${jobName}/doDelete`;
+    
+        try {
+            const response = await this.axiosInstance.post(url);
+    
+            if (response.status === 200) {
+                console.log(`Job '${jobName}' deleted successfully.`);
+            } else {
+                console.error(`Failed to delete job. Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error deleting job:', error);
+        }
+    }
+
+    public async getJenkinsURL(){
+        return this.jenkinsUrl;
+    }
+
 }

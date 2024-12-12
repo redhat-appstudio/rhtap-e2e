@@ -45,33 +45,30 @@ spec:
 
         echo "[DEBUG] JOB_SPEC: $JOB_SPEC"
 
-        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.git_repo')"
+        export GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.repo // empty')"
         echo "[INFO] GIT_REPO is set to $GIT_REPO"
 
         if [ -z "$GIT_REPO" ]; then
-          echo "[ERROR] GIT_REPO is not set in JOB_SPEC"
-          exit 1
+        # TODO - when fully switched to test-metadata v0.2, delete next 'if'
+          echo "\$JOB_SPEC \`.git.repo\` is empty. Trying \`.git.git_repo\`"
+          GIT_REPO="$(echo "$JOB_SPEC" | jq -r '.git.git_repo // empty')"
+          if [ -z "$GIT_REPO" ]; then
+            echo "[ERROR] GIT_REPO is not set in JOB_SPEC"
+            exit 1
+          fi 
         fi
 
         if [ "$GIT_REPO" = "rhtap-e2e" ]; then
-          export SOURCE_REPO_URL="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')"
-          export SOURCE_REPO_BRANCH="$(echo "$JOB_SPEC" | jq -r '.git.source_repo_branch')"
+          GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha')}"
+          GIT_URL="${GIT_URL:-$(echo "$JOB_SPEC" | jq -r '.git.source_repo_url')}"
 
-          echo "[INFO] SOURCE_REPO_URL is set to $SOURCE_REPO_URL"
-          echo "[INFO] SOURCE_REPO_BRANCH is set to $SOURCE_REPO_BRANCH"
+          echo -e "INFO: Cloning repository '$GIT_REPO' with revision '$GIT_REVISION' from URL '$GIT_URL'"
+          git clone "${GIT_URL}" .
+          git checkout "${GIT_REVISION}"
 
-          if [ -z "$SOURCE_REPO_URL" ] || [ -z "$SOURCE_REPO_BRANCH" ]; then
-            echo "[ERROR] SOURCE_REPO_URL or SOURCE_REPO_BRANCH is not set"
-            exit 1
-          fi
-
-          echo -e "[INFO] Running e2e tests from source: $SOURCE_REPO_URL and branch $SOURCE_REPO_BRANCH"
-          curl -fsSL https://raw.githubusercontent.com/$SOURCE_REPO_URL/$SOURCE_REPO_BRANCH/integration-tests/scripts/rhtap-e2e-runner.sh -o rhtap-e2e-runner.sh
-          chmod +x rhtap-e2e-runner.sh 
-          ./rhtap-e2e-runner.sh
+          ./integration-tests/scripts/rhtap-e2e-runner.sh
         else
-          echo -e "[INFO] Running e2e tests from: redhat-appstudio/rhtap-e2e and branch main"
-          curl -fsSL https://raw.githubusercontent.com/redhat-appstudio/rhtap-e2e/main/integration-tests/scripts/rhtap-e2e-runner.sh -o rhtap-e2e-runner.sh
-          chmod +x rhtap-e2e-runner.sh
-          ./rhtap-e2e-runner.sh
+          echo -e "INFO: Cloning repository 'redhat-appstudio/rhtap-e2e' with revision 'main'"
+          git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
+          ./integration-tests/scripts/rhtap-e2e-runner.sh
         fi

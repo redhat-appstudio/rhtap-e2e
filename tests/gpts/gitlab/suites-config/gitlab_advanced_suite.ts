@@ -1,11 +1,10 @@
-import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub";
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -38,13 +37,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         let gitopsPromotionMergeRequestNumber: number;
         let pipelineAsCodeRoute: string;
 
+        let RHTAPRootNamespace: string;
+
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
         const quayImageName = "rhtap-qe";
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || '';
-        const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
@@ -56,67 +56,23 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
         
         beforeAll(async ()=> {
-            backstageClient = new DeveloperHubClient();
-            gitLabProvider = new GitLabProvider()
-            kubeClient = new Kubernetes()
+            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            kubeClient = new Kubernetes();
+            gitLabProvider = await getGitLabProvider(kubeClient);
+            backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            if (componentRootNamespace === '') {
-                throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (gitLabOrganization === '') {
-                throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            if (quayImageOrg === '') {
-                throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-            }
-
-            const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
-
-            if (!namespaceExists) {
-                throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
-            }
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
         })
 
         /**
-            * Creates a task in Developer Hub to generate a new component using specified git and kube options.
-            * 
-            * @param {string} templateRef Refers to the Developer Hub template name.
-            * @param {object} values Set of options to create the component.
-            * @param {string} values.branch Default git branch for the component.
-            * @param {string} values.gitlabServer GitLab server URL.
-            * @param {string} values.hostType Type of host (e.g., GitLab).
-            * @param {string} values.imageName Registry image name for the component to be pushed.
-            * @param {string} values.imageOrg Registry organization name for the component to be pushed.
-            * @param {string} values.imageRegistry Image registry provider. Default is Quay.io.
-            * @param {string} values.name Name of the repository to be created in GitLab.
-            * @param {string} values.namespace Kubernetes namespace where ArgoCD will create component manifests.
-            * @param {string} values.owner Developer Hub username who initiates the task.
-            * @param {string} values.repoName Name of the GitLab repository.
-            * @param {string} values.repoOwner Owner of the GitLab repository.
+        * Creates a task in Developer Hub to generate a new component using specified git and kube options.
+        * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions: ScaffolderScaffoldOptions = {
-                templateRef: `template:default/${softwareTemplateName}`,
-                values: {
-                    branch: 'main',
-                    gitlabServer: 'gitlab.com',
-                    hostType: 'GitLab',
-                    imageName: quayImageName,
-                    imageOrg: quayImageOrg,
-                    imageRegistry: imageRegistry,
-                    name: repositoryName,
-                    namespace: componentRootNamespace,
-                    owner: "user:guest",
-                    repoName: repositoryName,
-                    repoOwner: gitLabOrganization, 
-                    ciType: "tekton"
-                }
-            };
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
 
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);
@@ -151,7 +107,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
 
         /**
             * Verifies if Red Hat Developer Hub created a repository from the specified template in GitLab.
@@ -163,7 +119,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
 
             const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabGitopsRepositoryID, '.tekton')
             expect(tektonFolderExists).toBe(true)
-        })
+        }, 120000)
 
         /**
             * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
