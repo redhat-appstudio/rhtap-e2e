@@ -54,6 +54,7 @@ export class JenkinsCI extends Utils {
                     <userRemoteConfigs>
                         <hudson.plugins.git.UserRemoteConfig>
                             <url>https://${gitProvider}/${organization}/${jobName}</url>
+                            <credentialsId>GITOPS_CREDENTIALS</credentialsId>
                         </hudson.plugins.git.UserRemoteConfig>
                     </userRemoteConfigs>
                     <branches>
@@ -198,10 +199,10 @@ export class JenkinsCI extends Utils {
 
     public async deleteJenkinsJob(jobName: string) {
         const url = `${this.jenkinsUrl}/job/${jobName}/doDelete`;
-    
+
         try {
             const response = await this.axiosInstance.post(url);
-    
+
             if (response.status === 200) {
                 console.log(`Job '${jobName}' deleted successfully.`);
             } else {
