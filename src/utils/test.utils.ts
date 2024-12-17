@@ -4,6 +4,7 @@ import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
+import { syncArgoApplication } from "./argocd";
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -199,4 +200,22 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
         }
     };
     return taskCreatorOptions;
+}
+
+export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string){
+    console.log("syncing argocd application in development environment")
+    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`)
+    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName)
+    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
+    if (!isReady) {
+        throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+    }
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
+}
+
+export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobName: string, jobBuildNumber: number) {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    const jobStatus = await jenkinsClient.waitForBuildToFinish(jobName, jobBuildNumber, 540000);
+    expect(jobStatus).not.toBe(undefined);
+    expect(jobStatus).toBe("SUCCESS");
 }
