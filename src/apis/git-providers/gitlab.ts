@@ -3,6 +3,7 @@ import { Utils } from "./utils";
 
 export class GitLabProvider extends Utils {
     private readonly gitlab;
+    private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
     private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
@@ -10,14 +11,19 @@ export class GitLabProvider extends Utils {
         super()
 
         if (!gitlabToken) {
-            throw new Error("Missing environment variable GITLAB_TOKEN");    
+            throw new Error("Missing environment variable GITLAB_TOKEN");
         }
-
+        this.gitlabToken = gitlabToken;
         this.extractImagePatternFromGitopsManifest = /- image: (.*)/;
         this.gitlab = new Gitlab({
             host: 'https://gitlab.com',
-            token: gitlabToken
+            token: this.gitlabToken
         })
+    }
+
+    // Get GitLab token
+    public async getGitlabToken(): Promise<string> {
+        return this.gitlabToken;
     }
 
     // Function to find a repository by name
@@ -27,15 +33,14 @@ export class GitLabProvider extends Utils {
             try {
                 const projects = await this.gitlab.Projects.show(`${namespace}/${repoName}`);
                 if (projects) {
-                    console.info(`Repository with name '${repoName}' found in namespace '${namespace}'
+                    console.info(`Repository with name '${repoName}' found in organization '${namespace}'
                         created at '${projects.created_at}' url: gitlab.com/${namespace}/${repoName}`);
                     return projects.id
                 }
 
-                await this.sleep(5000); // Wait 5 seconds before checking again
+                await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (error) {
                 console.info(`Failed to check if repository ${repoName} exists`);
-
             }
         }
     }
@@ -54,9 +59,9 @@ export class GitLabProvider extends Utils {
                     })
                 }
 
-                await this.sleep(5000); // Wait 5 seconds before checking again
+                await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (error) {
-                console.info('Error checking for folder creation');
+                console.error('Error checking for folder creation:', error);
             }
         }
     }
@@ -117,51 +122,15 @@ export class GitLabProvider extends Utils {
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
-    public async enableACSJenkins(repositoryID: number, branchName: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update ACS scan for Gitlab', `DISABLE_ACS=true`, `DISABLE_ACS=false`);
-    }
-
-    public async commitReplacementStringInFile(repositoryID: number, branchName: string, filePath: string, commitMessage: string, textToReplace: string, replacement: string): Promise<boolean> {
-        try {
-            // Get the current content of the file
-            const file = await this.gitlab.RepositoryFiles.show(repositoryID, filePath, branchName);
-            const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
-    
-            // Replace specific text
-            const updatedContent = fileContent.replace(textToReplace,replacement);
-    
-            // Encode the updated content to base64
-            const encodedContent = Buffer.from(updatedContent).toString('base64');
-    
-            // Create a commit to update the file
-            await this.gitlab.RepositoryFiles.edit(
-                repositoryID,
-                filePath,
-                branchName,
-                encodedContent,
-                commitMessage,
-                {
-                    encoding: 'base64',
-                }
-            );
-    
-            console.log(`${filePath} updated successfully for username.`);
-            return true;
-        } catch (error: any) {
-            console.error('Error updating ${filePath}:', error);
-            return false;
-        }
-    }
-
     public async createMergeRequestWithPromotionImage(repositoryID: number, targetBranch: string,
         componentName: string, fromEnvironment: string, toEnvironment: string): Promise<number> {
-        
+
         let extractedImage;
-        
+
         try {
             // Get the main branch reference
             const mainBranch = await this.gitlab.Branches.show(repositoryID, 'main');
-            
+
             // Create a new branch from the main branch
             await this.gitlab.Branches.create(repositoryID, targetBranch, mainBranch.commit.id);
 
@@ -172,7 +141,7 @@ export class GitLabProvider extends Utils {
 
             const fromEnvironmentContentToString = fromEnvironmentContent.toString()
             const matches = fromEnvironmentContentToString.match(this.extractImagePatternFromGitopsManifest);
-            
+
             if (matches && matches.length > 1) {
                 extractedImage = matches[1];
                 console.log("Extracted image:", extractedImage);
@@ -180,7 +149,7 @@ export class GitLabProvider extends Utils {
             } else {
                 throw new Error("Image not found in the gitops repository path");
             }
-            
+
             const targetEnvironmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
                 `components/${componentName}/overlays/${toEnvironment}/deployment-patch.yaml`, targetBranch);
 
@@ -211,7 +180,7 @@ export class GitLabProvider extends Utils {
         } catch (error) {
             console.log(error)
             throw new Error("Failed to create merge request. Check bellow error");
-            
+
         }
     }
 
@@ -233,19 +202,19 @@ export class GitLabProvider extends Utils {
             )
         } catch (error) {
             console.log(error)
-            throw new Error('Failed to create webhook. Check bellow error.' );
+            throw new Error('Failed to create webhook. Check bellow error.');
         }
     }
 
     /**
      * createMergeRequest
      */
-    public async createMergeRequest(repositoryID: number, branchName: string, title: string):Promise<number> {
+    public async createMergeRequest(repositoryID: number, branchName: string, title: string): Promise<number> {
         try {
             const mainBranch = await this.gitlab.Branches.show(repositoryID, 'main');
-            
+
             await this.gitlab.Branches.create(repositoryID, branchName, mainBranch.commit.id);
-            
+
             await this.gitlab.Commits.create(
                 repositoryID,
                 branchName,
@@ -262,7 +231,7 @@ export class GitLabProvider extends Utils {
             const mergeRequest = await this.gitlab.MergeRequests.create(repositoryID, branchName, "main", title);
 
             console.log(`Pull request "${title}" created successfully. URL: ${mergeRequest.web_url}`);
-            
+
             return mergeRequest.iid
         } catch (error) {
             console.log(error)
@@ -295,11 +264,221 @@ export class GitLabProvider extends Utils {
     public async deleteProject(projectId: number) {
         try {
             await this.gitlab.Projects.remove(projectId);
-    
+
             console.log(`Project with "${projectId}" deleted successfully.`);
         } catch (error) {
             console.log(error)
             throw new Error("Failed to delete project. Check bellow error");
         }
     }
+
+    public async waitForPipelinesToBeCreated(projectId: number, pipelinesCount: number, timeoutMs: number) {
+        console.log(`Waiting for new pipeline to be created...`);
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
+            try {
+                const pipelines = await this.gitlab.Pipelines.all(projectId);
+                if(pipelines.length == pipelinesCount){
+                    return;
+                }
+
+                await this.sleep(5000); // Wait 5 seconds
+            } catch (error) {
+                console.error('Error checking pipeline count:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
+            }
+            totalTimeMs += retryInterval;
+        }
+    }
+
+    public async getLatestPipeline(projectId: number) {
+        try {
+            const pipelines = await this.gitlab.Pipelines.all(projectId);
+            if (pipelines.length === 0) {
+                console.log(`No pipelines found!`);
+                return null;
+            }
+            const latestPipeline = pipelines.sort((a, b) => b.id - a.id)[0];
+            console.log(`Latest pipeline ID: ${latestPipeline.id} Status: ${latestPipeline.status}`);
+            return latestPipeline;
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+            throw error;
+        }
+    }
+
+    // Trigger a GitLab pipeline
+    public async triggerPipeline(projectId: number, branchName: string, triggerToken: string) {
+        try {
+            const response = await this.gitlab.PipelineTriggerTokens.trigger(projectId, branchName, triggerToken);
+            console.log('Pipeline triggered successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+            throw error;
+        }
+    }
+
+    // Wait until the pipeline finishes
+    public async waitForPipelineToFinish(projectId: number, pipelineId: number, timeoutMs: number) {
+        console.log(`Waiting for pipeline ${pipelineId} to finish...`);
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
+            try {
+                const pipeline = await this.gitlab.Pipelines.show(projectId, pipelineId);
+                console.log(`Pipeline status: ${pipeline.status}`);
+
+                if (
+                    pipeline.status === 'success' ||
+                    pipeline.status === 'failed' ||
+                    pipeline.status === 'canceled'
+                ) {
+                    console.log(`Pipeline finished with status: ${pipeline.status}`);
+                    return pipeline.status;
+                }
+
+                await this.sleep(15000); // Wait 15 seconds
+            } catch (error) {
+                console.error('Error checking pipeline status:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
+            }
+            totalTimeMs += retryInterval;
+        }
+    }
+
+    // Set environment variables (secrets) for the repository
+    public async setEnvironmentVariable(projectId: number, key: string, value: string) {
+        try {
+            const response = await this.gitlab.ProjectVariables.create(projectId, key, value, {
+                protected: false,
+                masked: false,
+            });
+            console.log(`Environment variable '${key}' set successfully.`);
+            return response;
+        } catch (error) {
+            console.error(`Error setting environment variable '${key}':`, error);
+            throw error;
+        }
+    }
+
+    public async enableACSJenkins(repositoryID: number, branchName: string): Promise<boolean> {
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update ACS scan for Gitlab', `DISABLE_ACS=true`, `DISABLE_ACS=false`);
+    }
+
+    public async updateRekorHost(repositoryID: number, branchName: string, rekorHost: string): Promise<boolean> {
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `rekor-server.rhtap-tas.svc`, rekorHost);
+    }
+
+    public async updateTufMirror(repositoryID: number, branchName: string, tufMirror: string): Promise<boolean> {
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `tuf.rhtap-tas.svc`, tufMirror);
+    }
+
+    public async updateEnvFileForGitLabCI(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string): Promise<boolean> {
+        const filePath = 'rhtap/env.sh';
+        const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
+        // Replace ACS
+        let updatedContent = fileContent.replace(`DISABLE_ACS=true`, `DISABLE_ACS=false`);
+        // Replace rekor
+        updatedContent = updatedContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
+        // Replace TUF
+        updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirror);
+        //Commit changed file
+        return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for GitLabCI", updatedContent);
+    }
+
+
+    public async commitReplacementStringInFile(repositoryID: number, branchName: string, filePath: string, commitMessage: string, textToReplace: string, replacement: string): Promise<boolean> {
+        try {
+            // Get the current content of the file
+            const file = await this.gitlab.RepositoryFiles.show(repositoryID, filePath, branchName);
+            const fileContent = Buffer.from(file.content, 'base64').toString('utf-8');
+
+            // Replace specific text
+            const updatedContent = fileContent.replace(textToReplace, replacement);
+
+            // Encode the updated content to base64
+            const encodedContent = Buffer.from(updatedContent).toString('base64');
+
+            // Create a commit to update the file
+            await this.gitlab.RepositoryFiles.edit(
+                repositoryID,
+                filePath,
+                branchName,
+                encodedContent,
+                commitMessage,
+                {
+                    encoding: 'base64',
+                }
+            );
+
+            console.log(`${filePath} updated successfully for username.`);
+            return true;
+        } catch (error: any) {
+            console.error('Error updating ${filePath}:', error);
+            return false;
+        }
+    }
+
+    public async getFileContentAsString(repositoryID: number, branchName: string, filePath: string): Promise<string> {
+        try {
+            // Get the current content of the file
+            const file = await this.gitlab.RepositoryFiles.show(repositoryID, filePath, branchName);
+            return Buffer.from(file.content, 'base64').toString('utf-8');
+        } catch (error: any) {
+            console.error('Error getting content of ${filePath}:', error);
+            return "";
+        }
+    }
+
+    public async commitFileContent(repositoryID: number, branchName: string, filePath: string, commitMessage: string, fileContent: string): Promise<boolean> {
+        try {
+            // Encode the updated content to base64
+            const encodedContent = Buffer.from(fileContent).toString('base64');
+
+            // Create a commit to update the file
+            await this.gitlab.RepositoryFiles.edit(
+                repositoryID,
+                filePath,
+                branchName,
+                encodedContent,
+                commitMessage,
+                {
+                    encoding: 'base64',
+                }
+            );
+
+            console.log(`${filePath} updated successfully for username.`);
+            return true;
+        } catch (error: any) {
+            console.error('Error updating ${filePath}:', error);
+            return false;
+        }
+    }
+
+
+    // Function to kill the oldest pipeline
+    public async killInitialPipeline(repositoryID: number) {
+        try {
+            const pipelines = await this.gitlab.Pipelines.all(repositoryID);
+
+            if (pipelines.length === 0) {
+                console.log('No pipelines found.');
+                return null;
+            }
+
+            for (const pipeline of pipelines){
+                await this.gitlab.Pipelines.cancel(repositoryID, pipeline.id);
+                console.log(`Initial pipeline (ID: ${pipeline.id}) has been canceled.`);
+            }
+        } catch (error) {
+            console.error('Error killing the initial pipeline:', error);
+            throw error;
+        }
+    }
+
+
 }

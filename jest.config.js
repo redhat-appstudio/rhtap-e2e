@@ -12,6 +12,7 @@ module.exports = {
                     active: true,
                     tekton: true,
                     jenkins: false,
+                    actions: false,
                     host: 'https://api.github.com',
                     registriesConfig: {
                         quay: {
@@ -24,6 +25,7 @@ module.exports = {
                     active: true,
                     tekton: true,
                     jenkins: false,
+                    gitlabci: false,
                     host: 'https://gitlab.com',
                     registriesConfig: {
                         quay: {
