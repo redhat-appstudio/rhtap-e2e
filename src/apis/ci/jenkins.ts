@@ -40,7 +40,11 @@ export class JenkinsCI extends Utils {
             <keepDependencies>false</keepDependencies>
             <properties>
                 <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-                    <triggers/>
+                    <triggers>
+                        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.1">
+                        <spec/>
+                        </com.cloudbees.jenkins.GitHubPushTrigger>
+                    </triggers>
                 </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
             </properties>
             <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.89">
@@ -214,5 +218,8 @@ export class JenkinsCI extends Utils {
         } catch (error) {
             console.error('Error deleting job:', error);
         }
+    }
+    public async getJenkinsURL(){
+        return this.jenkinsUrl;
     }
 }

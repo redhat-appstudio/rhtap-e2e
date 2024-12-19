@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.4-1181 as builder
+FROM registry.access.redhat.com/ubi9/ubi:9.5-1732804088 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
@@ -62,7 +62,7 @@ RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://github.com/tektoncd/cli/rel
     mv tkn /usr/local/bin && \
     tkn version
 
-FROM registry.access.redhat.com/ubi9/go-toolset:1.22.5-1730550521
+FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1733160835
 
 USER root
 
