@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForArgoSyncAndRouteContent, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, checkComponentSyncedInArgoAndRouteIsWorking, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -98,16 +98,24 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         }, 600000);
 
         /**
+        * Cance first pipeline - it fails anyway due to missing env vars
+        */
+        it(`Cancel first pipeline`, async () => {
+            // Kill initial pipeline to save time
+            await gitLabProvider.killInitialPipeline(gitlabRepositoryID);
+        }, 600000);
+
+        /**
         * Setup env cvariables for gitlab runner in repository settings.
         */
         it(`Setup creds for ${softwareTemplateName} pipeline in repository`, async () => {
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY || '');
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY || '');
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD || '');
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "QUAY_IO_CREDS_PSW", process.env.QUAY_PASSWORD || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "QUAY_IO_CREDS_USR", process.env.QUAY_USERNAME || '');
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.QUAY_PASSWORD || '');
+            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.QUAY_USERNAME || '');
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
             await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
         }, 600000);
@@ -127,12 +135,12 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         * Waits for pipeline after commit RHTAP ENV
         */
         it(`Wait for a pipeline run to finish`, async () => {
+            await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, 2, 10000);
             const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
-            await gitLabProvider.waitForPipelineToBeCreated(gitlabRepositoryID, "main", response.sha);
 
-            const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id);
+            const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id, 540000);
             expect(pipelineResult).toBe("success");
-        }, 360000)
+        }, 600000)
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment

@@ -100,6 +100,20 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true)
         }, 600000);
 
+        it (`creates env variables in repo`, async () => {
+            await gitHubClient.setEnvironmentVariables(githubOrganization, repositoryName, {
+                "IMAGE_REGISTRY": imageRegistry,
+                "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
+                "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
+                "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
+                "IMAGE_REGISTRY_USER": process.env.QUAY_USERNAME || '',
+                "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
+                "COSIGN_SECRET_PASSWORD": process.env.COSIGN_SECRET_PASSWORD || '',
+                "COSIGN_SECRET_KEY": process.env.COSIGN_SECRET_KEY || '',
+                "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || ''
+            })
+        })
+
         /**
          * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
          * my application. Also verifies if the repository contains a workflow file.
@@ -126,6 +140,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 // Wait for the latest job and get only the status
                 const workflowId = await gitHubClient.getWorkflowId(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
                 expect(workflowId).not.toBe(0);
+                await gitHubClient.rerunWorkflow(githubOrganization, repositoryName, workflowId) // We need this, because first run doesn't have secrets in repo yet.
                 jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, repositoryName, workflowId?.toString());
                 console.log('Job Status:', jobStatus);
               } catch (error) {

@@ -5,6 +5,7 @@ export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
+    private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(gitlabToken: string) {
         super()
@@ -111,7 +112,7 @@ export class GitLabProvider extends Utils {
 
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
         let stringToFind = "agent any";
-        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image 'image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
@@ -271,6 +272,27 @@ export class GitLabProvider extends Utils {
         }
     }
 
+    public async waitForPipelinesToBeCreated(projectId: number, pipelinesCount: number, timeoutMs: number) {
+        console.log(`Waiting for new pipeline to be created...`);
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
+            try {
+                const pipelines = await this.gitlab.Pipelines.all(projectId);
+                if(pipelines.length == pipelinesCount){
+                    return;
+                }
+
+                await this.sleep(5000); // Wait 5 seconds
+            } catch (error) {
+                console.error('Error checking pipeline count:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
+            }
+            totalTimeMs += retryInterval;
+        }
+    }
+
     public async getLatestPipeline(projectId: number) {
         try {
             const pipelines = await this.gitlab.Pipelines.all(projectId);
@@ -322,9 +344,12 @@ export class GitLabProvider extends Utils {
     }
 
     // Wait until the pipeline finishes
-    public async waitForPipelineToFinish(projectId: number, pipelineId: number) {
+    public async waitForPipelineToFinish(projectId: number, pipelineId: number, timeoutMs: number) {
         console.log(`Waiting for pipeline ${pipelineId} to finish...`);
-        while (true) {
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const pipeline = await this.gitlab.Pipelines.show(projectId, pipelineId);
                 console.log(`Pipeline status: ${pipeline.status}`);
@@ -338,10 +363,12 @@ export class GitLabProvider extends Utils {
                     return pipeline.status;
                 }
 
-                await this.sleep(5000); // Wait 5 seconds
+                await this.sleep(15000); // Wait 15 seconds
             } catch (error) {
                 console.error('Error checking pipeline status:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
             }
+            totalTimeMs += retryInterval;
         }
     }
 

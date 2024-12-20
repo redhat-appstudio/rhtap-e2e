@@ -478,7 +478,7 @@ export class Kubernetes extends Utils {
     * @param {string} namespace - The namespace where the route is located.
     * @returns {Promise<string>}  - returns route URL.
     */
-        public async getTUFUrl(namespace: string): Promise<string> {
-            return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
-        }
+    public async getTUFUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+    }
 }

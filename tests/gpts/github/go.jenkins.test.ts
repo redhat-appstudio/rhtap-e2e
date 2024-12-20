@@ -1,4 +1,4 @@
-import { gitHubJenkinsBasicGoldenPathTemplateTests } from "./test-config/github_suite_jenkins.ts";
+import { gitHubJenkinsPromotionTemplateTests } from "./test-config/github_advanced_jenkins.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 
@@ -18,7 +18,7 @@ const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals()
 
     if (configuration.templates.includes(golangTemplateName) && configuration.github.active && configuration.github.jenkins) {
-        gitHubJenkinsBasicGoldenPathTemplateTests(golangTemplateName, stringOnRoute);
+        gitHubJenkinsPromotionTemplateTests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);
     }
