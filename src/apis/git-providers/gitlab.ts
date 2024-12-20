@@ -321,6 +321,28 @@ export class GitLabProvider extends Utils {
         }
     }
 
+    // Wait until the pipeline is created
+    public async waitForPipelineToBeCreated(projectId: number, ref: string, sha: string) {
+        console.log(`Waiting for the pipeline with ref '${ref}' and sha '${sha}' to be created...`);
+
+        while (true) {
+            try {
+                const pipelines = await this.gitlab.Pipelines.all(projectId, { ref });
+
+                // Check if the pipeline with the matching ref and sha is created
+                const pipeline = pipelines.find(pipeline => pipeline.sha === sha);
+                if (pipeline) {
+                    console.log(`Pipeline created: ID ${pipeline.id}`);
+                    return pipeline;
+                }
+
+                await this.sleep(5000); // Wait 5 seconds before checking again
+            } catch (error) {
+                console.error('Error checking for pipeline creation:', error);
+            }
+        }
+    }
+
     // Wait until the pipeline finishes
     public async waitForPipelineToFinish(projectId: number, pipelineId: number, timeoutMs: number) {
         console.log(`Waiting for pipeline ${pipelineId} to finish...`);
@@ -470,10 +492,14 @@ export class GitLabProvider extends Utils {
                 return null;
             }
 
-            for (const pipeline of pipelines){
-                await this.gitlab.Pipelines.cancel(repositoryID, pipeline.id);
-                console.log(`Initial pipeline (ID: ${pipeline.id}) has been canceled.`);
-            }
+            // Sort pipelines by creation time (ascending order) to get the oldest pipeline
+            const oldestPipeline = pipelines.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];
+            console.log(`Initial pipeline ID: ${oldestPipeline.id}, Status: ${oldestPipeline.status}`);
+
+            // Cancel the oldest pipeline
+            const cancelResponse = await this.gitlab.Pipelines.cancel(repositoryID, oldestPipeline.id);
+            console.log(`Initial pipeline (ID: ${oldestPipeline.id}) has been canceled.`);
+            return cancelResponse;
         } catch (error) {
             console.error('Error killing the initial pipeline:', error);
             throw error;

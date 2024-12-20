@@ -422,12 +422,32 @@ export class Kubernetes extends Utils {
     }
 
     /**
+    * Gets cosign public key.
+    */
+    public async getCosignPublicKey(): Promise<string> {
+        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
+    }
+
+    /**
+    * Gets cosign private key.
+    */
+    public async getCosignPrivateKey(): Promise<string> {
+        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", false);
+    }
+
+    /**
+    * Gets cosign password.
+    */
+    public async getCosignPassword(): Promise<string> {
+        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "password", false);
+    }
+
+    /**
     * Gets ACS endpoint.
     * 
     * @param {string} namespace - The namespace where the route is located.
     * @returns {Promise<string>}  - returns route URL.
     */
-
     public async getACSEndpoint(namespace: string): Promise<string> {
         return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "endpoint");
     }

@@ -99,6 +99,30 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
+export async function getCosignPassword(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_PASSWORD) {
+        return process.env.COSIGN_SECRET_PASSWORD;
+    } else {
+        return await kubeClient.getCosignPassword();
+    }
+}
+
+export async function getCosignPrivateKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_KEY) {
+        return process.env.COSIGN_SECRET_KEY;
+    } else {
+        return await kubeClient.getCosignPrivateKey();
+    }
+}
+
+export async function getCosignPublicKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_PUBLIC_KEY) {
+        return process.env.COSIGN_PUBLIC_KEY;
+    } else {
+        return await kubeClient.getCosignPublicKey();
+    }
+}
+
 export async function waitForComponentCreation(backstageClient: DeveloperHubClient, repositoryName: string, developerHubTask: TaskIdReponse) {
     const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
 
