@@ -476,7 +476,7 @@ export class GitHubProvider extends Utils {
                     console.log(`Latest job in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
                     return latestRun.conclusion; // Return only the status of the job
                 } else {
-                    console.log(`Latest job in workflow '${workflow_id}' is still in progress, retrying...`);
+                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' is still in progress, retrying...`);
                 }
             } catch (error) {
                 console.error('Error fetching workflow run details:', error);
@@ -594,7 +594,7 @@ export class GitHubProvider extends Utils {
             throw error;
         }
         for (const [envVarName,envVarValue] of Object.entries(envVars)){
-            console.log(`envVarName`)
+            console.log("Setting env var: " + envVarName)
             await sodium.ready
             let binkey = sodium.from_base64(publicKeyResponse.data.key, sodium.base64_variants.ORIGINAL)
             let binsec = sodium.from_string(envVarValue)

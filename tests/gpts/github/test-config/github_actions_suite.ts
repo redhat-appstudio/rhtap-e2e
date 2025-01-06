@@ -108,11 +108,19 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
                 "IMAGE_REGISTRY_USER": process.env.QUAY_USERNAME || '',
                 "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
+                "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
+                "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
                 "COSIGN_SECRET_PASSWORD": process.env.COSIGN_SECRET_PASSWORD || '',
                 "COSIGN_SECRET_KEY": process.env.COSIGN_SECRET_KEY || '',
-                "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || ''
+                "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || '',
+                "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
+                "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             })
-        })
+            //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
+            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+
+        }, 600000);
 
         /**
          * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
@@ -140,7 +148,6 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 // Wait for the latest job and get only the status
                 const workflowId = await gitHubClient.getWorkflowId(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
                 expect(workflowId).not.toBe(0);
-                await gitHubClient.rerunWorkflow(githubOrganization, repositoryName, workflowId) // We need this, because first run doesn't have secrets in repo yet.
                 jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, repositoryName, workflowId?.toString());
                 console.log('Job Status:', jobStatus);
               } catch (error) {
