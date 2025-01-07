@@ -6,6 +6,7 @@ interface softwareTemplatesConfig {
         active: boolean;
         tekton: boolean;
         jenkins: boolean;
+        actions: boolean;
         host: string;
         registriesConfig: {
             quay: {
@@ -18,6 +19,7 @@ interface softwareTemplatesConfig {
         active: boolean;
         tekton: boolean;
         jenkins: boolean;
+        gitlabci: boolean;
         host: string;
         registriesConfig: {
             quay: {
