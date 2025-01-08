@@ -175,7 +175,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
                 const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
                 const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
-                console.log(index)
                 const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
                 const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
                 if (image_index)
@@ -184,7 +183,25 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 }
             expect(image_index).not.toBe(undefined)
             } 
-        }, 900000)        
+        }, 900000)   
+        
+         /**
+         * verify if the ACS Scan is successfully done from the logs of task steps
+         */
+         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+            type tasks = {name: string}
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+                const tasks = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
+                const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
+                const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
+                const result = regex.test(pod_logs)
+                if (result){
+                    console.log("The logs from acs-image-scan lists the step as success \n\n" + pod_logs )
+                }
+            expect(result).toBe(true)
+               }  },900000)
 
         /**
         * Deletes created applications
