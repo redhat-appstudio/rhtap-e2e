@@ -125,6 +125,25 @@ export class Kubernetes extends Utils {
     }
 
     /**
+     * Reads logs from a particular container from a specified pod and namespace and return logs
+     *
+     * @param {string} podName - The name of the pod.
+     * @param {string} namespace - The namespace where the pod is located.
+     * @param {string} ContainerName - The name of the Container.
+     * @returns {Promise<any>} A Promise that resolves once the logs are read and written to artifact files and return logs
+     */
+    async readContainerLogs(podName: string, namespace: string, ContainerName: string): Promise<any> {
+        const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
+        try {
+                // Get logs from the given container
+                const response = await k8sApi.readNamespacedPodLog(podName, namespace, ContainerName);
+                return(response.body)
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    }
+
+    /**
      * Retrieves the most recent PipelineRun associated with a GitHub/GitLab repository.
      * 
      * @param {string} gitRepository - The name of the GitHub/GitLab repository.
