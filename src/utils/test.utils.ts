@@ -237,3 +237,40 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
     expect(jobStatus).not.toBe(undefined);
     expect(jobStatus).toBe("SUCCESS");
 }
+
+/**
+ * Checks whether an ACS scan has passed for a given repository.
+ * 
+ * This function retrieves the pipeline run associated with a repository, looks for the 
+ * ACS image scan pod related to the pipeline, and checks the container logs to determine 
+ * if the scan was successful.
+ * 
+ * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
+ * @param {string} developmentNamespace - The Kubernetes namespace where the development resources (including the ACS scan pod) are deployed.
+ * @returns {Promise<boolean>} A Promise that resolves to `true` if the ACS scan was successful, or `false` if not.
+ * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
+ * 
+ */
+export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
+    let kubeClient: Kubernetes;
+    kubeClient = new Kubernetes();
+    
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
+        
+        // Read the logs from the related container
+        const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
+        
+        // Print the logs from the container 
+        console.log("The logs from acs-image-scan lists the step as success \n\n" + pod_logs)
+        
+        const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
+        
+        // Verify if the scan was success from logs
+        const result: boolean = regex.test(pod_logs)
+        return (result);  
+    }
+    // Returns false when if condition not met
+    return false
+}

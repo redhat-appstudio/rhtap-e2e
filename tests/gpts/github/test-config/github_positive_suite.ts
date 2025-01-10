@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass } from "../../../../src/utils/test.utils";
 
 
 /**
@@ -189,20 +189,9 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            type tasks = {name: string}
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const tasks = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
-                let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
-                const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
-                const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
-                const result = regex.test(pod_logs)
-                if (result){
-                    console.log("The logs from acs-image-scan lists the step as success \n\n" + pod_logs )
-                }
-                
-               expect(result).toBe(true)
-               }  },900000)
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
+            expect(result).toBe(true)
+            }, 900000)
 
 
 
