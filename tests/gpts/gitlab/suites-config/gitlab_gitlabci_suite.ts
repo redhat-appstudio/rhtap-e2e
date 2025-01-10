@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, checkComponentSyncedInArgoAndRouteIsWorking, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, checkComponentSyncedInArgoAndRouteIsWorking, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -146,7 +146,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            await waitForArgoSyncAndRouteContent(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000)
 
         /**
