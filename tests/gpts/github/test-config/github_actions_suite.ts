@@ -101,7 +101,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         }, 600000);
 
         it (`creates env variables in repo`, async () => {
-            await gitHubClient.setEnvironmentVariables(githubOrganization, repositoryName, {
+            await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
                 "IMAGE_REGISTRY": imageRegistry,
                 "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                 "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),

@@ -574,13 +574,13 @@ export class GitHubProvider extends Utils {
      * 
      * @param owner repo owner/org
      * @param repo repo
-     * @param envVars array of envName:envValue pairs. Example
+     * @param envVars array of secretName:secretValue pairs. Example
      * {
      *  "IMAGE_REGISTRY":"quay.io",
      *  "ROX_API_TOKEN": "xxxxx"
      * }
      */
-    public async setEnvironmentVariables(owner: string, repo: string, envVars: {[key:string]: string}) {
+    public async setGitHubSecrets(owner: string, repo: string, envVars: {[key:string]: string}) {
         console.group(`Adding env vars to github ${owner}/${repo}`);
         let publicKeyResponse
         try {
