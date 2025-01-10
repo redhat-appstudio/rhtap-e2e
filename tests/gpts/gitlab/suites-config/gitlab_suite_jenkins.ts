@@ -4,8 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace, waitForStringInPageContent } from "../../../../src/utils/test.utils";
-import { syncArgoApplication } from "../../../../src/utils/argocd";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 
 /**
@@ -35,6 +34,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
+        const developmentEnvironmentName = 'development';
 
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
@@ -87,19 +87,30 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         /**
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
+<<<<<<< HEAD
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.tekton' folder`, async () => {
             gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
             expect(gitlabRepositoryID).toBeDefined();
+=======
+        it(`verifies if component ${softwareTemplateName} was created in GitLab and contains Jenkinsfile`, async () => {
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
+            expect(gitlabRepositoryID).toBeDefined()
+>>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
             expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
         });
 
         /**
         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
-        * The repository should contain the source code of the application and a '.tekton' folder.
+        * The repository should contain the source code of the application and a 'Jenkinsfile.
         */
+<<<<<<< HEAD
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
             const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
+=======
+        it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a Jenkinsfile`, async () => {
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+>>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
             expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true);
         });
@@ -158,6 +169,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
+<<<<<<< HEAD
             console.log("syncing argocd application in development environment");
             await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentNamespace}`);
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
@@ -167,6 +179,10 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             }
             expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
         }, 900000);
+=======
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000)
+>>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
         /**
         * Deletes created applications
