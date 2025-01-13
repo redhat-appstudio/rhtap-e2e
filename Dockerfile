@@ -62,7 +62,7 @@ RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://github.com/tektoncd/cli/rel
     mv tkn /usr/local/bin && \
     tkn version
 
-FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1733160835
+FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1736729788
 
 USER root
 
