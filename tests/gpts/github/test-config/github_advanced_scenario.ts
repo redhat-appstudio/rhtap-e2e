@@ -5,7 +5,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -218,6 +218,15 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 expect(finished).toBe(true)
             }
         }, 900000)
+        
+        /**
+         * verify if the ACS Scan is successfully done from the logs of task steps
+         */
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
+            expect(result).toBe(true)
+            console.log("Verified as ACS Scan is Successful")
+            }, 900000)
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster

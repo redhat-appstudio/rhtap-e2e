@@ -191,6 +191,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
             const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
             expect(result).toBe(true)
+            console.log("Verified as ACS Scan is Successful")
             }, 900000)
 
 

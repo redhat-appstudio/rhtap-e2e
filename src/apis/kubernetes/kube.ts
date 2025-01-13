@@ -132,11 +132,11 @@ export class Kubernetes extends Utils {
      * @param {string} ContainerName - The name of the Container.
      * @returns {Promise<any>} A Promise that resolves once the logs are read and written to artifact files and return logs
      */
-    async readContainerLogs(podName: string, namespace: string, ContainerName: string): Promise<any> {
+    async readContainerLogs(podName: string, namespace: string, containerName: string): Promise<any> {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
                 // Get logs from the given container
-                const response = await k8sApi.readNamespacedPodLog(podName, namespace, ContainerName);
+                const response = await k8sApi.readNamespacedPodLog(podName, namespace, containerName);
                 return(response.body)
         } catch (err) {
             console.error('Error:', err);

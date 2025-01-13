@@ -263,7 +263,7 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
         const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
         
         // Print the logs from the container 
-        console.log("The logs from acs-image-scan lists the step as success \n\n" + pod_logs)
+        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name  + ": \n\n" + pod_logs)
         
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
         
