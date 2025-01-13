@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass } from "../../../../src/utils/test.utils";
 
 
 /**
@@ -175,7 +175,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
                 const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
                 const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
-                console.log(index)
                 const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
                 const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
                 if (image_index)
@@ -184,7 +183,18 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
                 }
             expect(image_index).not.toBe(undefined)
             } 
-        }, 900000)        
+        }, 900000)   
+        
+        /**
+         * verify if the ACS Scan is successfully done from the logs of task steps
+         */
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
+            expect(result).toBe(true)
+            console.log("Verified as ACS Scan is Successful")
+            }, 900000)
+
+
 
         /**
         * Deletes created applications
