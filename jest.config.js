@@ -22,7 +22,7 @@ module.exports = {
                     },
                 },
                 gitlab: {
-                    active: true,
+                    active: false,
                     tekton: true,
                     jenkins: false,
                     gitlabci: false,
