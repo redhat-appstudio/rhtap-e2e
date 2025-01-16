@@ -18,7 +18,7 @@ export GITLAB_ORGANIZATION="rhtap-qe"
 
 #TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
 # Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` org in case of public quay.io and `rhtap` or in case of in-cluster quay.
-export QUAY_IMAGE_ORG="rhtap"
+export IMAGE_REGISTRY_ORG="rhtap"
 
 
 export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
