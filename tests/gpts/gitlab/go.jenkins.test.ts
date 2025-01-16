@@ -17,7 +17,7 @@ const stringOnRoute = 'Hello World!';
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
         gitLabJenkinsBasicTests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);

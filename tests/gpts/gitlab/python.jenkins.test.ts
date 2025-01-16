@@ -17,7 +17,7 @@ const stringOnRoute = 'Hello World!';
 const runPythonBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
 
         gitLabJenkinsBasicTests(pythonTemplateName, stringOnRoute);
     } else {

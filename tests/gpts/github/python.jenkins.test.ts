@@ -17,7 +17,7 @@ const stringOnRoute =  'Hello World!';
 const runPythonBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.github.active && configuration.github.jenkins) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.pipeline.github && configuration.github.jenkins) {
 
         gitHubJenkinsBasicGoldenPathTemplateTests(pythonTemplateName, stringOnRoute);
     } else {

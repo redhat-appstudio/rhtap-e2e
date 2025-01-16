@@ -7,7 +7,7 @@ const stringOnRoute =  'Hello World!';
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
 
         gitLabProviderGitLabCITests(golangTemplateName, stringOnRoute);
     } else {
