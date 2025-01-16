@@ -8,7 +8,7 @@ const stringOnRoute =  'Congratulations, you have created a new Quarkus cloud ap
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
         gitLabProviderGitLabCITests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);

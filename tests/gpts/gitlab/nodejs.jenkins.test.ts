@@ -17,7 +17,7 @@ const stringOnRoute = 'Hello from Node.js Starter Application!';
 const runNodeJSBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
         gitLabJenkinsBasicTests(nodejsTemplateName, stringOnRoute);
     } else {
         skipSuite(nodejsTemplateName);

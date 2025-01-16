@@ -8,7 +8,7 @@ const stringOnRoute =  'Hello World!';
 const runPythonBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
         gitLabProviderGitLabCITests(pythonTemplateName, stringOnRoute);
     } else {
         skipSuite(pythonTemplateName);
