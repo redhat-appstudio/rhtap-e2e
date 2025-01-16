@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -153,10 +153,10 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          /**
          * Check if the pipelinerun yaml has the rh-syft image path mentioned
          */
-         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async ()=> {
+         it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async ()=> {
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
+                const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
                 const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
                 const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
                 const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
@@ -171,7 +171,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
-        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async ()=> {
             const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
             expect(result).toBe(true)
             console.log("Verified as ACS Scan is Successful")

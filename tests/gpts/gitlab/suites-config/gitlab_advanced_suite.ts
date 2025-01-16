@@ -4,7 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -162,6 +162,15 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 }
                 expect(finished).toBe(true)
             }
+        }, 900000)
+
+        /**
+            * verify if the ACS Scan is successfully done from the logs of task steps
+        */
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async ()=> {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
+            expect(result).toBe(true)
+            console.log("Verified as ACS Scan is Successful")
         }, 900000)
 
         /**
