@@ -6,6 +6,8 @@ import { JenkinsCI } from "../../src/apis/ci/jenkins";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { syncArgoApplication } from "./argocd";
 import { TaskIdReponse } from "../../src/apis/backstage/types";
+import { TrustificationClient } from "../../src/apis/trustification/trustification";
+
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
@@ -255,7 +257,7 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
     kubeClient = new Kubernetes();
     
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
-    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+    if (pipelineRun?.metadata?.name) {
         let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
         
         // Read the logs from the related container
@@ -297,4 +299,22 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
 
     const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response!.id, 540000);
     expect(pipelineResult).toBe("success");
+}
+
+export async function checkSBOMInTrustification(kubeClient: Kubernetes, componentId: string) {
+    let trust: TrustificationClient;
+    const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
+    const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
+    const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
+    const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace());
+    
+    trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl,oidcclientId, oidcclientSecret);
+
+    try {
+        await trust.initializeTpaToken();
+        const sbomData = await trust.waitForSbomSearchByName(componentId);
+        console.log('SBOM Data:', sbomData);
+    } catch (error) {
+        console.error('Error fetching SBOM data:', error);
+    }
 }

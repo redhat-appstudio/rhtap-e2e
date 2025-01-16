@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation, waitForGitLabCIPipelineToFinish } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation, waitForGitLabCIPipelineToFinish } from "../../../../src/utils//test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -210,6 +210,13 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         */
         it('container component is successfully synced by gitops in prod environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000)
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () =>{
+            await checkSBOMInTrustification(kubeClient, repositoryName);
         }, 900000)
 
         /**

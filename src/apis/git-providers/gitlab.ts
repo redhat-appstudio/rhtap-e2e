@@ -111,7 +111,6 @@ export class GitLabProvider extends Utils {
         }
     }
 
-
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
         let stringToFind = "agent any";
         let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
@@ -195,7 +194,7 @@ export class GitLabProvider extends Utils {
                 repositoryID,
                 webHookUrl,
                 {
-                    token: process.env.GITLAB_WEBHOOK_SECRET || '',
+                    token: process.env.GITLAB_WEBHOOK_SECRET ?? '',
                     pushEvents: true,
                     mergeRequestsEvents: true,
                     tagPushEvents: true,
