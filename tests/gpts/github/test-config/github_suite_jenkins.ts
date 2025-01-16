@@ -1,11 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 import { Utils } from '../../../../src/apis/git-providers/utils';
 
 /**
@@ -54,15 +54,15 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             jenkinsClient = await getJenkinsCI(kubeClient);
 
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
          */
         it(`verifies if ${gptTemplate} gpt exists in the catalog`, async () => {
             const goldenPathTemplates = await backstageClient.getGoldenPathTemplates();
-            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true)
-        })
+            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true);
+        });
 
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -80,12 +80,12 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
 
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
                     await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
 
                     throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
@@ -103,7 +103,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Need to wait until application is synced until commit something to github and trigger a pipelinerun
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
-            expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true)
+            expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
         }, 600000);
 
         /**
@@ -111,32 +111,32 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * my application. Also verifies if the repository contains a Jenkinsfile.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains Jenkinsfile`, async () => {
-            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true)
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true)
-        }, 120000)
+            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true);
+        }, 120000);
 
         /**
          * Creates commits to update Jenkins agent and enable ACS scan
          */
         it(`Commit updated agent ${gptTemplate} and enable ACS scan`, async () => {
-            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined)
-            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined)
+            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
-        }, 120000)
+        }, 120000);
 
         /**
          * Verification to check if Red Hat Developer Hub created the gitops repository with Jenkinsfile
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a Jenkinsfile`, async () => {
-            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true)
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true)
-        }, 120000)
+            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true);
+        }, 120000);
 
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName);
             await jenkinsClient.waitForJobCreation(repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**
@@ -157,10 +157,10 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Creates an empty commit
          */
         it(`Creates empty commit`, async () => {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName)
-            expect(commit).not.toBe(undefined)
+            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName);
+            expect(commit).not.toBe(undefined);
 
-        }, 120000)
+        }, 120000);
 
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
@@ -177,8 +177,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-           await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000);
 
 
         /**
@@ -189,7 +189,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
                 await jenkinsClient.deleteJenkinsJob(repositoryName);
             }
-        })
-    })
+        });
+    });
 
-}
+};

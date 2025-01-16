@@ -51,7 +51,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitLabProvider = await getGitLabProvider(kubeClient);
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -68,14 +68,14 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
                 console.log("Failed to create backstage task. Creating logs...");
 
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
                 } catch (error) {
                     throw new Error(`Failed to write logs to artifact directory: ${error}`);
                 }
@@ -88,21 +88,21 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.tekton' folder`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
 
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true)
-        })
+            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
+        });
 
         /**
         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
         * The repository should contain the source code of the application and a '.tekton' folder.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
 
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true)
-        })
+            expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true);
+        });
 
         /**
         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -115,11 +115,11 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Creates commits to update Jenkins agent and enable ACS scan
         */
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
-            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main')
+            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
             //expect(await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID)).not.toBe(undefined)
-            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main')
-            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main')
-        }, 120000)
+            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
+        }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName);
@@ -141,8 +141,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
         */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            await gitLabProvider.createCommit(gitlabRepositoryID, 'main')
-        }, 120000)
+            await gitLabProvider.createCommit(gitlabRepositoryID, 'main');
+        }, 120000);
 
         /**
         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
@@ -158,23 +158,23 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            console.log("syncing argocd application in development environment")
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentNamespace}`)
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
+            console.log("syncing argocd application in development environment");
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentNamespace}`);
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000);
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
-            expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
-        }, 900000)
+            expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
+        }, 900000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};

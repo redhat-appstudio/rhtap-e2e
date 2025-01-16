@@ -14,7 +14,7 @@ import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.
 const golangTemplateName = 'go';
 
 const runGolangBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
 
@@ -22,6 +22,6 @@ const runGolangBasicTests = () => {
     } else {
         skipSuite(golangTemplateName);
     }
-}
+};
 
 runGolangBasicTests();

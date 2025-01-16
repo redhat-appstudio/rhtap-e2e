@@ -14,14 +14,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 const dotNetTemplateName = 'dotnet-basic';
 
 const runDotNetBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(dotNetTemplateName) && configuration.github.active && configuration.github.tekton) {
         gitHubBasicGoldenPathTemplateTests(dotNetTemplateName);
 
     } else {
-        skipSuite(dotNetTemplateName)
+        skipSuite(dotNetTemplateName);
     }
-}
+};
 
-runDotNetBasicTests()
+runDotNetBasicTests();

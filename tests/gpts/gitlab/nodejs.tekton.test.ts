@@ -14,14 +14,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.
 const nodejsTemplateName = 'nodejs';
 
 const runNodeJSBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(nodejsTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
 
-        gitLabProviderBasicTests(nodejsTemplateName)
+        gitLabProviderBasicTests(nodejsTemplateName);
     } else {
-        skipSuite(nodejsTemplateName)
+        skipSuite(nodejsTemplateName);
     }
-}
+};
 
-runNodeJSBasicTests()
+runNodeJSBasicTests();
