@@ -15,13 +15,13 @@ const nodejsTemplateName = 'nodejs';
 const stringOnRoute =  'Hello from Node.js Starter Application!';
 
 const runNodeJSBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(nodejsTemplateName) && configuration.github.active && configuration.github.jenkins) {
         gitHubJenkinsBasicGoldenPathTemplateTests(nodejsTemplateName, stringOnRoute);
     } else {
-        skipSuite(nodejsTemplateName)
+        skipSuite(nodejsTemplateName);
     }
-}
+};
 
-runNodeJSBasicTests()
+runNodeJSBasicTests();

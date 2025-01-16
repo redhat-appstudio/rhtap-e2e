@@ -6,13 +6,13 @@ const springBootTemplateName = 'java-springboot';
 const stringOnRoute =  'Hello World!';
 
 const runSpringBootBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(springBootTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
         gitLabProviderGitLabCITests(springBootTemplateName, stringOnRoute);
     } else {
         skipSuite(springBootTemplateName);
     }
-}
+};
 
 runSpringBootBasicTests();

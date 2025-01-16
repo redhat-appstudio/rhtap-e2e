@@ -26,8 +26,6 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         let kubeClient: Kubernetes;
 
         let gitlabRepositoryID: number;
-        let pipelineAsCodeRoute: string;
-        let pipelineTriggerToken: "";
 
         let RHTAPRootNamespace: string;
 
@@ -49,7 +47,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -73,22 +71,22 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         * Checks if Red Hat Developer Hub created the repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.gitlab-ci.yml' file`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
 
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, '.gitlab-ci.yml')
-            expect(tektonFolderExists).toBe(true)
-        }, 60000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, '.gitlab-ci.yml');
+            expect(tektonFolderExists).toBe(true);
+        }, 60000);
 
         /**
         * Verifies if Red Hat Developer Hub created a gitops repository from the specified template in GitHub.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.gitlab-ci.yml' file`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
 
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, '.gitlab-ci.yml')
-            expect(tektonFolderExists).toBe(true)
-        }, 60000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, '.gitlab-ci.yml');
+            expect(tektonFolderExists).toBe(true);
+        }, 60000);
 
         /**
         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -127,7 +125,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         it(`Commit updated RHTAP env file for ${softwareTemplateName} and enable ACS scan`, async () => {
             // Update env file for GitLab CI vars
             await gitLabProvider.updateEnvFileForGitLabCI(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace));
-        }, 120000)
+        }, 120000);
 
         /**
         * Waits for pipeline after commit RHTAP ENV
@@ -138,22 +136,22 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
 
             const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id, 540000);
             expect(pipelineResult).toBe("success");
-        }, 600000)
+        }, 600000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment and route is working', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-        }, 600000)
+        }, 600000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};

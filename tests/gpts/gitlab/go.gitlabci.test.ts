@@ -5,7 +5,7 @@ const golangTemplateName = 'go';
 const stringOnRoute =  'Hello World!';
 
 const runGolangBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
 
@@ -13,6 +13,6 @@ const runGolangBasicTests = () => {
     } else {
         skipSuite(golangTemplateName);
     }
-}
+};
 
 runGolangBasicTests();

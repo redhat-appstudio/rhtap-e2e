@@ -49,7 +49,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
     
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -67,14 +67,14 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
     
             if (taskCreated.status !== 'completed') {
                 console.log("Failed to create backstage task. Creating logs...");
     
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
                 } catch (error) {
                     throw new Error(`Failed to write logs to artifact directory: ${error}`);
                 }
@@ -87,23 +87,23 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.tekton' folder`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
     
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(gitlabRepositoryID, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
     
         /**
             * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
             * The repository should contain the source code of the application and a '.tekton' folder.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
         
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(repositoryID, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFolder(repositoryID, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
     
         /**
             * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -117,46 +117,46 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         */
         it(`Creates empty commit to trigger a pipeline run`, async ()=> {
             await gitLabProvider.createProjectWebHook(gitlabRepositoryID, pipelineAsCodeRoute);
-        }, 120000)
+        }, 120000);
     
         /**
             * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
         */
         it(`Creates empty commit to trigger a pipeline run`, async ()=> {
-            await gitLabProvider.createCommit(gitlabRepositoryID, 'main')    
-        }, 120000)
+            await gitLabProvider.createCommit(gitlabRepositoryID, 'main');    
+        }, 120000);
     
         /**
             * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
         */
         it(`Wait component ${softwareTemplateName} pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push')
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push');
         
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
         
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
         
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
 
-        }, 900000)
+        }, 900000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};
