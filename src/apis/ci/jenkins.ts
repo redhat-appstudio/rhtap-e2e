@@ -14,7 +14,6 @@ export class JenkinsCI extends Utils {
      */
     constructor(jenkinsURL: string, jenkinsUsername: string, jenkinsToken: string) {
         super();
-
         this.jenkinsUrl = jenkinsURL;
         this.jenkinsUsername = jenkinsUsername;
         this.jenkinsApiToken = jenkinsToken;
@@ -54,6 +53,7 @@ export class JenkinsCI extends Utils {
                     <userRemoteConfigs>
                         <hudson.plugins.git.UserRemoteConfig>
                             <url>https://${gitProvider}/${organization}/${jobName}</url>
+                            <credentialsId>GITOPS_CREDENTIALS</credentialsId>
                         </hudson.plugins.git.UserRemoteConfig>
                     </userRemoteConfigs>
                     <branches>
@@ -97,8 +97,17 @@ export class JenkinsCI extends Utils {
             }
             return response.status === 200;
         } catch (error) {
-            console.error('Error checking job existence:', error);
-            throw error;
+            if (axios.isAxiosError(error)) {
+                if (error.response && error.response.status === 404) {
+                    return false;
+                } else {
+                    console.error('Axios error checking job existence:', error);
+                    throw error;
+                }
+            } else {
+                console.error('Error checking job existence:', error);
+                throw error;
+            }
         }
     }
 
@@ -198,10 +207,10 @@ export class JenkinsCI extends Utils {
 
     public async deleteJenkinsJob(jobName: string) {
         const url = `${this.jenkinsUrl}/job/${jobName}/doDelete`;
-    
+
         try {
             const response = await this.axiosInstance.post(url);
-    
+
             if (response.status === 200) {
                 console.log(`Job '${jobName}' deleted successfully.`);
             } else {
@@ -211,9 +220,7 @@ export class JenkinsCI extends Utils {
             console.error('Error deleting job:', error);
         }
     }
-
     public async getJenkinsURL(){
         return this.jenkinsUrl;
     }
-
 }

@@ -5,6 +5,7 @@ import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { syncArgoApplication } from "./argocd";
+import { TaskIdReponse } from "../../src/apis/backstage/types";
 
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
@@ -96,6 +97,34 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     } else {
         return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
     }
+}
+
+export async function waitForComponentCreation(backstageClient: DeveloperHubClient, repositoryName: string, developerHubTask: TaskIdReponse) {
+    const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+
+    if (taskCreated.status !== 'completed') {
+        console.log("Failed to create backstage task. Creating logs...");
+
+        try {
+            const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+        } catch (error) {
+            throw new Error(`Failed to write logs to artifact directory: ${error}`);
+        }
+    } else {
+        console.log("Task created successfully in backstage");
+    }
+}
+
+export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string){
+    console.log("syncing argocd application in development environment")
+    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`)
+    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName)
+    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
+    if (!isReady) {
+        throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
+    }
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
@@ -202,20 +231,46 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     return taskCreatorOptions;
 }
 
-export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string){
-    console.log("syncing argocd application in development environment")
-    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`)
-    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName)
-    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
-    if (!isReady) {
-        throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
-    }
-    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
-}
-
 export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobName: string, jobBuildNumber: number) {
     await new Promise(resolve => setTimeout(resolve, 5000));
     const jobStatus = await jenkinsClient.waitForBuildToFinish(jobName, jobBuildNumber, 540000);
     expect(jobStatus).not.toBe(undefined);
     expect(jobStatus).toBe("SUCCESS");
+}
+
+/**
+ * Checks whether an ACS scan has passed for a given repository.
+ * 
+ * This function retrieves the pipeline run associated with a repository, looks for the 
+ * ACS image scan pod related to the pipeline, and checks the container logs to determine 
+ * if the scan was successful.
+ * 
+ * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
+ * @param {string} developmentNamespace - The Kubernetes namespace where the development resources (including the ACS scan pod) are deployed.
+ * @returns {Promise<boolean>} A Promise that resolves to `true` if the ACS scan was successful, or `false` if not.
+ * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
+ * 
+ */
+export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
+    let kubeClient: Kubernetes;
+    kubeClient = new Kubernetes();
+    
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
+        
+        // Read the logs from the related container
+        const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
+        
+        // Print the logs from the container 
+        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name  + ": \n\n" + pod_logs)
+        
+        const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
+        
+        // Verify if the scan was success from logs
+        const result: boolean = regex.test(pod_logs)
+        return (result);  
+    }
+    // Returns false when if condition not met
+    return false
 }
