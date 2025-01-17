@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { Octokit } from "@octokit/rest";
 import { AxiosError } from "axios";
+import sodium from 'libsodium-wrappers';
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
 
@@ -441,6 +442,100 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
+    public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
+        console.log(`Waiting for the latest job in workflow '${workflow_id}' to finish...`);
+
+        const startTime = Date.now();
+
+        while (true) {
+            // Check for timeout
+            if (Date.now() - startTime > timeout) {
+                throw new Error(`Timeout: The latest job did not finish within the specified time.`);
+            }
+
+            try {
+                // Fetch the latest workflow runs
+                const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
+                    owner,
+                    repo,
+                    workflow_id,
+                    per_page: 1, // We only need the latest run
+                });
+
+                if (workflowRuns.total_count === 0) {
+                    console.log('No workflow runs found, retrying...');
+                    await this.sleep(5000);
+                    continue;
+                }
+
+                // Get the latest workflow run
+                const latestRun = workflowRuns.workflow_runs[0];
+
+                // Check if the run is still in progress
+                if (latestRun.status === 'completed') {
+                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
+                    return latestRun.conclusion; // Return only the status of the job
+                } 
+            } catch (error) {
+                console.error('Error fetching workflow run details:', error);
+                throw error;
+            }
+
+            // Wait 5 seconds before checking again
+            await this.sleep(5000);
+        }
+    }
+
+
+    // Function to get the workflow ID for a specific workflow name or filename in a repository
+    public async getWorkflowId(owner: string, repo: string, workflowName: string): Promise<number> {
+        try {
+            // Fetch all workflows in the repository
+            const { data: workflows } = await this.octokit.rest.actions.listRepoWorkflows({
+                owner,
+                repo,
+            });
+
+            // Find the workflow that matches the provided name or filename
+            const workflow = workflows.workflows.find(wf => wf.name === workflowName || wf.path === workflowName);
+
+            if (workflow) {
+                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id}`);
+                return workflow.id;
+            } else {
+                console.log(`Workflow '${workflowName}' not found`);
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error fetching workflows:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * This function reruns latest job of given workflow.
+     * 
+     */
+    public async rerunWorkflow(owner:string, repo: string, workflowId: number) {
+        try {
+            const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflowId,
+                per_page: 1, // We only need the latest run
+            });
+            await this.octokit.actions.reRunWorkflow({
+                owner,
+                repo,
+                run_id: workflowRuns.workflow_runs[0].id
+            });
+        }catch (error) {
+            console.error(`Error rerunning workflow id=${workflowId}: `, error);
+            throw error;
+        }
+    }
+    
     /**
      * Function to create a GitHub webhook for push events(for Jenkins for example)
      * @param {string} owner - The name of the GitHub organization.
@@ -473,5 +568,54 @@ export class GitHubProvider extends Utils {
         }
     }
 
+
+    /**
+     * This creates or updates secrets in Github repository to be used in Github Actions
+     * 
+     * @param owner repo owner/org
+     * @param repo repo
+     * @param envVars array of secretName:secretValue pairs. Example
+     * {
+     *  "IMAGE_REGISTRY":"quay.io",
+     *  "ROX_API_TOKEN": "xxxxx"
+     * }
+     * @author rhopp
+     */
+    public async setGitHubSecrets(owner: string, repo: string, envVars: Record<string, string>) {
+        console.group(`Adding env vars to github ${owner}/${repo}`);
+        let publicKeyResponse;
+        try {
+            publicKeyResponse = await this.octokit.actions.getRepoPublicKey({
+                owner,
+                repo
+            });
+        }catch (error) {
+            console.error("Error getting repo public key to setup secrets:", error);
+            console.groupEnd();
+            throw error;
+        }
+        for (const [envVarName,envVarValue] of Object.entries(envVars)){
+            console.log("Setting env var: " + envVarName);
+            await sodium.ready;
+            const binkey = sodium.from_base64(publicKeyResponse.data.key, sodium.base64_variants.ORIGINAL);
+            const binsec = sodium.from_string(envVarValue);
+            const encBytes = sodium.crypto_box_seal(binsec, binkey);
+            const output = sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+            try {
+                await this.octokit.actions.createOrUpdateRepoSecret({
+                    owner,
+                    repo,
+                    secret_name: envVarName,
+                    encrypted_value: output,
+                    key_id: publicKeyResponse.data.key_id
+                });
+            }catch (error) {
+                console.error(`Error creating secret ${envVarName}: ${error}`);
+                console.groupEnd();
+                throw error;
+            }
+        }
+        console.groupEnd();
+    }
 
 }
