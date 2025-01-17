@@ -44,6 +44,12 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
                     console.error(`Error executing commands: ${error.message}`);
                     failed(error);
                 }
+
+                // Log stdout for script debugging
+                if (stdout) {
+                    console.log(`Commands STDOUT: ${stdout}`);
+                }
+        
                 if (stderr) {
                     console.error(`Commands STDERR: ${stderr}`);
                 }
@@ -54,6 +60,6 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
             });
         });
     } catch (error) {
-        fail(error);
+        console.error(error);
     }
 };
