@@ -7,13 +7,9 @@ export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
-<<<<<<< HEAD
-    private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-=======
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
     private readonly jenkinsAgentImage="quay.io/jkopriva/rhtap-jenkins-agent:0.1";
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
     constructor(gitlabToken: string) {
         super();
@@ -41,16 +37,6 @@ export class GitLabProvider extends Utils {
             try {
                 const projects = await this.gitlab.Projects.show(`${organization}/${repoName}`);
                 if (projects) {
-<<<<<<< HEAD
-                    console.info(`Repository with name '${repoName}' found in organization '${namespace}'
-                        created at '${projects.created_at}' url: gitlab.com/${namespace}/${repoName}`);
-                    return projects.id;
-                }
-
-                await this.sleep(10000); // Wait 10 seconds before checking again
-            } catch (_) {
-                console.info(`Failed to check if repository ${repoName} exists`);
-=======
                     console.info(`Repository with name '${repoName}' found in organization '${organization}'
                        created at '${projects.created_at}' url: gitlab.com/${organization}/${repoName}`);
                     return projects.id
@@ -59,7 +45,6 @@ export class GitLabProvider extends Utils {
                 await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (error) {
                 console.info(`Failed to check if repository ${organization}/${repoName} exists`);
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
             }
         }
     }
@@ -128,27 +113,15 @@ export class GitLabProvider extends Utils {
         }
     }
 
-
-<<<<<<< HEAD
-    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
-        const stringToFind = "agent any";
-        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
-=======
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
-        let stringToFind = "agent any";
-        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+        const stringToFind = "agent any";
+        const replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
     public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
-<<<<<<< HEAD
-        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') Uncomment this when using GitLab */";
-        const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
-=======
-        let stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */"
-        let replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */"
+        const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
