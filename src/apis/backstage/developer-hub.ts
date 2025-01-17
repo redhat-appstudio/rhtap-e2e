@@ -118,7 +118,7 @@ export class DeveloperHubClient extends Utils {
         try {
             const response = await axios.get(url);
             return response.status === 200;
-        } catch (error) {
+        } catch (_) {
             return false;
         }
     }

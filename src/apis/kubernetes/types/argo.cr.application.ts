@@ -1,4 +1,4 @@
-import { V1ObjectMeta } from "@kubernetes/client-node"
+import { V1ObjectMeta } from "@kubernetes/client-node";
 
 export interface ApplicationSpec {
     apiVersion: string

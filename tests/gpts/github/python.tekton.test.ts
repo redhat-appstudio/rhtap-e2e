@@ -14,14 +14,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 const pythonTemplateName = 'python';
 
 const runPythonBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(pythonTemplateName) && configuration.github.active && configuration.github.tekton) {
 
-        gitHubBasicGoldenPathTemplateTests(pythonTemplateName)
+        gitHubBasicGoldenPathTemplateTests(pythonTemplateName);
     } else {
-        skipSuite(pythonTemplateName)
+        skipSuite(pythonTemplateName);
     }
-}
+};
 
-runPythonBasicTests()
+runPythonBasicTests();

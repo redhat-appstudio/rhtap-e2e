@@ -70,7 +70,7 @@ const softwareTemplateParserValidator = z.object({
 });
 
 export const loadSoftwareTemplatesTestsGlobals = ():softwareTemplatesConfig => {
-    const configuration: softwareTemplatesConfig = global.suites.softwareTemplates
+    const configuration: softwareTemplatesConfig = global.suites.softwareTemplates;
 
     const validationResult = softwareTemplateParserValidator.safeParse(configuration);
 
@@ -79,5 +79,5 @@ export const loadSoftwareTemplatesTestsGlobals = ():softwareTemplatesConfig => {
         console.error("Validation failed:", validationResult.error);
     }
 
-    return configuration
-}
+    return configuration;
+};

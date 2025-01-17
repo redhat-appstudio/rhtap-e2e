@@ -1,20 +1,21 @@
+/* eslint-disable camelcase */
 import { Octokit } from "@octokit/rest";
 import { AxiosError } from "axios";
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
 
 export class GitHubProvider extends Utils {
-    private readonly octokit: Octokit
+    private readonly octokit: Octokit;
     private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(githubToken: string) {
-        super()
+        super();
 
         this.octokit = new Octokit({
             baseUrl: 'https://api.github.com',
             userAgent: 'rhtap-e2e',
             auth: githubToken,
-        })
+        });
     }
 
     /**
@@ -24,13 +25,13 @@ export class GitHubProvider extends Utils {
      */
     public async checkIfRepositoryExists(organization: string, name: string): Promise<boolean> {
         try {
-            const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name })
+            const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name });
 
-            return repositoryResponse.status === 200
+            return repositoryResponse.status === 200;
         } catch (error) {
-            console.log(error)
+            console.log(error);
 
-            return false
+            return false;
         }
     }
 
@@ -43,13 +44,13 @@ export class GitHubProvider extends Utils {
         //Check, if repo exists and delete
         try {
             if (await this.checkIfRepositoryExists(organization, name)) {
-                await this.deleteRepository(organization, name)
-                return true
+                await this.deleteRepository(organization, name);
+                return true;
             }
-            return false
+            return false;
         } catch (error) {
-            console.log(error)
-            return false
+            console.log(error);
+            return false;
         }
     }
 
@@ -66,12 +67,12 @@ export class GitHubProvider extends Utils {
                 headers: {
                     'X-GitHub-Api-Version': '2022-11-28'
                 }
-            })
-            return repositoryResponse.status === 204
+            });
+            return repositoryResponse.status === 204;
         } catch (error) {
-            console.log(error)
+            console.log(error);
 
-            return false
+            return false;
         }
     }
 
@@ -85,12 +86,12 @@ export class GitHubProvider extends Utils {
         try {
             const response = await this.octokit.repos.getContent({ owner: organization, repo: name, path: folderPath });
 
-            return response.status === 200
+            return response.status === 200;
         } catch (error) {
-            const e = error as AxiosError
-            console.error(`Failed to fetch folderPath: ${folderPath}, from repository: ${organization}/${name}, request status: ${e.status}, message: ${e.message}`)
+            const e = error as AxiosError;
+            console.error(`Failed to fetch folderPath: ${folderPath}, from repository: ${organization}/${name}, request status: ${e.status}, message: ${e.message}`);
 
-            return false
+            return false;
         }
     }
 
@@ -104,7 +105,7 @@ export class GitHubProvider extends Utils {
      */
     public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
-            const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' })
+            const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' });
 
             const currentCommit = await this.octokit.git.getCommit({
                 owner: gitOrg, repo: gitRepository,
@@ -124,9 +125,9 @@ export class GitHubProvider extends Utils {
                 sha: newCommit.data.sha,
             });
 
-            return newCommit.data.sha
+            return newCommit.data.sha;
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     }
 
@@ -340,7 +341,7 @@ export class GitHubProvider extends Utils {
                 body: "RHTAP E2E: Automatic Pull Request"
             });
 
-            return pullRequest.number
+            return pullRequest.number;
 
         } catch (error) {
             console.error("Error:", error);
@@ -351,19 +352,19 @@ export class GitHubProvider extends Utils {
      * Merge GitHub pull request.
      * @param {string} owner - The name of the GitHub organization.
      * @param {string} repo - The name of the repository.
-     * @param {string} pull_request - PR number.
+     * @param {string} pullRequest - PR number.
      */
-    public async mergePullRequest(owner: string, repo: string, pull_request: number) {
+    public async mergePullRequest(owner: string, repo: string, pullRequest: number) {
         try {
             await this.octokit.pulls.merge({
                 owner,
                 repo,
-                pull_number: pull_request,
+                pull_number: pullRequest,
                 commit_title: "RHTAP E2E: Automatic Pull Request merge",
                 merge_method: "squash"
             });
         } catch (error) {
-            throw new Error(`Failed to merge Pull Request ${pull_request}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
+            throw new Error(`Failed to merge Pull Request ${pullRequest}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
         }
     }
 
@@ -384,9 +385,9 @@ export class GitHubProvider extends Utils {
 
             const { content } = { ...response.data };
 
-            const decodedData = Buffer.from(content, 'base64')
+            const decodedData = Buffer.from(content, 'base64');
 
-            const decodedContent = decodedData.toString()
+            const decodedContent = decodedData.toString();
 
             // Define the regular expression pattern to extract the desired string
             const pattern = /- image: (.*)/;
@@ -398,13 +399,13 @@ export class GitHubProvider extends Utils {
                 const extractedImage = matches[1];
                 console.log("Extracted image:", extractedImage);
 
-                return extractedImage
+                return extractedImage;
             } else {
                 throw new Error("Image not found in the gitops repository path");
             }
 
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error(`Error: ${error}`);
         }
     }
@@ -427,13 +428,13 @@ export class GitHubProvider extends Utils {
 
             const { content, sha: fileSHA } = { ...response.data };
 
-            const decodedData = Buffer.from(content, 'base64')
-            let decodedContent = decodedData.toString()
+            const decodedData = Buffer.from(content, 'base64');
+            let decodedContent = decodedData.toString();
 
             const pattern = /- image: (.*)/;
             decodedContent = decodedContent.replace(pattern, `- image: ${image}`);
 
-            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA)
+            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA);
 
         } catch (error) {
             throw new Error(`Error: ${error}`);

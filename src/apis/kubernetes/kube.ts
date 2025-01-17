@@ -16,16 +16,16 @@ const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
  */
 export class Kubernetes extends Utils {
 
-    private readonly kubeConfig
+    private readonly kubeConfig;
 
     /**
      * Constructs a new instance of the Kubernetes class.
      */
     constructor() {
-        super()
+        super();
 
-        this.kubeConfig = new KubeConfig()
-        this.kubeConfig.loadFromDefault()
+        this.kubeConfig = new KubeConfig();
+        this.kubeConfig.loadFromDefault();
     }
 
     /**
@@ -37,16 +37,16 @@ export class Kubernetes extends Utils {
     public async namespaceExists(name: string): Promise<boolean> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespace(name)
+            const response = await k8sCoreApi.readNamespace(name);
 
             if (response.body && response.body.metadata && response.body.metadata.name === name) {
-                return true
+                return true;
             }
 
-            return false
+            return false;
         } catch (error) {
-            console.error(error)
-            return false
+            console.error(error);
+            return false;
         }
     }
 
@@ -65,7 +65,7 @@ export class Kubernetes extends Utils {
                 taskRun.metadata && taskRun.metadata.name && taskRun.metadata.name.startsWith(pipelineRunName));
 
         } catch (error) {
-            console.error(error)
+            console.error(error);
             throw new Error(`Failed to obtain task run from pipelinerun ${pipelineRunName}: ${error}`);
         }
     }
@@ -80,12 +80,12 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
             const { body: openshiftRoute } = await customObjectsApi.getNamespacedCustomObject('route.openshift.io', 'v1', namespace, 'routes', name);
-            const route = openshiftRoute as OpenshiftRoute
+            const route = openshiftRoute as OpenshiftRoute;
 
-            return route.spec.host
+            return route.spec.host;
 
         } catch (error) {
-            console.error(error)
+            console.error(error);
             throw new Error(`Failed to obtain openshift route ${name}: ${error}`);
         }
     }
@@ -112,8 +112,8 @@ export class Kubernetes extends Utils {
 
                     // Append container name before the logs
                     const logsWithContainerInfo = `Container: ${container.name}\n${response.body}\n\n`;
-                    const logFilePath = path.join('taskruns-logs', podName)
-                    await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo)
+                    const logFilePath = path.join('taskruns-logs', podName);
+                    await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo);
                 }
 
             } else {
@@ -132,12 +132,12 @@ export class Kubernetes extends Utils {
      * @param {string} ContainerName - The name of the Container.
      * @returns {Promise<any>} A Promise that resolves once the logs are read and written to artifact files and return logs
      */
-    async readContainerLogs(podName: string, namespace: string, containerName: string): Promise<any> {
+    async readContainerLogs(podName: string, namespace: string, containerName: string): Promise<unknown> {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-                // Get logs from the given container
-                const response = await k8sApi.readNamespacedPodLog(podName, namespace, containerName);
-                return(response.body)
+            // Get logs from the given container
+            const response = await k8sApi.readNamespacedPodLog(podName, namespace, containerName);
+            return (response.body);
         } catch (err) {
             console.error('Error:', err);
         }
@@ -151,9 +151,9 @@ export class Kubernetes extends Utils {
      * @throws This function may throw errors during API calls or retries.
      */
     public async getPipelineRunByRepository(gitRepository: string, eventType: string): Promise<PipelineRunKind | undefined> {
-        const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi)
+        const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const maxAttempts = 10;
-        const retryInterval = 10 * 1000
+        const retryInterval = 10 * 1000;
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
@@ -162,17 +162,17 @@ export class Kubernetes extends Utils {
                 const pr = body as PipelineRunList;
 
                 const filteredPipelineRuns = pr.items.filter((pipelineRun: PipelineRunKind) => {
-                    const metadata: V1ObjectMeta = pipelineRun.metadata!;
+                    const metadata: V1ObjectMeta | undefined = pipelineRun.metadata;
+                    if (!metadata) {
+                        return false;
+                    }
                     const labels = metadata.labels;
 
-                    if (labels && labels['pipelinesascode.tekton.dev/event-type'] === eventType) {
-                        return true;
-                    }
-                    return false;
+                    return labels?.['pipelinesascode.tekton.dev/event-type'] === eventType;
                 });
 
                 if (filteredPipelineRuns.length > 0) {
-                    console.log(`Found pipeline run ${filteredPipelineRuns[0].metadata!.name}`);
+                    console.log(`Found pipeline run ${filteredPipelineRuns[0].metadata?.name}`);
 
                     return filteredPipelineRuns[0];
                 } else {
@@ -246,7 +246,7 @@ export class Kubernetes extends Utils {
      * @param {string} name - The name of the pipelinerun
      * @throws This function does not throw directly, but may throw errors during API calls or retries.
      */
-    public async pipelinerunfromName(name: string,namespace: string) {
+    public async pipelinerunfromName(name: string, namespace: string) {
         try {
             const k8sCoreApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
             const plr = await k8sCoreApi.getNamespacedCustomObject(
@@ -256,9 +256,9 @@ export class Kubernetes extends Utils {
                 'pipelineruns',
                 name
             );
-            const plr_yaml = dumpYaml(plr.body);
-            const doc = loadYaml(plr_yaml)
-            return doc
+            const plrYaml = dumpYaml(plr.body);
+            const doc = loadYaml(plrYaml);
+            return doc;
         }
         catch (error) { console.error('Error fetching PipelineRuns: ', error); }
     }
@@ -293,7 +293,7 @@ export class Kubernetes extends Utils {
                     totalTimeMs += retryInterval;
                     continue;
                 }
-            } catch (error) {
+            } catch (_) {
                 console.info('Error fetching argo application : retrying');
             }
 
@@ -329,7 +329,7 @@ export class Kubernetes extends Utils {
             await k8sCoreApi.patchNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName, patchObject, undefined, undefined, undefined, options);
 
             // Delete the app
-            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName)
+            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName);
 
             console.log(`App ${applicationName} patched and deleted successfully.`);
         } catch (error) {
@@ -368,7 +368,7 @@ export class Kubernetes extends Utils {
         }
     }
 
-    public async getSecretPartialName(namespace: string, partialSecretName: string, key: string, decode: boolean = true): Promise<string> {
+    public async getSecretPartialName(namespace: string, partialSecretName: string, key: string, decode = true): Promise<string> {
         try {
             const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
 
@@ -425,6 +425,7 @@ export class Kubernetes extends Utils {
             );
 
             // Extract the host from the route object
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const routeSpec = (route.body as any).spec;
             const host = routeSpec.host;
 

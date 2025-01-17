@@ -50,10 +50,10 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
         
                 console.log(`succesfully synced application ${applicationName} in cluster`);
                 console.log(stdout);
-                done()
+                done();
             });
-        })
+        });
     } catch (error) {
-        fail(error)
+        fail(error);
     }
-}
+};

@@ -1,14 +1,16 @@
-import { Gitlab, ProjectHookSchema } from "@gitbeaker/rest"
+import { Gitlab, ProjectHookSchema } from "@gitbeaker/rest";
 import { Utils } from "./utils";
+import { AxiosError } from "axios";
+
 
 export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
-    private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
+    private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(gitlabToken: string) {
-        super()
+        super();
 
         if (!gitlabToken) {
             throw new Error("Missing environment variable GITLAB_TOKEN");
@@ -18,7 +20,7 @@ export class GitLabProvider extends Utils {
         this.gitlab = new Gitlab({
             host: 'https://gitlab.com',
             token: this.gitlabToken
-        })
+        });
     }
 
     // Get GitLab token
@@ -35,11 +37,11 @@ export class GitLabProvider extends Utils {
                 if (projects) {
                     console.info(`Repository with name '${repoName}' found in organization '${namespace}'
                         created at '${projects.created_at}' url: gitlab.com/${namespace}/${repoName}`);
-                    return projects.id
+                    return projects.id;
                 }
 
                 await this.sleep(10000); // Wait 10 seconds before checking again
-            } catch (error) {
+            } catch (_) {
                 console.info(`Failed to check if repository ${repoName} exists`);
             }
         }
@@ -52,11 +54,11 @@ export class GitLabProvider extends Utils {
         //RHTAPBUGS-1327: Added wait: it should improve stability of Gitlab test - sometimes request from tests could be faster, than GitLab responses
         while (true) {
             try {
-                const file = await this.gitlab.Repositories.allRepositoryTrees(repositoryID)
+                const file = await this.gitlab.Repositories.allRepositoryTrees(repositoryID);
                 if (file) {
                     return file.some((folder) => {
-                        return folder.path === folderPath && folder.type === 'tree'
-                    })
+                        return folder.path === folderPath && folder.type === 'tree';
+                    });
                 }
 
                 await this.sleep(10000); // Wait 10 seconds before checking again
@@ -73,8 +75,8 @@ export class GitLabProvider extends Utils {
         try {
             await this.gitlab.RepositoryFiles.show(repositoryID, filePath, 'main');
             return true;
-        } catch (error: any) {
-            if (error.response && error.response.status === 404) {
+        } catch (error: unknown) {
+            if (error instanceof AxiosError && error.response && error.response.status === 404) {
                 console.log('File does not exist.');
                 return false;
             } else {
@@ -104,21 +106,21 @@ export class GitLabProvider extends Utils {
             );
 
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error("Failed to create commit in Gitlab. Check bellow error");
         }
     }
 
 
-    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
-        let stringToFind = "agent any";
-        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
+        const stringToFind = "agent any";
+        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
     public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
-        let stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') Uncomment this when using GitLab */"
-        let replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
+        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') Uncomment this when using GitLab */";
+        const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
@@ -139,7 +141,7 @@ export class GitLabProvider extends Utils {
             const fromEnvironmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
                 `components/${componentName}/overlays/${fromEnvironment}/deployment-patch.yaml`, targetBranch);
 
-            const fromEnvironmentContentToString = fromEnvironmentContent.toString()
+            const fromEnvironmentContentToString = fromEnvironmentContent.toString();
             const matches = fromEnvironmentContentToString.match(this.extractImagePatternFromGitopsManifest);
 
             if (matches && matches.length > 1) {
@@ -153,7 +155,7 @@ export class GitLabProvider extends Utils {
             const targetEnvironmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
                 `components/${componentName}/overlays/${toEnvironment}/deployment-patch.yaml`, targetBranch);
 
-            const targetEnvironmentContentToString = targetEnvironmentContent.toString()
+            const targetEnvironmentContentToString = targetEnvironmentContent.toString();
 
             const pattern = /- image: (.*)/;
             const newContent = targetEnvironmentContentToString.replace(pattern, `- image: ${extractedImage}`);
@@ -176,9 +178,9 @@ export class GitLabProvider extends Utils {
 
             console.log(`Merge request created successfully. URL: ${mergeRequest.web_url}`);
 
-            return mergeRequest.iid
+            return mergeRequest.iid;
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error("Failed to create merge request. Check bellow error");
 
         }
@@ -199,9 +201,9 @@ export class GitLabProvider extends Utils {
                     tagPushEvents: true,
                     enableSslVerification: false
                 }
-            )
+            );
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error('Failed to create webhook. Check bellow error.');
         }
     }
@@ -232,9 +234,9 @@ export class GitLabProvider extends Utils {
 
             console.log(`Pull request "${title}" created successfully. URL: ${mergeRequest.web_url}`);
 
-            return mergeRequest.iid
+            return mergeRequest.iid;
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error("Failed to create merge request. Check bellow error");
         }
     }
@@ -251,7 +253,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`Pull request "${mergeRequestId}" merged successfully.`);
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error("Failed to merge Merge Request. Check bellow error");
         }
     }
@@ -267,7 +269,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`Project with "${projectId}" deleted successfully.`);
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error("Failed to delete project. Check bellow error");
         }
     }
@@ -280,7 +282,7 @@ export class GitLabProvider extends Utils {
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const pipelines = await this.gitlab.Pipelines.all(projectId);
-                if(pipelines.length == pipelinesCount){
+                if (pipelines.length == pipelinesCount) {
                     return;
                 }
 
@@ -417,7 +419,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`${filePath} updated successfully for username.`);
             return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating ${filePath}:', error);
             return false;
         }
@@ -428,7 +430,7 @@ export class GitLabProvider extends Utils {
             // Get the current content of the file
             const file = await this.gitlab.RepositoryFiles.show(repositoryID, filePath, branchName);
             return Buffer.from(file.content, 'base64').toString('utf-8');
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error getting content of ${filePath}:', error);
             return "";
         }
@@ -453,7 +455,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`${filePath} updated successfully for username.`);
             return true;
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Error updating ${filePath}:', error);
             return false;
         }
@@ -470,7 +472,7 @@ export class GitLabProvider extends Utils {
                 return null;
             }
 
-            for (const pipeline of pipelines){
+            for (const pipeline of pipelines) {
                 await this.gitlab.Pipelines.cancel(repositoryID, pipeline.id);
                 console.log(`Initial pipeline (ID: ${pipeline.id}) has been canceled.`);
             }

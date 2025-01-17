@@ -10,32 +10,32 @@ import { TaskIdReponse } from "../../src/apis/backstage/types";
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
-    await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, `${repositoryName}-gitops`)
+    await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, `${repositoryName}-gitops`);
 
     //Check, if repo exists and delete
-    await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, repositoryName)
+    await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, repositoryName);
 
     //Delete app of apps from argo
-    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`)
+    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
 }
 
 export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeClient: Kubernetes, rootNamespace: string, gitLabOrganization: string, gitlabRepositoryID: number, repositoryName: string) {
     //Check, if gitops repo exists and delete
-    const gitlabRepositoryIDGitOps = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
-    await gitLabProvider.deleteProject(gitlabRepositoryIDGitOps)
+    const gitlabRepositoryIDGitOps = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
+    await gitLabProvider.deleteProject(gitlabRepositoryIDGitOps);
 
     //Check, if repo exists and delete
-    await gitLabProvider.deleteProject(gitlabRepositoryID)
+    await gitLabProvider.deleteProject(gitlabRepositoryID);
 
     //Delete app of apps from argo
-    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`)
+    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
 }
 
 export async function waitForStringInPageContent(
     url: string,
     searchString: string,
-    timeout: number = 60000, // Default timeout is 60 seconds
-    interval: number = 5000 // Check every 5 seconds
+    timeout = 60000, // Default timeout is 60 seconds
+    interval = 5000 // Check every 5 seconds
 ): Promise<boolean> {
     const endTime = Date.now() + timeout;
     while (Date.now() < endTime) {
@@ -84,9 +84,9 @@ export async function getJenkinsCI(kubeClient: Kubernetes) {
     if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN) {
         return new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
     } else {
-        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL")
-        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME")
-        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN")
+        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
+        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
+        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
         return new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
     }
 }
@@ -100,14 +100,14 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
 }
 
 export async function waitForComponentCreation(backstageClient: DeveloperHubClient, repositoryName: string, developerHubTask: TaskIdReponse) {
-    const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+    const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
     if (taskCreated.status !== 'completed') {
         console.log("Failed to create backstage task. Creating logs...");
 
         try {
-            const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+            const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
         } catch (error) {
             throw new Error(`Failed to write logs to artifact directory: ${error}`);
         }
@@ -117,14 +117,14 @@ export async function waitForComponentCreation(backstageClient: DeveloperHubClie
 }
 
 export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string){
-    console.log("syncing argocd application in development environment")
-    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`)
-    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName)
-    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000)
+    console.log("syncing argocd application in development environment");
+    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`);
+    const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName);
+    const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000);
     if (!isReady) {
         throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
     }
-    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true)
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
@@ -158,7 +158,7 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
         throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace)
+    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace);
 
     if (!namespaceExists) {
         throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
@@ -252,25 +252,24 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * 
  */
 export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
-    let kubeClient: Kubernetes;
-    kubeClient = new Kubernetes();
+    const kubeClient: Kubernetes = new Kubernetes();
     
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-        let podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod'
+        const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         
         // Read the logs from the related container
-        const pod_logs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan')
+        const podLogs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan');
         
         // Print the logs from the container 
-        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name  + ": \n\n" + pod_logs)
+        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name  + ": \n\n" + podLogs);
         
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
         
         // Verify if the scan was success from logs
-        const result: boolean = regex.test(pod_logs)
+        const result: boolean = regex.test(podLogs);
         return (result);  
     }
     // Returns false when if condition not met
-    return false
+    return false;
 }
