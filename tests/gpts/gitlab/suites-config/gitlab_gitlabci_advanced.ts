@@ -63,7 +63,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -87,33 +87,33 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         * Checks if Red Hat Developer Hub created the repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.gitlab-ci.yml' file`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
 
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, '.gitlab-ci.yml')
-            expect(tektonFolderExists).toBe(true)
-        }, 60000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, '.gitlab-ci.yml');
+            expect(tektonFolderExists).toBe(true);
+        }, 60000);
 
         /**
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if gitops ${softwareTemplateName} was created in GitLab and contains '.gitlab-ci.yml' file`, async () => {
-            gitlabRepositoryGitOpsID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName + "-gitops")
-            expect(gitlabRepositoryGitOpsID).toBeDefined()
+            gitlabRepositoryGitOpsID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName + "-gitops");
+            expect(gitlabRepositoryGitOpsID).toBeDefined();
 
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryGitOpsID, '.gitlab-ci.yml')
-            expect(tektonFolderExists).toBe(true)
-        }, 60000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryGitOpsID, '.gitlab-ci.yml');
+            expect(tektonFolderExists).toBe(true);
+        }, 60000);
 
         /**
         * Verifies if Red Hat Developer Hub created a gitops repository from the specified template in GitLab.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.gitlab-ci.yml' file`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
 
-            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, '.gitlab-ci.yml')
-            expect(tektonFolderExists).toBe(true)
-        }, 60000)
+            const tektonFolderExists = await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, '.gitlab-ci.yml');
+            expect(tektonFolderExists).toBe(true);
+        }, 60000);
 
         /**
         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -146,21 +146,21 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
             // Update env file for GitLab CI vars
             await gitLabProvider.updateEnvFileForGitLabCI(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace));
             await gitLabProvider.updateEnvFileForGitLabCI(gitlabRepositoryGitOpsID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace));
-        }, 120000)
+        }, 120000);
 
         /**
         * Waits for pipeline after commit RHTAP ENV
         */
         it(`Wait for a pipeline run to finish in component repo`, async () => {
             await waitForGitLabCIPipelineToFinish(gitLabProvider, gitlabRepositoryID, 2);
-        }, 600000)
+        }, 600000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment and route is working', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-        }, 600000)
+        }, 600000);
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
@@ -168,24 +168,24 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         it('trigger pull request promotion to promote from development to stage environment', async () => {
             gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabRepositoryGitOpsID, generateRandomChars(6),
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
-            expect(gitopsPromotionMergeRequestNumber).toBeDefined()
+            expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
             await waitForGitLabCIPipelineToFinish(gitLabProvider, gitlabRepositoryGitOpsID, 1);
-        }, 900000)
+        }, 900000);
 
         /**
         * Merge the gitops Pull Request with the new image value for stage environment. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
-            await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber)
-        }, 120000)
+            await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
+        }, 120000);
 
         /*
         * Verifies if the new image is deployed with an expected endpoint in stage environment
         */
         it('container component is successfully synced by gitops in stage environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
@@ -193,32 +193,32 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
             gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabRepositoryGitOpsID, generateRandomChars(6),
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
-            expect(gitopsPromotionMergeRequestNumber).toBeDefined()
+            expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
             await waitForGitLabCIPipelineToFinish(gitLabProvider, gitlabRepositoryGitOpsID, 2);
-        }, 900000)
+        }, 900000);
 
         /**
         * Merge the gitops Pull Request with the new image value for prod. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in prod environment`, async () => {
-            await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber)
-        }, 120000)
+            await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
+        }, 120000);
 
         /*
         * Verifies if the new image is deployed with an expected endpoint in production environment
         */
         it('container component is successfully synced by gitops in prod environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};

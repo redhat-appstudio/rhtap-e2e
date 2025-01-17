@@ -87,16 +87,9 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         /**
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
-<<<<<<< HEAD
-        it(`verifies if component ${softwareTemplateName} was created in GitLab and contains '.tekton' folder`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
-            expect(gitlabRepositoryID).toBeDefined();
-=======
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains Jenkinsfile`, async () => {
             gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
             expect(gitlabRepositoryID).toBeDefined()
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
-
             expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
         });
 
@@ -104,14 +97,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
         * The repository should contain the source code of the application and a 'Jenkinsfile.
         */
-<<<<<<< HEAD
-        it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
-=======
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a Jenkinsfile`, async () => {
             const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
-
             expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true);
         });
 
@@ -127,7 +114,6 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         */
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
             await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
-            //expect(await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID)).not.toBe(undefined)
             await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
         }, 120000);
@@ -169,20 +155,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-<<<<<<< HEAD
-            console.log("syncing argocd application in development environment");
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentNamespace}`);
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000);
-            if (!isReady) {
-                throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
-            }
-            expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
-        }, 900000);
-=======
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000)
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
         /**
         * Deletes created applications

@@ -22,12 +22,12 @@ const runQuarkusBasicTests = () => {
         gitLabJenkinsBasicTests(quarkusTemplateName, stringOnRoute)
 =======
     if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
-<<<<<<< HEAD
-        gitLabJenkinsBasicTests(quarkusTemplateName, stringOnRoute);
-=======
         gitLabJenkinsAdvancedTests(quarkusTemplateName, stringOnRoute);
+<<<<<<< HEAD
 >>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 >>>>>>> 7e03c75 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+=======
+>>>>>>> f5a3c06 (Fixes after rebase)
     } else {
         skipSuite(quarkusTemplateName);
     }
