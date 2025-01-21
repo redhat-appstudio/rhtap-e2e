@@ -17,8 +17,8 @@ const stringOnRoute =  'Hello World!';
 const runSpringBootBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.github.active && configuration.github.jenkins) {
-        gitHubJenkinsBasicGoldenPathTemplateTests(springBootTemplateName, stringOnRoute);
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.github && configuration.github.jenkins) {
+        gitHubJenkinsBasicGoldenPathTemplateTests(springBootTemplateName, stringOnRoute)
     } else {
         skipSuite(springBootTemplateName);
     }

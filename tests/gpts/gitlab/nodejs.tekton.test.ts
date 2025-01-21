@@ -16,7 +16,7 @@ const nodejsTemplateName = 'nodejs';
 const runNodeJSBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.tekton) {
 
         gitLabProviderBasicTests(nodejsTemplateName);
     } else {

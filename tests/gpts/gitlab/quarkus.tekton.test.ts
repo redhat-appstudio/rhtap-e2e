@@ -16,7 +16,7 @@ const quarkusTemplateName = 'java-quarkus';
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.tekton) {
 
         gitLabSoftwareTemplatesAdvancedScenarios(quarkusTemplateName);
     } else {
