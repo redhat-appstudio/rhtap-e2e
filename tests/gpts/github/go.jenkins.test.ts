@@ -15,13 +15,13 @@ const golangTemplateName = 'go';
 const stringOnRoute =  'Hello World!';
 
 const runGolangBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.github.active && configuration.github.jenkins) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.jenkins) {
         gitHubJenkinsPromotionTemplateTests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);
     }
-}
+};
 
 runGolangBasicTests();

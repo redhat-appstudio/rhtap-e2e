@@ -14,14 +14,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 const springBootTemplateName = 'java-springboot';
 
 const runSpringBootBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.github.active && configuration.github.tekton) {
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
 
-        gitHubBasicGoldenPathTemplateTests(springBootTemplateName)
+        gitHubBasicGoldenPathTemplateTests(springBootTemplateName);
     } else {
-        skipSuite(springBootTemplateName)
+        skipSuite(springBootTemplateName);
     }
-}
+};
 
-runSpringBootBasicTests()
+runSpringBootBasicTests();

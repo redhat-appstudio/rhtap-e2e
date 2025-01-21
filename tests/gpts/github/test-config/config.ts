@@ -1,76 +1,74 @@
 import { z } from "zod";
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface softwareTemplatesConfig {
     templates: string[];
+    priority: string[];
     github: {
-        active: boolean;
         tekton: boolean;
         jenkins: boolean;
         actions: boolean;
         host: string;
-        registriesConfig: {
-            quay: {
-                active: boolean;
-                host: string;
-            };
-        };
     };
     gitlab: {
-        active: boolean;
         tekton: boolean;
         jenkins: boolean;
         gitlabci: boolean;
         host: string;
-        registriesConfig: {
-            quay: {
-                active: boolean;
-                host: string;
-            };
-        };
+    };
+    pipeline: {
+        ocp: string;
+        version: string;
+        github: boolean;
+        gitlab: boolean;
     };
 }
 
 // Define Zod schema for validation
 const softwareTemplateParserValidator = z.object({
     templates: z.array(z.string()).min(1),
+    priority: z.array(z.string()).min(1),
     github: z.object({
-        active: z.boolean(),
-        host: z.string(),
-        registriesConfig: z.object({
-            quay: z.object({
-                active: z.boolean(),
-                host: z.string()
-            }),
-        })
-    }).optional(),
+        tekton: z.boolean(),
+        jenkins: z.boolean(),
+        actions: z.boolean(),
+        host: z.string()
+    }),
     gitlab: z.object({
-        active: z.boolean(),
+        tekton: z.boolean(),
+        jenkins: z.boolean(),
+        gitlabci: z.boolean(),
         host: z.string(),
-        registriesConfig: z.object({
-            quay: z.object({
-                active: z.boolean(),
-                host: z.string()
-            }),
-        })
-    }).optional()
+    }),
+    pipeline: z.object({
+        ocp: z.string(),
+        version: z.string(),
+        github: z.boolean(),
+        gitlab: z.boolean(),
+    })
 }).refine(data => {
-    if (data.github && data.gitlab && (!data.github.active && !data.gitlab.active)) {
-        throw new Error("Seems like none of the Git providers were activated. 'github.active' or 'gitlab.active' must be true");
+    if (! data.pipeline.github && ! data.pipeline.gitlab) {
+        throw new Error("Both Git providers were deactivated. At least one of them can be activated");
     }
-
-    if (data.github && data.github.active && !data.github.registriesConfig.quay) {
-        throw new Error("Github provider activated but seems like none of the registries to push RHTAP images was activated. registriesConfig.quay' or 'registriesConfig.openshiftRegistry' must be true");
+    // if pipeline.github is active, one of the tekton, jenkins or actions must be active
+    if (data.pipeline.github && (!data.github.tekton && !data.github.jenkins && !data.github.actions)) {
+        throw new Error("Github provider activated but none of the CI/CD options were activated. 'tekton', 'jenkins' or 'actions' must be true");
     }
-
-    if (data.gitlab && data.gitlab.active && !data.gitlab.registriesConfig.quay) {
-        throw new Error("Gitlab provider activated but seems like none of the registries to push RHTAP images was activated. registriesConfig.quay' or 'registriesConfig.openshiftRegistry' must be true");
+    // if pipeline.gitlab is active, one of the tekton, jenkins or gitlabci must be active
+    if (data.pipeline.gitlab && (!data.gitlab.tekton && !data.gitlab.jenkins && !data.gitlab.gitlabci)) {
+        throw new Error("Gitlab provider activated but none of the CI/CD options were activated. 'tekton', 'jenkins' or 'gitlabci' must be true");
     }
 
     return data;
 });
 
+const softwareTemplatesFile = process.env.SOFTWARE_TEMPLATES_FILE || 'softwareTemplates.json';
+
 export const loadSoftwareTemplatesTestsGlobals = ():softwareTemplatesConfig => {
-    const configuration: softwareTemplatesConfig = global.suites.softwareTemplates
+    console.log("Loading software templates configuration from file:", softwareTemplatesFile);
+    const fileContents = fs.readFileSync(softwareTemplatesFile, 'utf-8');
+    const configuration: softwareTemplatesConfig = JSON.parse(fileContents);
 
     const validationResult = softwareTemplateParserValidator.safeParse(configuration);
 
@@ -79,5 +77,5 @@ export const loadSoftwareTemplatesTestsGlobals = ():softwareTemplatesConfig => {
         console.error("Validation failed:", validationResult.error);
     }
 
-    return configuration
-}
+    return configuration;
+};

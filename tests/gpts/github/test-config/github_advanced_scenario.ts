@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
+import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
@@ -76,8 +76,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         it(`verifies if ${gptTemplate} gpt exists in the catalog`, async ()=> {
             const goldenPathTemplates = await backstageClient.getGoldenPathTemplates();
 
-            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true)
-        })
+            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true);
+        });
 
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -97,10 +97,10 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
-                console.log("failed to create backstage tasks. creating logs...")
+                console.log("failed to create backstage tasks. creating logs...");
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
                 } catch (error) {
                     throw new Error(`failed to write files to console: ${error}`);
                 }
@@ -170,221 +170,221 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request')
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request');
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
-        }, 900000)
+        }, 900000);
 
         /**
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
-            await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber)
-        }, 120000)
+            await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber);
+        }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
         
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
         
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
         
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
-        }, 900000)
+        }, 900000);
         
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
-            expect(result).toBe(true)
-            console.log("Verified as ACS Scan is Successful")
-            }, 900000)
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
+        }, 900000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
          */
         it('container component is successfully synced by gitops in development environment', async ()=> {
-            console.log("syncing argocd application in development environment")
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`)
+            console.log("syncing argocd application in development environment");
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`);
 
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace)
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
 
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000);
 
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
 
-        }, 900000)
+        }, 900000);
 
         /**
          * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName);
 
             if (getImage !== undefined) {
-                extractedBuildImage = getImage
+                extractedBuildImage = getImage;
             } else {
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
             if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR
+                gitopsPromotionPRNumber = gitopsPromotionPR;
             } else {
                 throw new Error("Failed to create a pr");
             }
-        })
+        });
 
         /**
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging.
          */
         it('verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging', async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request')
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request');
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
-        }, 900000)
+        }, 900000);
 
         /**
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
          */
         it(`merge gitops pull request to sync new image in stage environment`, async ()=> {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
-        }, 120000)
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+        }, 120000);
 
         /*
         * Verifies if the new image is deployed with an expected endpoint in stage environment
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
-            console.log("syncing argocd application in stage environment")
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`)
+            console.log("syncing argocd application in stage environment");
+            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`);
 
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace)
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace);
 
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000);
 
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
 
-        }, 900000)
+        }, 900000);
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName)
+            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName);
 
             if (getImage !== undefined) {
-                extractedBuildImage = getImage
+                extractedBuildImage = getImage;
             } else {
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)
+            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
             if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR
+                gitopsPromotionPRNumber = gitopsPromotionPR;
             } else {
                 throw new Error("Failed to create a pr");
             }
-        })
+        });
 
         /**
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from staging to production.
          */
         it('verifies successful completion of PipelineRun to ensure environment promotion from stage to prod', async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request')
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request');
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
-        }, 900000)
+        }, 900000);
 
         /**
          * If pipelinerun succeeds merge the PR to allow image to sync in prod environment
          */
         it(`merge gitops pull request to sync new image in prod environment`, async ()=> {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber)
-        }, 120000)
+            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+        }, 120000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster
          */
         it('container component is successfully synced by gitops in prod environment', async ()=> {
-            console.log("syncing argocd application in prod environment")
-            await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`)
+            console.log("syncing argocd application in prod environment");
+            await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`);
 
-            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace)
+            const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace);
 
-            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000)
+            const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}/hello-resteasy`, 10 * 60 * 1000);
 
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
-        }, 900000)
+        }, 900000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};

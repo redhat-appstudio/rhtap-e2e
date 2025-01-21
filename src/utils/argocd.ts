@@ -44,16 +44,22 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
                     console.error(`Error executing commands: ${error.message}`);
                     failed(error);
                 }
+
+                // Log stdout for script debugging
+                if (stdout) {
+                    console.log(`Commands STDOUT: ${stdout}`);
+                }
+        
                 if (stderr) {
                     console.error(`Commands STDERR: ${stderr}`);
                 }
         
                 console.log(`succesfully synced application ${applicationName} in cluster`);
                 console.log(stdout);
-                done()
+                done();
             });
-        })
+        });
     } catch (error) {
-        fail(error)
+        console.error(error);
     }
-}
+};

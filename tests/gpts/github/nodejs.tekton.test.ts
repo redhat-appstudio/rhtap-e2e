@@ -14,13 +14,13 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 const nodejsTemplateName = 'nodejs';
 
 const runNodeJSBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.github.active && configuration.github.tekton) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
         gitHubBasicGoldenPathTemplateTests(nodejsTemplateName);
     } else {
-        skipSuite(nodejsTemplateName)
+        skipSuite(nodejsTemplateName);
     }
-}
+};
 
-runNodeJSBasicTests()
+runNodeJSBasicTests();

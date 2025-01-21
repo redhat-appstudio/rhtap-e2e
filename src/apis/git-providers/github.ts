@@ -1,20 +1,22 @@
+/* eslint-disable camelcase */
 import { Octokit } from "@octokit/rest";
 import { AxiosError } from "axios";
+import sodium from 'libsodium-wrappers';
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
 
 export class GitHubProvider extends Utils {
-    private readonly octokit: Octokit
+    private readonly octokit: Octokit;
     private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(githubToken: string) {
-        super()
+        super();
 
         this.octokit = new Octokit({
             baseUrl: 'https://api.github.com',
             userAgent: 'rhtap-e2e',
             auth: githubToken,
-        })
+        });
     }
 
     /**
@@ -24,13 +26,13 @@ export class GitHubProvider extends Utils {
      */
     public async checkIfRepositoryExists(organization: string, name: string): Promise<boolean> {
         try {
-            const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name })
+            const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name });
 
-            return repositoryResponse.status === 200
+            return repositoryResponse.status === 200;
         } catch (error) {
-            console.log(error)
+            console.log(error);
 
-            return false
+            return false;
         }
     }
 
@@ -43,13 +45,13 @@ export class GitHubProvider extends Utils {
         //Check, if repo exists and delete
         try {
             if (await this.checkIfRepositoryExists(organization, name)) {
-                await this.deleteRepository(organization, name)
-                return true
+                await this.deleteRepository(organization, name);
+                return true;
             }
-            return false
+            return false;
         } catch (error) {
-            console.log(error)
-            return false
+            console.log(error);
+            return false;
         }
     }
 
@@ -66,12 +68,12 @@ export class GitHubProvider extends Utils {
                 headers: {
                     'X-GitHub-Api-Version': '2022-11-28'
                 }
-            })
-            return repositoryResponse.status === 204
+            });
+            return repositoryResponse.status === 204;
         } catch (error) {
-            console.log(error)
+            console.log(error);
 
-            return false
+            return false;
         }
     }
 
@@ -85,12 +87,12 @@ export class GitHubProvider extends Utils {
         try {
             const response = await this.octokit.repos.getContent({ owner: organization, repo: name, path: folderPath });
 
-            return response.status === 200
+            return response.status === 200;
         } catch (error) {
-            const e = error as AxiosError
-            console.error(`Failed to fetch folderPath: ${folderPath}, from repository: ${organization}/${name}, request status: ${e.status}, message: ${e.message}`)
+            const e = error as AxiosError;
+            console.error(`Failed to fetch folderPath: ${folderPath}, from repository: ${organization}/${name}, request status: ${e.status}, message: ${e.message}`);
 
-            return false
+            return false;
         }
     }
 
@@ -104,7 +106,7 @@ export class GitHubProvider extends Utils {
      */
     public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
-            const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' })
+            const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' });
 
             const currentCommit = await this.octokit.git.getCommit({
                 owner: gitOrg, repo: gitRepository,
@@ -124,9 +126,9 @@ export class GitHubProvider extends Utils {
                 sha: newCommit.data.sha,
             });
 
-            return newCommit.data.sha
+            return newCommit.data.sha;
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     }
 
@@ -340,7 +342,7 @@ export class GitHubProvider extends Utils {
                 body: "RHTAP E2E: Automatic Pull Request"
             });
 
-            return pullRequest.number
+            return pullRequest.number;
 
         } catch (error) {
             console.error("Error:", error);
@@ -351,19 +353,19 @@ export class GitHubProvider extends Utils {
      * Merge GitHub pull request.
      * @param {string} owner - The name of the GitHub organization.
      * @param {string} repo - The name of the repository.
-     * @param {string} pull_request - PR number.
+     * @param {string} pullRequest - PR number.
      */
-    public async mergePullRequest(owner: string, repo: string, pull_request: number) {
+    public async mergePullRequest(owner: string, repo: string, pullRequest: number) {
         try {
             await this.octokit.pulls.merge({
                 owner,
                 repo,
-                pull_number: pull_request,
+                pull_number: pullRequest,
                 commit_title: "RHTAP E2E: Automatic Pull Request merge",
                 merge_method: "squash"
             });
         } catch (error) {
-            throw new Error(`Failed to merge Pull Request ${pull_request}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
+            throw new Error(`Failed to merge Pull Request ${pullRequest}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
         }
     }
 
@@ -384,9 +386,9 @@ export class GitHubProvider extends Utils {
 
             const { content } = { ...response.data };
 
-            const decodedData = Buffer.from(content, 'base64')
+            const decodedData = Buffer.from(content, 'base64');
 
-            const decodedContent = decodedData.toString()
+            const decodedContent = decodedData.toString();
 
             // Define the regular expression pattern to extract the desired string
             const pattern = /- image: (.*)/;
@@ -398,13 +400,13 @@ export class GitHubProvider extends Utils {
                 const extractedImage = matches[1];
                 console.log("Extracted image:", extractedImage);
 
-                return extractedImage
+                return extractedImage;
             } else {
                 throw new Error("Image not found in the gitops repository path");
             }
 
         } catch (error) {
-            console.log(error)
+            console.log(error);
             throw new Error(`Error: ${error}`);
         }
     }
@@ -427,19 +429,113 @@ export class GitHubProvider extends Utils {
 
             const { content, sha: fileSHA } = { ...response.data };
 
-            const decodedData = Buffer.from(content, 'base64')
-            let decodedContent = decodedData.toString()
+            const decodedData = Buffer.from(content, 'base64');
+            let decodedContent = decodedData.toString();
 
             const pattern = /- image: (.*)/;
             decodedContent = decodedContent.replace(pattern, `- image: ${image}`);
 
-            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA)
+            return await this.createPullRequestFromMainBranch(owner, repo, `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, decodedContent, fileSHA);
 
         } catch (error) {
             throw new Error(`Error: ${error}`);
         }
     }
 
+    // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
+    public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
+        console.log(`Waiting for the latest job in workflow '${workflow_id}' to finish...`);
+
+        const startTime = Date.now();
+
+        while (true) {
+            // Check for timeout
+            if (Date.now() - startTime > timeout) {
+                throw new Error(`Timeout: The latest job did not finish within the specified time.`);
+            }
+
+            try {
+                // Fetch the latest workflow runs
+                const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
+                    owner,
+                    repo,
+                    workflow_id,
+                    per_page: 1, // We only need the latest run
+                });
+
+                if (workflowRuns.total_count === 0) {
+                    console.log('No workflow runs found, retrying...');
+                    await this.sleep(5000);
+                    continue;
+                }
+
+                // Get the latest workflow run
+                const latestRun = workflowRuns.workflow_runs[0];
+
+                // Check if the run is still in progress
+                if (latestRun.status === 'completed') {
+                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
+                    return latestRun.conclusion; // Return only the status of the job
+                } 
+            } catch (error) {
+                console.error('Error fetching workflow run details:', error);
+                throw error;
+            }
+
+            // Wait 5 seconds before checking again
+            await this.sleep(5000);
+        }
+    }
+
+
+    // Function to get the workflow ID for a specific workflow name or filename in a repository
+    public async getWorkflowId(owner: string, repo: string, workflowName: string): Promise<number> {
+        try {
+            // Fetch all workflows in the repository
+            const { data: workflows } = await this.octokit.rest.actions.listRepoWorkflows({
+                owner,
+                repo,
+            });
+
+            // Find the workflow that matches the provided name or filename
+            const workflow = workflows.workflows.find(wf => wf.name === workflowName || wf.path === workflowName);
+
+            if (workflow) {
+                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id}`);
+                return workflow.id;
+            } else {
+                console.log(`Workflow '${workflowName}' not found`);
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error fetching workflows:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * This function reruns latest job of given workflow.
+     * 
+     */
+    public async rerunWorkflow(owner:string, repo: string, workflowId: number) {
+        try {
+            const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflowId,
+                per_page: 1, // We only need the latest run
+            });
+            await this.octokit.actions.reRunWorkflow({
+                owner,
+                repo,
+                run_id: workflowRuns.workflow_runs[0].id
+            });
+        }catch (error) {
+            console.error(`Error rerunning workflow id=${workflowId}: `, error);
+            throw error;
+        }
+    }
+    
     /**
      * Function to create a GitHub webhook for push events(for Jenkins for example)
      * @param {string} owner - The name of the GitHub organization.
@@ -472,5 +568,54 @@ export class GitHubProvider extends Utils {
         }
     }
 
+
+    /**
+     * This creates or updates secrets in Github repository to be used in Github Actions
+     * 
+     * @param owner repo owner/org
+     * @param repo repo
+     * @param envVars array of secretName:secretValue pairs. Example
+     * {
+     *  "IMAGE_REGISTRY":"quay.io",
+     *  "ROX_API_TOKEN": "xxxxx"
+     * }
+     * @author rhopp
+     */
+    public async setGitHubSecrets(owner: string, repo: string, envVars: Record<string, string>) {
+        console.group(`Adding env vars to github ${owner}/${repo}`);
+        let publicKeyResponse;
+        try {
+            publicKeyResponse = await this.octokit.actions.getRepoPublicKey({
+                owner,
+                repo
+            });
+        }catch (error) {
+            console.error("Error getting repo public key to setup secrets:", error);
+            console.groupEnd();
+            throw error;
+        }
+        for (const [envVarName,envVarValue] of Object.entries(envVars)){
+            console.log("Setting env var: " + envVarName);
+            await sodium.ready;
+            const binkey = sodium.from_base64(publicKeyResponse.data.key, sodium.base64_variants.ORIGINAL);
+            const binsec = sodium.from_string(envVarValue);
+            const encBytes = sodium.crypto_box_seal(binsec, binkey);
+            const output = sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
+            try {
+                await this.octokit.actions.createOrUpdateRepoSecret({
+                    owner,
+                    repo,
+                    secret_name: envVarName,
+                    encrypted_value: output,
+                    key_id: publicKeyResponse.data.key_id
+                });
+            }catch (error) {
+                console.error(`Error creating secret ${envVarName}: ${error}`);
+                console.groupEnd();
+                throw error;
+            }
+        }
+        console.groupEnd();
+    }
 
 }

@@ -6,13 +6,13 @@ const nodejsTemplateName = 'nodejs';
 const stringOnRoute =  'Hello from Node.js Starter Application!';
 
 const runNodeJSBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
         gitLabProviderGitLabCITests(nodejsTemplateName, stringOnRoute);
     } else {
-        skipSuite(nodejsTemplateName)
+        skipSuite(nodejsTemplateName);
     }
-}
+};
 
-runNodeJSBasicTests()
+runNodeJSBasicTests();

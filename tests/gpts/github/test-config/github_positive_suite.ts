@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub'
+import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/git-providers/github";
@@ -41,7 +41,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
-        beforeAll(async()=> {
+        beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
@@ -53,11 +53,11 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
          */
-        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async ()=> {
+        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async () => {
             const goldenPathTemplates = await backstageClient.getGoldenPathTemplates();
-            
-            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true)
-        })
+
+            expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true);
+        });
 
         /**
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -85,16 +85,16 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
 
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
                     await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
 
                     throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-                    
+
                 } catch (error) {
                     throw new Error(`failed to write files to console: ${error}`);
                 }
@@ -108,8 +108,8 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * Need to wait until application is synced until commit something to github and trigger a pipelinerun
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
-            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)
-            expect(argoCDAppISSynced).toBe(true)
+            const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000);
+            expect(argoCDAppISSynced).toBe(true);
         }, 600000);
 
         /**
@@ -117,83 +117,81 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * my application. Also verifies if the repository contains a '.tekton' folder.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)
-            expect(repositoryExists).toBe(true)
+            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName);
+            expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
+            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
 
         /**
          * Verification to check if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)
-            expect(repositoryExists).toBe(true)
+            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`);
+            expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton')
-            expect(tektonFolderExists).toBe(true)
-        }, 120000)
+            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            expect(tektonFolderExists).toBe(true);
+        }, 120000);
 
         /**
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
-        it(`Creates empty commit to trigger a pipeline run`, async ()=> {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName)
-            expect(commit).not.toBe(undefined)
+        it(`Creates empty commit to trigger a pipeline run`, async () => {
+            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName);
+            expect(commit).not.toBe(undefined);
 
-        }, 120000)
+        }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
-        it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+        it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async () => {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
 
             if (pipelineRun === undefined) {
                 throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000)
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name)
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace)
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
                     }
                 }
-                expect(finished).toBe(true)
+                expect(finished).toBe(true);
             }
-        }, 900000)
-  
-         /**
+        }, 900000);
+
+        /**
          * Check if the pipelinerun yaml has the rh-syft image path mentioned
          */
-         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push')
+        it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
+            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name,developmentNamespace)
-                const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container")
+                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
+                const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container");
                 const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
-                const image_index= (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)))
-                if (image_index)
-                {
-                    console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[image_index].image )
+                const imageIndex = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)));
+                if (imageIndex) {
+                    console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
                 }
-            expect(image_index).not.toBe(undefined)
-            } 
-        }, 900000)   
-        
+                expect(imageIndex).not.toBe(undefined);
+            }
+        }, 900000);
+
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
-        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
-            expect(result).toBe(true)
-            console.log("Verified as ACS Scan is Successful")
-            }, 900000)
-
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
+        }, 900000);
 
 
         /**
@@ -201,9 +199,9 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName)
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
             }
-        })
-    })
+        });
+    });
 
-}
+};

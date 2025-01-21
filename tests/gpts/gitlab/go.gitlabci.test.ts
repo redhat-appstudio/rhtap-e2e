@@ -5,14 +5,14 @@ const golangTemplateName = 'go';
 const stringOnRoute =  'Hello World!';
 
 const runGolangBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
 
         gitLabProviderGitLabCITests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);
     }
-}
+};
 
 runGolangBasicTests();

@@ -1,4 +1,4 @@
-import { V1ObjectMeta, V1Condition } from "@kubernetes/client-node"
+import { V1ObjectMeta, V1Condition } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 
 export interface PipelineRunSpec {

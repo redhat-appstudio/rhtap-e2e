@@ -14,13 +14,13 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
 const golangTemplateName = 'go';
 
 const runGolangBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.github.active && configuration.github.tekton) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
         gitHubBasicGoldenPathTemplateTests(golangTemplateName);
     } else {
         skipSuite(golangTemplateName);
     }
-}
+};
 
 runGolangBasicTests();

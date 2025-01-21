@@ -1,6 +1,6 @@
 import { gitLabSoftwareTemplatesAdvancedScenarios } from "./suites-config/gitlab_advanced_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
-import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts"
+import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts";
 
 /**
  * Tests Quarkus template in GitLab with Tekton
@@ -14,14 +14,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.
 const quarkusTemplateName = 'java-quarkus';
 
 const runQuarkusBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.tekton) {
 
-        gitLabSoftwareTemplatesAdvancedScenarios(quarkusTemplateName)
+        gitLabSoftwareTemplatesAdvancedScenarios(quarkusTemplateName);
     } else {
-        skipSuite(quarkusTemplateName)
+        skipSuite(quarkusTemplateName);
     }
-}
+};
 
-runQuarkusBasicTests()
+runQuarkusBasicTests();

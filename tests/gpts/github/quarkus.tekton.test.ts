@@ -14,14 +14,14 @@ import { githubSoftwareTemplatesAdvancedScenarios } from "./test-config/github_a
 const quarkusTemplateName = 'java-quarkus';
 
 const runQuarkusBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.github.active && configuration.github.tekton) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
 
-        githubSoftwareTemplatesAdvancedScenarios(quarkusTemplateName)
+        githubSoftwareTemplatesAdvancedScenarios(quarkusTemplateName);
     } else {
-        skipSuite(quarkusTemplateName)
+        skipSuite(quarkusTemplateName);
     }
-}
+};
 
-runQuarkusBasicTests()
+runQuarkusBasicTests();
