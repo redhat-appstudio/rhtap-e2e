@@ -16,7 +16,7 @@
       "noEmitOnError": false,
       "module": "commonjs",
       "moduleResolution": "node",
-      "target": "es6",
+      "target": "ES2019",
       "sourceMap": true,
       "allowSyntheticDefaultImports": true,
     },

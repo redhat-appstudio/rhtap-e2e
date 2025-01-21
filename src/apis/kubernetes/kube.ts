@@ -1,10 +1,11 @@
-import { CoreV1Api, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, V1ObjectMeta } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
 import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
 import { OpenshiftRoute } from "./types/oc.routes.cr";
+import { Configuration, CoreV1Api, createConfiguration, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, RequestContext, ResponseContext, ServerConfiguration, V1ObjectMeta } from '@kubernetes/client-node';
+import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware';
 
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
@@ -37,9 +38,9 @@ export class Kubernetes extends Utils {
     public async namespaceExists(name: string): Promise<boolean> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespace(name);
+            const response = await k8sCoreApi.readNamespace({ name: name});
 
-            if (response.body && response.body.metadata && response.body.metadata.name === name) {
+            if (response && response.metadata && response.metadata.name === name) {
                 return true;
             }
 
@@ -59,7 +60,7 @@ export class Kubernetes extends Utils {
     public async getTaskRunsFromPipelineRun(pipelineRunName: string): Promise<TaskRunKind[]> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const { body: taskRunList } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'taskruns');
+            const taskRunList = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
             const taskRunInterface = taskRunList as TaskRunList;
             return taskRunInterface.items.filter(taskRun =>
                 taskRun.metadata && taskRun.metadata.name && taskRun.metadata.name.startsWith(pipelineRunName));
@@ -79,8 +80,8 @@ export class Kubernetes extends Utils {
     public async getOpenshiftRoute(name: string, namespace: string): Promise<string> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const { body: openshiftRoute } = await customObjectsApi.getNamespacedCustomObject('route.openshift.io', 'v1', namespace, 'routes', name);
-            const route = openshiftRoute as OpenshiftRoute;
+            const body = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
+            const route = body as OpenshiftRoute;
 
             return route.spec.host;
 
@@ -101,17 +102,17 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Get the pod object
-            const { body: pod } = await k8sApi.readNamespacedPod(podName, namespace);
+            const pod = await k8sApi.readNamespacedPod({name: podName, namespace: namespace});
 
             // Check if pod.spec is defined
             if (pod.spec && pod.spec.containers) {
                 // Iterate over each container in the pod
                 for (const container of pod.spec.containers) {
                     // Get logs from each container
-                    const response = await k8sApi.readNamespacedPodLog(podName, namespace, container.name);
+                    const response = await k8sApi.readNamespacedPodLog({name: podName, namespace: namespace, container: container.name});
 
                     // Append container name before the logs
-                    const logsWithContainerInfo = `Container: ${container.name}\n${response.body}\n\n`;
+                    const logsWithContainerInfo = `Container: ${container.name}\n${response}\n\n`;
                     const logFilePath = path.join('taskruns-logs', podName);
                     await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo);
                 }
@@ -136,8 +137,8 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Get logs from the given container
-            const response = await k8sApi.readNamespacedPodLog(podName, namespace, containerName);
-            return (response.body);
+            const response = await k8sApi.readNamespacedPodLog({name: podName, namespace: namespace, container: containerName});
+            return (response);
         } catch (err) {
             console.error('Error:', err);
         }
@@ -157,8 +158,8 @@ export class Kubernetes extends Utils {
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                const { body } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'pipelineruns',
-                    undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitRepository}`);
+                const body = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version:'v1', plural: 'pipelineruns',
+                    labelSelector: `pipelinesascode.tekton.dev/url-repository=${gitRepository}`});
                 const pr = body as PipelineRunList;
 
                 const filteredPipelineRuns = pr.items.filter((pipelineRun: PipelineRunKind) => {
@@ -209,7 +210,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('tekton.dev', 'v1', namespace, 'pipelineruns', name);
+                const body = await customObjectsApi.getNamespacedCustomObject({group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name});
                 const pr = body as PipelineRunKind;
 
                 if (pr.status && pr.status.conditions) {
@@ -249,16 +250,14 @@ export class Kubernetes extends Utils {
     public async pipelinerunfromName(name: string, namespace: string) {
         try {
             const k8sCoreApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
-            const plr = await k8sCoreApi.getNamespacedCustomObject(
-                'tekton.dev',
-                'v1',
-                namespace,
-                'pipelineruns',
-                name
-            );
-            const plrYaml = dumpYaml(plr.body);
-            const doc = loadYaml(plrYaml);
-            return doc;
+            const plr = await k8sCoreApi.getNamespacedCustomObject({
+                group: 'tekton.dev',
+                version: 'v1',
+                namespace: namespace,
+                plural: 'pipelineruns',
+                name: name
+            });
+            return plr;
         }
         catch (error) { console.error('Error fetching PipelineRuns: ', error); }
     }
@@ -279,7 +278,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPRootNamespace, 'applications', name);
+                const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPRootNamespace, plural: 'applications', name: name});
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
@@ -322,14 +321,38 @@ export class Kubernetes extends Utils {
                 }
             };
 
-            // Define the options
-            const options = { headers: { 'Content-Type': 'application/merge-patch+json' } };
+            const headerPatchMiddleware = new PromiseMiddlewareWrapper({
+                pre: async (requestContext: RequestContext) => {
+                    requestContext.setHeaderParam('Content-Type', 'application/merge-patch+json');
+                    return requestContext;
+                },
+                post: async (responseContext: ResponseContext) => responseContext,
+            });
+            const currentContext = this.kubeConfig.getCurrentContext();
+            const currentCluster = this.kubeConfig.getCluster(currentContext);
+            if (currentCluster === undefined || currentCluster === null) {
+                throw new Error('Cluster is undefined');
+            }
+            const server = currentCluster.server;
+            if (server === undefined) {
+                throw new Error('Server is undefined');
+            }
+
+            const baseServerConfig: ServerConfiguration<{}> = new ServerConfiguration<{}>(server, {});
+            const configuration: Configuration = createConfiguration({
+                middleware: [headerPatchMiddleware],
+                baseServer: baseServerConfig,
+                authMethods: {
+                    default: this.kubeConfig,
+                },
+            });
 
             // Patch the app
-            await k8sCoreApi.patchNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName, patchObject, undefined, undefined, undefined, options);
+            await k8sCoreApi.patchNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName, body: patchObject}, configuration);
+
 
             // Delete the app
-            await k8sCoreApi.deleteNamespacedCustomObject('argoproj.io', 'v1alpha1', namespace, 'applications', applicationName);
+            await k8sCoreApi.deleteNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName});
 
             console.log(`App ${applicationName} patched and deleted successfully.`);
         } catch (error) {
@@ -350,12 +373,12 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Fetch the secret from the specified namespace
-            const secret = await k8sApi.readNamespacedSecret(secretName, namespace);
+            const secret = await k8sApi.readNamespacedSecret({name: secretName, namespace: namespace});
 
             // Check if the key exists in the secret data
-            if (secret.body.data && secret.body?.data[keyName]) {
+            if (secret.data && secret.data[keyName]) {
                 // Decode the base64 encoded secret value
-                const secretValue = Buffer.from(secret.body.data[keyName], 'base64').toString('utf-8');
+                const secretValue = Buffer.from(secret.data[keyName], 'base64').toString('utf-8');
                 return secretValue;
             } else {
                 console.error(`Key ${keyName} not found in secret ${secretName}`);
@@ -373,10 +396,10 @@ export class Kubernetes extends Utils {
             const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
 
             // List all secrets
-            const secretList = await k8sApi.listNamespacedSecret(namespace);
+            const secretList = await k8sApi.listNamespacedSecret({namespace: namespace});
 
             // Filter secrets
-            const matchingSecrets = secretList.body.items.filter(secret => secret.metadata?.name?.startsWith(partialSecretName));
+            const matchingSecrets = secretList.items.filter(secret => secret.metadata?.name?.startsWith(partialSecretName));
 
             if (matchingSecrets.length === 0) {
                 console.error(`No secrets found with prefix ${partialSecretName}`);
@@ -416,13 +439,13 @@ export class Kubernetes extends Utils {
         const k8sCustomApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
             // Get the route object from the OpenShift cluster
-            const route = await k8sCustomApi.getNamespacedCustomObject(
-                'route.openshift.io',
-                'v1',
-                namespace,
-                'routes',
-                'backstage-developer-hub'
-            );
+            const route = await k8sCustomApi.getNamespacedCustomObject({
+                group: 'route.openshift.io',
+                version: 'v1',
+                namespace: namespace,
+                plural: 'routes',
+                name: 'backstage-developer-hub'
+            });
 
             // Extract the host from the route object
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
