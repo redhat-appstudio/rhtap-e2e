@@ -16,7 +16,7 @@ const springBootTemplateName = 'java-springboot';
 const runSpringBootBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.github.active && configuration.github.tekton) {
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
 
         gitHubBasicGoldenPathTemplateTests(springBootTemplateName);
     } else {

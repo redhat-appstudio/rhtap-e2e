@@ -16,7 +16,7 @@ const golangTemplateName = 'go';
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.gitlab.active && configuration.gitlab.tekton) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.tekton) {
 
         gitLabProviderBasicTests(golangTemplateName);
     } else {

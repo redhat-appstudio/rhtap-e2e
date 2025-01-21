@@ -4,39 +4,6 @@ module.exports = {
     bail: false,
     testRunner: 'jest-circus/runner',
     verbose: true,
-    globals: {
-        suites: {
-            softwareTemplates: {
-                templates: ['dotnet-basic', 'go', 'nodejs', 'python', 'java-quarkus', 'java-springboot'],
-                github: {
-                    active: true,
-                    tekton: true,
-                    jenkins: false,
-                    actions: false,
-                    host: 'https://api.github.com',
-                    registriesConfig: {
-                        quay: {
-                            active: true,
-                            host: 'quay.io'
-                        },
-                    },
-                },
-                gitlab: {
-                    active: false,
-                    tekton: true,
-                    jenkins: false,
-                    gitlabci: false,
-                    host: 'https://gitlab.com',
-                    registriesConfig: {
-                        quay: {
-                            active: true,
-                            host: 'quay.io'
-                        },
-                    },
-                },
-            }
-        }
-    },
     reporters: [
         "default",
         "jest-junit",

@@ -17,7 +17,7 @@ const stringOnRoute = 'Welcome';
 const runDotNetBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
         gitLabJenkinsBasicTests(dotNetTemplateName, stringOnRoute);
     } else {
         skipSuite(dotNetTemplateName);
