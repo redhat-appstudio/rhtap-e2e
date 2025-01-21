@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Octokit } from "@octokit/rest";
 import { AxiosError } from "axios";
-import sodium from 'libsodium-wrappers';
+import _sodium from 'libsodium-wrappers';
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
 
