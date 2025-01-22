@@ -134,7 +134,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         /**
         * Setup env cvariables for gitlab runner in repository settings.
         */
-        it(`Setup creds for ${softwareTemplateName} pipeline in repositories: componnet and gitops`, async () => {
+        it(`Setup creds for ${softwareTemplateName} pipeline in repositories: component and gitops`, async () => {
             await setSecretsForGitLabCI(gitLabProvider, gitlabRepositoryID, kubeClient);
             await setSecretsForGitLabCI(gitLabProvider, gitlabRepositoryGitOpsID, kubeClient);
         }, 600000);

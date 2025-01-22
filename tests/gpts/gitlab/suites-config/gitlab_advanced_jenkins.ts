@@ -59,7 +59,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitLabProvider = await getGitLabProvider(kubeClient);
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
@@ -76,14 +76,14 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000)
+            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
 
             if (taskCreated.status !== 'completed') {
                 console.log("Failed to create backstage task. Creating logs...");
 
                 try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id)
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs)
+                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
+                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
                 } catch (error) {
                     throw new Error(`Failed to write logs to artifact directory: ${error}`);
                 }
@@ -96,10 +96,10 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains 'Jenkinsfile'`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
 
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true)
+            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
         }, 600000);
 
         /**
@@ -107,8 +107,8 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * The repository should contain the source code of the application and a Jenkinsfile.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a 'Jenkinsfile'`, async () => {
-            gitlabGitOpsRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabGitOpsRepositoryID, 'Jenkinsfile')).toBe(true)
+            gitlabGitOpsRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
+            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabGitOpsRepositoryID, 'Jenkinsfile')).toBe(true);
         }, 600000);
 
         /**
@@ -122,32 +122,32 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Creates commits to update Jenkins agent and enable ACS scan
         */
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
-            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main')
-            await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main')
+            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
+            await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main')
-            await gitLabProvider.createUsernameCommit(gitlabGitOpsRepositoryID, 'main')
+            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.createUsernameCommit(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main')
-            await gitLabProvider.enableACSJenkins(gitlabGitOpsRepositoryID, 'main')
+            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
+            await gitLabProvider.enableACSJenkins(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace))
-            await gitLabProvider.updateRekorHost(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace))
+            await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateRekorHost(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
 
-            await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace))
-            await gitLabProvider.updateTufMirror(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace))
-        }, 120000)
+            await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateTufMirror(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
+        }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName);
             await jenkinsClient.waitForJobCreation(repositoryName);
-            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
+            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${softwareTemplateName} GitOps jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName + "-gitops");
             await jenkinsClient.waitForJobCreation(repositoryName + "-gitops");
-            await gitLabProvider.createProjectWebHook(gitlabGitOpsRepositoryID, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/")
+            await gitLabProvider.createProjectWebHook(gitlabGitOpsRepositoryID, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**
@@ -166,8 +166,8 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
         */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            await gitLabProvider.createCommit(gitlabRepositoryID, 'main')
-        }, 120000)
+            await gitLabProvider.createCommit(gitlabRepositoryID, 'main');
+        }, 120000);
 
         /**
         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
@@ -186,7 +186,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          */
         it('container component is successfully synced by gitops in development environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
 
         /**
@@ -207,16 +207,16 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         it('Create merge request to promote from development to stage environment', async () => {
             gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitOpsRepositoryID, generateRandomChars(6),
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
-            expect(gitopsPromotionMergeRequestNumber).toBeDefined()
-        })
+            expect(gitopsPromotionMergeRequestNumber).toBeDefined();
+        });
 
         /**
         * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
         */
         it(`Merge gitops pull request to sync new image in stage environment`, async () => {
             await gitLabProvider.waitForMergeableMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber, 30000);
-            await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber)
-        }, 120000)
+            await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
+        }, 120000);
 
 
         /**
@@ -237,7 +237,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          */
         it('container component is successfully synced by gitops in staging environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
 
         /**
@@ -246,9 +246,9 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
             gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitOpsRepositoryID, generateRandomChars(6),
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
-            expect(gitopsPromotionMergeRequestNumber).toBeDefined()
+            expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-        }, 900000)
+        }, 900000);
 
         /**
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
@@ -256,8 +256,8 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         it(`merge gitops pull request to sync new image in production environment`, async () => {
             new Utils().sleep(100000);
             await gitLabProvider.waitForMergeableMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber, 30000);
-            await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber)
-        }, 120000)
+            await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
+        }, 120000);
 
         /**
         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
@@ -276,15 +276,15 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          */
         it('container component is successfully synced by gitops in prod environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName)
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
-        })
-    })
-}
+        });
+    });
+};

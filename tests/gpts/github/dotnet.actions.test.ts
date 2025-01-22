@@ -6,13 +6,13 @@ const dotNetTemplateName = 'dotnet-basic';
 const stringOnRoute =  'Welcome';
 
 const runDotNetBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.github.active && configuration.github.actions) {
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.github && configuration.github.actions) {
         gitHubActionsBasicGoldenPathTemplateTests(dotNetTemplateName, stringOnRoute);
     } else {
-        skipSuite(dotNetTemplateName)
+        skipSuite(dotNetTemplateName);
     }
-}
+};
 
-runDotNetBasicTests()
+runDotNetBasicTests();

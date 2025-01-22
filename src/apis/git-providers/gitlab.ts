@@ -39,11 +39,11 @@ export class GitLabProvider extends Utils {
                 if (projects) {
                     console.info(`Repository with name '${repoName}' found in organization '${organization}'
                        created at '${projects.created_at}' url: gitlab.com/${organization}/${repoName}`);
-                    return projects.id
+                    return projects.id;
                 }
 
                 await this.sleep(10000); // Wait 10 seconds before checking again
-            } catch (error) {
+            } catch (_) {
                 console.info(`Failed to check if repository ${organization}/${repoName} exists`);
             }
         }
@@ -115,13 +115,13 @@ export class GitLabProvider extends Utils {
 
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
         const stringToFind = "agent any";
-        const replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
     public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
-        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */"
-        const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
+        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */";
+        const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
@@ -273,9 +273,9 @@ export class GitLabProvider extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status
+                const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status;
                 if(detailedStatus.toString() == "mergeable"){
-                    return
+                    return;
                 }
 
                 await this.sleep(5000); // Wait 5 seconds
@@ -391,6 +391,7 @@ export class GitLabProvider extends Utils {
                     pipeline.status === 'canceled'
                 ) {
                     console.log(`Pipeline finished with status: ${pipeline.status}`);
+                    console.log(`Pipeline URL: ${pipeline.web_url}`);
                     return pipeline.status;
                 }
 

@@ -88,8 +88,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains Jenkinsfile`, async () => {
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
+            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
+            expect(gitlabRepositoryID).toBeDefined();
             expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
         });
 
@@ -98,7 +98,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * The repository should contain the source code of the application and a 'Jenkinsfile.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a Jenkinsfile`, async () => {
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
+            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
             expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true);
         });
 
@@ -156,7 +156,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
          */
         it('container component is successfully synced by gitops in development environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-        }, 900000)
+        }, 900000);
 
         /**
         * Deletes created applications

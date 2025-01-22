@@ -6,13 +6,13 @@ const quarkusTemplateName = 'java-quarkus';
 const stringOnRoute =  'Congratulations, you have created a new Quarkus cloud application.';
 
 const runQuarkusBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.github.active && configuration.github.actions) {
-        gitHubActionsBasicGoldenPathTemplateTests(quarkusTemplateName, stringOnRoute)
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.github && configuration.github.actions) {
+        gitHubActionsBasicGoldenPathTemplateTests(quarkusTemplateName, stringOnRoute);
     } else {
-        skipSuite(quarkusTemplateName)
+        skipSuite(quarkusTemplateName);
     }
-}
+};
 
-runQuarkusBasicTests()
+runQuarkusBasicTests();

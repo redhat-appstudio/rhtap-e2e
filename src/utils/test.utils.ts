@@ -277,7 +277,7 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
 export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
     const kubeClient: Kubernetes = new Kubernetes();
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+    if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
         const podLogs: any = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
