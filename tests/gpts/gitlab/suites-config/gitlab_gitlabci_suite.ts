@@ -122,7 +122,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         /**
         * Waits for pipeline after commit RHTAP ENV
         */
-        it(`Wait for a pipeline run to finish`, async () => {
+        it(`Wait for a pipeline run to finish for ${softwareTemplateName}`, async () => {
             await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, 2, 10000);
             const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
 
@@ -133,7 +133,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
-        it('container component is successfully synced by gitops in development environment and route is working', async () => {
+        it(`container component is successfully synced by gitops in development environment and route is working for ${softwareTemplateName}`, async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 600000);
 
