@@ -8,7 +8,7 @@ const stringOnRoute =  'Hello World!';
 const runSpringBootBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.gitlab.active && configuration.gitlab.gitlabci) {
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.gitlabci) {
         gitLabProviderGitLabCITests(springBootTemplateName, stringOnRoute);
     } else {
         skipSuite(springBootTemplateName);

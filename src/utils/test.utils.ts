@@ -61,7 +61,7 @@ export async function waitForStringInPageContent(
 }
 
 export async function getRHTAPRootNamespace() {
-    return process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+    return process.env.RHTAP_ROOT_NAMESPACE ?? 'rhtap';
 }
 
 export async function getGitHubClient(kubeClient: Kubernetes) {
@@ -96,6 +96,30 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
         return new GitLabProvider(process.env.GITLAB_TOKEN);
     } else {
         return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
+    }
+}
+
+export async function getCosignPassword(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_PASSWORD) {
+        return process.env.COSIGN_SECRET_PASSWORD;
+    } else {
+        return await kubeClient.getCosignPassword();
+    }
+}
+
+export async function getCosignPrivateKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_SECRET_KEY) {
+        return process.env.COSIGN_SECRET_KEY;
+    } else {
+        return await kubeClient.getCosignPrivateKey();
+    }
+}
+
+export async function getCosignPublicKey(kubeClient: Kubernetes) {
+    if (process.env.COSIGN_PUBLIC_KEY) {
+        return process.env.COSIGN_PUBLIC_KEY;
+    } else {
+        return await kubeClient.getCosignPublicKey();
     }
 }
 
@@ -253,22 +277,17 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  */
 export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
     const kubeClient: Kubernetes = new Kubernetes();
-    
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
-        
         // Read the logs from the related container
-        const podLogs = await kubeClient.readContainerLogs(podName,developmentNamespace,'step-rox-image-scan');
-        
+        const podLogs = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
         // Print the logs from the container 
-        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name  + ": \n\n" + podLogs);
-        
+        console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name + ": \n\n" + podLogs);
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
-        
         // Verify if the scan was success from logs
         const result: boolean = regex.test(podLogs);
-        return (result);  
+        return (result);
     }
     // Returns false when if condition not met
     return false;

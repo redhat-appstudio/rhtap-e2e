@@ -1,0 +1,30 @@
+{
+  "templates": [
+    "dotnet-basic",
+    "go",
+    "nodejs",
+    "python",
+    "java-quarkus",
+    "java-springboot"
+  ],
+  "priority": [
+    "High"
+  ],
+  "github": {
+    "tekton": true,
+    "jenkins": false,
+    "actions": false,
+    "host": "https://api.github.com"
+  },
+  "gitlab": {
+    "tekton": true,
+    "jenkins": false,
+    "gitlabci": false,
+    "host": "https://gitlab.com"
+  },
+  "pipeline": {
+    "version": "1.4",
+    "github": true,
+    "gitlab": false
+  }
+}

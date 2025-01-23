@@ -4,7 +4,7 @@ import * as path from "node:path";
 export class Utils {
     private readonly artifactDir: string;
     constructor() {
-        this.artifactDir = process.env.ARTIFACT_DIR || path.join(__dirname, '../../../', 'artifacts');
+        this.artifactDir = process.env.ARTIFACT_DIR ?? path.join(__dirname, '../../../', 'artifacts');
     }
 
     public async writeLogsToArtifactDir(storeDirectory: string, fileName: string, logData: string) {
