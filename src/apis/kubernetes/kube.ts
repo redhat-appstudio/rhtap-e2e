@@ -1,4 +1,3 @@
-// import  from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
 import { Utils } from "../git-providers/utils";
@@ -62,8 +61,7 @@ export class Kubernetes extends Utils {
     public async getTaskRunsFromPipelineRun(pipelineRunName: string): Promise<TaskRunKind[]> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const { body: taskRunList } = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
-            // const { body: taskRunList } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'taskruns');
+            const taskRunList = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
             const taskRunInterface = taskRunList as TaskRunList;
             return taskRunInterface.items.filter(taskRun =>
                 taskRun.metadata && taskRun.metadata.name && taskRun.metadata.name.startsWith(pipelineRunName));
@@ -161,7 +159,7 @@ export class Kubernetes extends Utils {
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                const { body } = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version:'v1', plural: 'pipelineruns',
+                const body = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version:'v1', plural: 'pipelineruns',
                     labelSelector: `pipelinesascode.tekton.dev/url-repository=${gitRepository}`});
                 // const { body } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'pipelineruns',
                 //     undefined, undefined, undefined, undefined, `pipelinesascode.tekton.dev/url-repository=${gitRepository}`);
@@ -215,7 +213,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject({group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name});
+                const body = await customObjectsApi.getNamespacedCustomObject({group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name});
                 const pr = body as PipelineRunKind;
 
                 if (pr.status && pr.status.conditions) {
@@ -285,7 +283,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPRootNamespace, plural: 'applications', name: name});
+                const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPRootNamespace, plural: 'applications', name: name});
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
