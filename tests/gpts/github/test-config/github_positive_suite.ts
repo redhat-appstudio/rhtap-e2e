@@ -173,12 +173,16 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
             const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
+                const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
                 const index = doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container");
-                const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
+                const regex = new RegExp("registry.redhat.io/rh-syft-tec-preview/syft-rhel9", 'i');
                 const imageIndex = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)));
                 if (imageIndex) {
                     console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
+                }
+                else
+                {
+                    console.log("The image path not found but The task build-container config is : \n" + doc.spec.pipelineSpec.tasks[index])
                 }
                 expect(imageIndex).not.toBe(undefined);
             }
