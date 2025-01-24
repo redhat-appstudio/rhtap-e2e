@@ -2,7 +2,7 @@ import axios, { Axios, AxiosResponse } from 'axios';
 import { ScaffolderScaffoldOptions, ScaffolderTask } from '@backstage/plugin-scaffolder-react';
 import { TaskIdReponse } from './types';
 import { TemplateEntityV1beta3 } from '@backstage/plugin-scaffolder-common';
-import { Utils } from '../git-providers/utils';
+import { Utils } from '../scm-providers/utils';
 import * as https from 'https';
 
 /**
