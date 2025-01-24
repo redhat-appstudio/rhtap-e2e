@@ -4,7 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, createTaskCreatorOptionsGitlab, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -162,6 +162,15 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 }
                 expect(finished).toBe(true);
             }
+        }, 900000);
+      
+        /**
+        * Check if the pipelinerun yaml has the rh-syft image path mentioned
+        * if failed to figure out the image path ,return pod yaml for reference
+        */
+        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
         }, 900000);
 
         /**

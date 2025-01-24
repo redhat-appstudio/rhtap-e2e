@@ -501,4 +501,23 @@ export class Kubernetes extends Utils {
     public async getTUFUrl(namespace: string): Promise<string> {
         return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
     }
+
+     /**
+     * Returns the pod yaml file given podname and namespace
+     * 
+     * @param {string} PodName - The name of the pod
+     * @returns {Promise<boolean>} A Promise that resolves to true if the namespace exists, otherwise false.
+     */
+    public async getPodYaml(PodName: string, nameSpace: string): Promise<string | null> {
+        const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
+        try {
+            const response = await k8sCoreApi.readNamespacedPod(PodName, nameSpace);
+            const podYaml = dumpYaml(response.body);
+            return podYaml;
+        }
+        catch (error) {
+            console.error('Error fetching pod:', error);
+            return null;
+        }
+    }
 }
