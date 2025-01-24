@@ -162,11 +162,11 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
-        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
-            expect(result).toBe(true)
-            console.log("Verified as ACS Scan is Successful")
-            }, 900000)
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
+        }, 900000);
 
         /**
         * Deletes created applications
