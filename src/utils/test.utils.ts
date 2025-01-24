@@ -31,6 +31,17 @@ export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeC
     await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
 }
 
+export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider, kubeClient: Kubernetes, rootNamespace: string, bitbucketWorkspace: string, repositoryName: string) {
+    //Check, if gitops repo exists and delete
+    await bitbucketClient.deleteRepository(bitbucketWorkspace, `${repositoryName}-gitops`);
+
+    //Check, if repo exists and delete
+    await bitbucketClient.deleteRepository(bitbucketWorkspace, repositoryName);
+
+    //Delete app of apps from argo
+    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
+}
+
 export async function waitForStringInPageContent(
     url: string,
     searchString: string,
@@ -229,6 +240,38 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
     if (!namespaceExists) {
         throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
     }
+
+}
+export async function checkEnvVariablesBitbucketl(componentRootNamespace: string, bitbucketUsername: string, bitbucketAppPassword: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+    if (componentRootNamespace === '') {
+        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketUsername === '') {
+        throw new Error("The 'BITBUCKET_USERNAME' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketAppPassword === '') {
+        throw new Error("The 'BITBUCKET_APP_PASSWORD' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketWorkspace === '') {
+        throw new Error("The 'BITBUCKET_WORKSPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketProject === '') {
+        throw new Error("The 'BITBUCKET_PROJECT' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (quayImageOrg === '') {
+        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace);
+
+    if (!namespaceExists) {
+        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+    }
 }
 
 /**
@@ -324,11 +367,12 @@ export async function createTaskCreatorOptionsBitbucket(softwareTemplateName: st
             owner: "user:guest",
             repoName: repositoryName,
             bitbucketOwner: bitbucketUsername,
-            bitbucketWorkspace: bitbucketWorkspace,
-            bitbucketProject: bitbucketProject,
+            workspace: bitbucketWorkspace,
+            project: bitbucketProject,
             ciType: ciType
         }
     };
+
     return taskCreatorOptions;
 }
 

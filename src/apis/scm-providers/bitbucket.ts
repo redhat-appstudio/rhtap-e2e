@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { Utils } from "./utils";
-import * as qs from 'qs';
+import * as qs from "qs";
+import { generateRandomChars } from '../../../src/utils/generator';
+
 
 export class BitbucketProvider extends Utils {
     private readonly bitbucket;
@@ -9,16 +11,16 @@ export class BitbucketProvider extends Utils {
     // private readonly bitbucketAppPassword;
     // private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
-    constructor(bitbucketUserName: string, bitbucketAppPassword: string) {
+    constructor(bitbucketUsername: string, bitbucketAppPassword: string) {
         super();
         this.bitbucket = axios.create({
             baseURL: "https://api.bitbucket.org/2.0",
             auth: {
-                username: bitbucketUserName || '',
+                username: bitbucketUsername || '',
                 password: bitbucketAppPassword || '',
             },
             headers: {
-                'Content-Type': 'application/json', // Ensure this is set
+                'Content-Type': 'application/json',
             },
         });
     }
@@ -39,6 +41,7 @@ export class BitbucketProvider extends Utils {
         }
     }
 
+    // Method to fetch folder in repository
     public async checkIfFolderExistsInRepository(workspace: string, repoName: string, folderPath: string): Promise<boolean> {
         try {
             const response = await this.bitbucket.get(`/repositories/${workspace}/${repoName}/src/main/${folderPath}`);
@@ -95,11 +98,13 @@ export class BitbucketProvider extends Utils {
         }
     }
 
+    // Method to create Pull Request for repository
     public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string){
-        const test_branch = "stage-test-2";
+        const test_branch = `test-${generateRandomChars(4)}`;
+
         // create new branch
         try{
-        const newBranch = await this.bitbucket.post(
+        await this.bitbucket.post(
             `/repositories/${workspace}/${repoSlug}/refs/branches`,
             {
                 "name" : test_branch,
@@ -108,39 +113,39 @@ export class BitbucketProvider extends Utils {
                 }
             },
         );
-        console.log("NEW BRANCH CREATED: ", newBranch);
 
         // Make changes in new branch
-        // await this.createCommit(workspace, repoSlug, test_branch, fileName, fileContent);
-        // console.log("Commit Done:", commitNew.data);
+        await this.createCommit(workspace, repoSlug, test_branch, fileName, fileContent);
 
         // Open PR to merge new branch into main branch
-        // const prData = {
-        //     "title": "PR created by Automated Tests",
-        //     "source": {
-        //         "branch": {
-        //             "name": test_branch
-        //         }
-        //     },
-        //     "destination": {
-        //         "branch": {
-        //             "name": "main"
-        //         }
-        //     }
-        // };
+        const prData = {
+            "title": "PR created by Automated Tests",
+            "source": {
+                "branch": {
+                    "name": test_branch
+                }
+            },
+            "destination": {
+                "branch": {
+                    "name": "main"
+                }
+            }
+        };
 
-        // const prResponse = await this.bitbucket.post(
-        //     `repositories/${workspace}/${repoSlug}/pullrequests`,
-        //     prData,
-        // );
+        const prResponse = await this.bitbucket.post(
+            `repositories/${workspace}/${repoSlug}/pullrequests`,
+            prData,
+        );
 
-        // console.log('Pull request created successfully:', prResponse.data.id);
+        console.log('Pull request created successfully:', prResponse.data.id);
+        return prResponse.data.id
 
         } catch(error){
             console.error("Error:", error)
         }
     }
 
+    // Method to merge Pull Request
     public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: string){
         const mergeData = {
             "type": "commit",
