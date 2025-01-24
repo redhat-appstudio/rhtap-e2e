@@ -177,10 +177,10 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * verify if the ACS Scan is successfully done from the logs of task steps
         */
         it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace)
-            expect(result).toBe(true)
-            console.log("Verified as ACS Scan is Successful")
-        }, 900000)
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
+        }, 900000);
 
         /**
             * Merges a merge request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
