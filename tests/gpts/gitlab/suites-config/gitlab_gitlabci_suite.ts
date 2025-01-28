@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -107,15 +107,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         * Setup env cvariables for gitlab runner in repository settings.
         */
         it(`Setup creds for ${softwareTemplateName} pipeline in repository`, async () => {
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.QUAY_PASSWORD || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.QUAY_USERNAME || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await setSecretsForGitLabCI(gitLabProvider, gitlabRepositoryID, kubeClient);
         }, 600000);
 
 
@@ -130,7 +122,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         /**
         * Waits for pipeline after commit RHTAP ENV
         */
-        it(`Wait for a pipeline run to finish`, async () => {
+        it(`Wait for a pipeline run to finish for ${softwareTemplateName}`, async () => {
             await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, 2, 10000);
             const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
 
@@ -141,7 +133,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
-        it('container component is successfully synced by gitops in development environment and route is working', async () => {
+        it(`container component is successfully synced by gitops in development environment and route is working for ${softwareTemplateName}`, async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 600000);
 

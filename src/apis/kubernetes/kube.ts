@@ -9,7 +9,7 @@ import { OpenshiftRoute } from "./types/oc.routes.cr";
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE ??'rhtap';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -440,7 +440,7 @@ export class Kubernetes extends Utils {
             return "";
         }
     }
-    
+
     /**
     * Gets cosign public key.
     */

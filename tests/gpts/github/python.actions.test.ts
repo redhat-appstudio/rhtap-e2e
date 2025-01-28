@@ -6,14 +6,14 @@ const pythonTemplateName = 'python';
 const stringOnRoute =  'Hello World!';
 
 const runPythonBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.github.active && configuration.github.actions) {
+    if (configuration.templates.includes(pythonTemplateName) && configuration.pipeline.github && configuration.github.actions) {
 
-        gitHubActionsBasicGoldenPathTemplateTests(pythonTemplateName, stringOnRoute)
+        gitHubActionsBasicGoldenPathTemplateTests(pythonTemplateName, stringOnRoute);
     } else {
-        skipSuite(pythonTemplateName)
+        skipSuite(pythonTemplateName);
     }
-}
+};
 
-runPythonBasicTests()
+runPythonBasicTests();
