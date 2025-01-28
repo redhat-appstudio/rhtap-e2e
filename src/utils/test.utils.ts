@@ -281,7 +281,7 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
     if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
-        const podLogs = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        const podLogs: any = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
         // Print the logs from the container 
         console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name + ": \n\n" + podLogs);
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
@@ -291,4 +291,42 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
     }
     // Returns false when if condition not met
     return false;
+}
+
+/**
+ * Verifies the syft image path used for pipelinerun
+ * 
+ * This function retrieves the pipeline run associated with a repository, looks for the 
+ * build-container pod related to the pipeline, and verifies the rh-syft image path 
+ * If not found,return pod yaml for reference
+ * 
+ * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
+ * @param {string} developmentNamespace - The Kubernetes namespace where the development resources (including the ACS scan pod) are deployed.
+ * @returns {Promise<boolean>} A Promise that resolves to `true` if image verification is successful, or `false` if not.
+ * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
+ * 
+ */
+export async function verifySyftImagePath(repositoryName: string, developmentNamespace: string):Promise<boolean> {
+    const kubeClient: Kubernetes = new Kubernetes();
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+    var result: boolean = true
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
+        const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
+        const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
+        const imageIndex: number = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex((item: { image: string; }) => regex.test(item.image)));
+        if (imageIndex !== -1) {
+            console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
+            }
+        else
+            {
+            const podName: string = pipelineRun.metadata.name + '-build-container-pod';
+            // Read the yaml of the given pod
+            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace)
+            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`)
+            result = false
+            }  
+    }
+    return result
+    
 }
