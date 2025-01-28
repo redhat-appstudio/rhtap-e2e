@@ -224,7 +224,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
             expect(result).toBe(true);
         }, 900000);
         

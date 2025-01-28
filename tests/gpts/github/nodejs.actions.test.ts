@@ -8,7 +8,7 @@ const stringOnRoute =  'Hello from Node.js Starter Application!';
 const runNodeJSBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.github && configuration.github.actions) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.github && configuration.github.actions) {
         gitHubActionsBasicGoldenPathTemplateTests(nodejsTemplateName, stringOnRoute);
     } else {
         skipSuite(nodejsTemplateName);

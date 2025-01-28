@@ -8,7 +8,7 @@ const stringOnRoute =  'Welcome';
 const runDotNetBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.github && configuration.github.actions) {
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.pipeline.github && configuration.github.actions) {
         gitHubActionsBasicGoldenPathTemplateTests(dotNetTemplateName, stringOnRoute);
     } else {
         skipSuite(dotNetTemplateName);

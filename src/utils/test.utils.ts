@@ -326,27 +326,25 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function verifySyftImagePath(repositoryName: string, developmentNamespace: string):Promise<boolean> {
-    const kubeClient: Kubernetes = new Kubernetes();
+export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string): Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-    var result: boolean = true
-    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+    let result = true;
+    if (pipelineRun?.metadata?.name) {
         const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
         const imageIndex: number = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex((item: { image: string; }) => regex.test(item.image)));
         if (imageIndex !== -1) {
             console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
-            }
-        else
-            {
+        }
+        else {
             const podName: string = pipelineRun.metadata.name + '-build-container-pod';
             // Read the yaml of the given pod
-            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace)
-            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`)
-            result = false
-            }  
+            const podYaml = await kubeClient.getPodYaml(podName, developmentNamespace);
+            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`);
+            result = false;
+        }
     }
-    return result
-    
+    return result;
+
 }

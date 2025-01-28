@@ -172,22 +172,8 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-<<<<<<< HEAD
-            const result = await verifySyftImagePath(repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
             expect(result).toBe(true);
-=======
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const doc = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
-                const index = await doc.spec.pipelineSpec.tasks.findIndex(item => item.name === "build-container");
-                const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
-                const imageIndex = (await doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex(item => regex.test(item.image)));
-                if (imageIndex) {
-                    console.log("The image path found is " + await doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
-                }
-                expect(imageIndex).not.toBe(undefined);
-            }
->>>>>>> 0d39281 (Fixes after review + other fixes)
         }, 900000);
 
         /**

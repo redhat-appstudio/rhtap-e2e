@@ -8,7 +8,7 @@ const stringOnRoute =  'Congratulations, you have created a new Quarkus cloud ap
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.github && configuration.github.actions) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.github && configuration.github.actions) {
         gitHubActionsBasicGoldenPathTemplateTests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);

@@ -8,7 +8,7 @@ const stringOnRoute =  'Hello World!';
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.github && configuration.github.actions) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.actions) {
         gitHubActionsBasicGoldenPathTemplateTests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);
