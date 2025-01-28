@@ -33,7 +33,7 @@ export const syncArgoApplication = async (namespace: string, applicationName: st
 
         argocd login $URL --insecure --grpc-web --username admin --password $ARGOPW
 
-        argocd app sync ${applicationName} --insecure
+        argocd app sync ${applicationName} --insecure --timeout 300
     `;
 
     // Execute the shell script commands
