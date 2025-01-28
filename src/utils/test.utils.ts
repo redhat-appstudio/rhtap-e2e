@@ -274,8 +274,7 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function checkIfAcsScanIsPass(repositoryName: string, developmentNamespace: string):Promise<boolean> {
-    const kubeClient: Kubernetes = new Kubernetes();
+export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string):Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';

@@ -383,7 +383,6 @@ export class GitLabProvider extends Utils {
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const pipeline = await this.gitlab.Pipelines.show(projectId, pipelineId);
-                console.log(`Pipeline status: ${pipeline.status}`);
 
                 if (
                     pipeline.status === 'success' ||
