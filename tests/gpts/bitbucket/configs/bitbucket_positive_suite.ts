@@ -35,6 +35,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         let backstageClient: DeveloperHubClient;
         let bitbucketClient: BitbucketProvider;
         let kubeClient: Kubernetes;
+        let pipelineAsCodeRoute: string;
 
         let RHTAPRootNamespace: string;
 
@@ -48,6 +49,9 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             kubeClient = new Kubernetes();
             bitbucketClient = await geBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
+
+            const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
+            pipelineAsCodeRoute = `https://${componentRoute}`;
 
             await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketUsername, bitbucketAppPassword, bitbucketWorkspace, bitbucketProject, quayImageOrg, developmentNamespace, kubeClient);
         });
@@ -68,8 +72,11 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * @param values Set of options to create the component.
          * @param owner Developer Hub username who initiates the task.
          * @param name Name of the repository to be created in Bitbucket.
+         * @param bitbucketUsername Name of the Bitbucket User.
+         * @param bitbucketWorkspace Workspace where repository to be created in Bitbucket.
+         * @param bitbucketProject Project where repository to be created in Bitbucket.
          * @param branch Default git branch for the component.
-         * @param repoUrl Complete URL of the git provider where the component will be created.
+         * @param repoUrl Complete URL of the scm provider where the component will be created.
          * @param imageRegistry Image registry provider. Default is Quay.io.
          * @param namespace Kubernetes namespace where ArgoCD will create component manifests.
          * @param imageName Registry image name for the component to be pushed.
@@ -139,10 +146,18 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         }, 120000);
 
         /**
+            * Creates an Webhook in the repository for a pipelinerun run.
+        */
+        it(`Creates webhook in the repository for pipeline run`, async ()=> {
+            const hook = await bitbucketClient.createRepoWebHook(bitbucketWorkspace, repositoryName, pipelineAsCodeRoute);
+            expect(hook).not.toBe(undefined);
+        }, 120000);
+
+        /**
          * Creates an commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "");
+            const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
             expect(commit).not.toBe(undefined);
 
         }, 120000);

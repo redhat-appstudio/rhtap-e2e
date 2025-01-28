@@ -6,10 +6,6 @@ import { generateRandomChars } from '../../../src/utils/generator';
 
 export class BitbucketProvider extends Utils {
     private readonly bitbucket;
-    // private readonly bitbucketWorkspace;
-    // private readonly bitbucketUserName;
-    // private readonly bitbucketAppPassword;
-    // private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
 
     constructor(bitbucketUsername: string, bitbucketAppPassword: string) {
         super();
@@ -29,8 +25,6 @@ export class BitbucketProvider extends Utils {
     public async checkIfRepositoryExists(workspace: string, repoName: string) {
         try {
             const projects = await this.bitbucket.get(`/repositories/${workspace}/${repoName}`);
-            // const projects = await this.bitbucket.get(`/repositories/${workspace}`);
-            console.log('Repositories: ', projects);
             if (projects) {
                 console.info(`Repository '${repoName}' found in Workspace '${workspace}'
                     created at '${projects.data.created_on}' and Status '${projects.status}' `);
@@ -42,16 +36,12 @@ export class BitbucketProvider extends Utils {
     }
 
     // Method to fetch folder in repository
-    public async checkIfFolderExistsInRepository(workspace: string, repoName: string, folderPath: string): Promise<boolean> {
+    public async checkIfFolderExistsInRepository(workspace: string, repoName: string, folderPath: string) {
         try {
             const response = await this.bitbucket.get(`/repositories/${workspace}/${repoName}/src/main/${folderPath}`);
-            console.log('Repositories: ', response.data);
             return response.status === 200;
         } catch (error) {
-            // const e = error as AxiosError;
             console.error(`Failed to fetch folderPath:`, error);
-
-            return false;
         }
     }
 
@@ -59,9 +49,10 @@ export class BitbucketProvider extends Utils {
     public async deleteRepository(workspace: string, repoName: string) {
         try {
             const projects = await this.bitbucket.delete(`/repositories/${workspace}/${repoName}`);
-            console.info(projects.status);
+            console.info(`Delete repository '${repoName}' from Workspace '${workspace}' `);
+            return projects.status;
         } catch (error) {
-            console.error('Error fetching repositories:', error);
+            console.error('Error deleting repository:', error);
         }
     }
 
@@ -92,9 +83,32 @@ export class BitbucketProvider extends Utils {
             );
 
             console.log('Commit successfully created:', response.data);
+            return response.data;
 
         } catch (error) {
             console.error('Error committing file:', error);
+        }
+    }
+
+    // Method to create WebHook in repository
+    public async createRepoWebHook(workspace: string, repoSlug: string, webHookUrl: string){
+        try{
+            const webhookData = {
+                "description": "rhtap-push",
+                "url": webHookUrl,
+                "active": true,
+                "skip_cert_verification": true,
+                secret_set: false,
+                "events": [
+                    "repo:push",
+                    "pullrequest:created",
+                    "pullrequest:fulfilled"
+                ]
+            };
+            const hook = await this.bitbucket.post(`/repositories/${workspace}/${repoSlug}/hooks`, webhookData);
+            return hook.data;
+        } catch (error) {
+            console.error('Error creating webhook:', error);
         }
     }
 
@@ -141,7 +155,7 @@ export class BitbucketProvider extends Utils {
         return prResponse.data.id
 
         } catch(error){
-            console.error("Error:", error)
+            console.error("Error creating PR:", error)
         }
     }
 
@@ -162,8 +176,7 @@ export class BitbucketProvider extends Utils {
 
             console.log(`Pull request "${pullRequestID}" merged successfully.`);
         } catch (error) {
-            console.log(error);
-            // throw new Error("Failed to merge Merge Request. Check bellow error", error);
+            console.log("Error merging PR", error);
         }
     }
 
