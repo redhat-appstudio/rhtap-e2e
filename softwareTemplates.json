@@ -22,9 +22,15 @@
     "gitlabci": false,
     "host": "https://gitlab.com"
   },
+  "bitbucket": {
+    "tekton": true,
+    "jenkins": false,
+    "host": "https://api.bitbucket.org/2.0"
+  },
   "pipeline": {
     "version": "1.4",
     "github": true,
-    "gitlab": false
+    "gitlab": false,
+    "bitbucket": false
   }
 }

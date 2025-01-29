@@ -1,7 +1,7 @@
 import { CoreV1Api, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, V1ObjectMeta } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
-import { Utils } from "../git-providers/utils";
+import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
 import { OpenshiftRoute } from "./types/oc.routes.cr";
