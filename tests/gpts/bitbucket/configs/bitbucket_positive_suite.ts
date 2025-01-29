@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, geBitbucketClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, geBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -27,8 +27,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = `rhtap-qe-${generateRandomChars(4)}`;
+        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
@@ -53,7 +53,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketUsername, bitbucketAppPassword, bitbucketWorkspace, bitbucketProject, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketUsername, bitbucketAppPassword, bitbucketWorkspace, bitbucketProject, imageOrg, developmentNamespace, kubeClient);
         });
 
         /**
@@ -83,7 +83,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsBitbucket(gptTemplate, quayImageName, quayImageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsBitbucket(gptTemplate, imageName, imageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -183,6 +183,24 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
                 }
                 expect(finished).toBe(true);
             }
+        }, 900000);
+
+        /**
+         * Check if the pipelinerun yaml has the rh-syft image path mentioned
+         * if failed to figure out the image path ,return pod yaml for reference
+         */
+        it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+        }, 900000);
+
+        /**
+         * verify if the ACS Scan is successfully done from the logs of task steps
+         */
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
+            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
         }, 900000);
 
         /**

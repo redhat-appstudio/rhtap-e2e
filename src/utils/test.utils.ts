@@ -318,20 +318,22 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     * @param {string} quayImageName Registry image name for the component to be pushed.
     * @param {string} quayImageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
-    * @param {string} repositoryName Name of the GitHub repository.
-    * @param {string} gitLabOrganization Owner of the GitHub repository.
+    * @param {string} bitbucketUsername Bitbucket username to create repo in Bitbucket.
+    * @param {string} bitbucketWorkspace Bitbucket workspace where repo to be created in Bitbucket.
+    * @param {string} bitbucketProject Bitbucket project where repo to be created in Bitbucket.
+    * @param {string} repositoryName Name of the Bitbucket repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsBitbucket(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, bitbucketUsername: string, bitbucketWorkspace: string, bitbucketProject: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsBitbucket(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, bitbucketUsername: string, bitbucketWorkspace: string, bitbucketProject: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
             branch: 'main',
             bbHost: 'bitbucket.org',
             hostType: 'Bitbucket',
-            imageName: quayImageName,
-            imageOrg: quayImageOrg,
+            imageName: imageName,
+            imageOrg: imageOrg,
             imageRegistry: imageRegistry,
             name: repositoryName,
             namespace: componentRootNamespace,
