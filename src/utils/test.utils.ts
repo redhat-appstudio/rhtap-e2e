@@ -281,7 +281,10 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
     if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
-        const podLogs: any = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        const podLogs: unknown = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        if (typeof podLogs !== "string") {
+            throw new Error(`Failed to retrieve container logs: Expected a string but got ${typeof podLogs}`);
+        }
         // Print the logs from the container 
         console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name + ": \n\n" + podLogs);
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
@@ -309,24 +312,25 @@ export async function checkIfAcsScanIsPass(repositoryName: string, developmentNa
 export async function verifySyftImagePath(repositoryName: string, developmentNamespace: string):Promise<boolean> {
     const kubeClient: Kubernetes = new Kubernetes();
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-    var result: boolean = true
+    let result = true;
     if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
         const imageIndex: number = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex((item: { image: string; }) => regex.test(item.image)));
         if (imageIndex !== -1) {
             console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
-            }
+        }
         else
-            {
+        {
             const podName: string = pipelineRun.metadata.name + '-build-container-pod';
             // Read the yaml of the given pod
-            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace)
-            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`)
-            result = false
-            }  
+            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace);
+            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`);
+            result = false;
+        }  
     }
-    return result
+    return result;
     
 }
