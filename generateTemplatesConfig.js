@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const path = require('path');
 
@@ -39,7 +40,7 @@ const generateTemplatesConfig = (ocpVersion, templateName, jenkinsEnabled, tekto
     fs.writeFileSync(filePath, jsonContent, 'utf-8');
 };
 
-const ocpVersion = process.env.OCP_VERSION
+const ocpVersion = process.env.OCP_VERSION;
 
 const templateName = process.env.SOFTWARE_TEMPLATES_FILE || 'softwareTemplates.json';
 const jenkinsEnabled = process.env.JENKINS_ENABLED || 'false';

@@ -18,7 +18,7 @@ const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
-        gitLabJenkinsBasicTests(quarkusTemplateName, stringOnRoute)
+        gitLabJenkinsBasicTests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);
     }
