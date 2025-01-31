@@ -376,7 +376,10 @@ export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryNam
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
-        const podLogs: any = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        const podLogs: unknown = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        if (typeof podLogs !== "string") {
+            throw new Error(`Failed to retrieve container logs: Expected a string but got ${typeof podLogs}`);
+        }
         // Print the logs from the container 
         console.log("Logs from acs-image-scan for pipelineRun " + pipelineRun.metadata.name + ": \n\n" + podLogs);
         const regex = new RegExp("\"result\":\"SUCCESS\"", 'i');
@@ -427,6 +430,7 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     let result = true;
     if (pipelineRun?.metadata?.name) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
