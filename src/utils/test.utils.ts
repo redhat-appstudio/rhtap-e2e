@@ -33,12 +33,14 @@ export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeC
 
 export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider, kubeClient: Kubernetes, rootNamespace: string, bitbucketWorkspace: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
-    await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`);
-    await bitbucketClient.deleteRepository(bitbucketWorkspace, `${repositoryName}-gitops`);
+    if (await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`)) {
+        await bitbucketClient.deleteRepository(bitbucketWorkspace, `${repositoryName}-gitops`);
+    }
 
     //Check, if repo exists and delete
-    await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, repositoryName);
-    await bitbucketClient.deleteRepository(bitbucketWorkspace, repositoryName);
+    if (await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, repositoryName)) {
+        await bitbucketClient.deleteRepository(bitbucketWorkspace, repositoryName);
+    }
 
     //Delete app of apps from argo
     await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
@@ -112,7 +114,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
-export async function geBitbucketClient(kubeClient: Kubernetes) {
+export async function getBitbucketClient(kubeClient: Kubernetes) {
     if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME ) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
@@ -176,7 +178,7 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (gitLabOrganization === '') {
@@ -194,7 +196,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
 
 export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (githubOrganization === '') {
@@ -212,17 +214,9 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
     }
 }
 
-export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketUsername: string, bitbucketAppPassword: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-    }
-
-    if (bitbucketUsername === '') {
-        throw new Error("The 'BITBUCKET_USERNAME' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
-    }
-
-    if (bitbucketAppPassword === '') {
-        throw new Error("The 'BITBUCKET_APP_PASSWORD' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (bitbucketWorkspace === '') {
@@ -423,8 +417,13 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  */
 export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string): Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+<<<<<<< HEAD
     let result = true;
     if (pipelineRun?.metadata?.name) {
+=======
+    var result: boolean = true;
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+>>>>>>> 3a6d1ff (update)
         const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
@@ -432,6 +431,7 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
         if (imageIndex !== -1) {
             console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
         }
+<<<<<<< HEAD
         else {
             const podName: string = pipelineRun.metadata.name + '-build-container-pod';
             // Read the yaml of the given pod
@@ -442,4 +442,17 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     }
     return result;
 
+=======
+        else
+        {
+            const podName: string = pipelineRun.metadata.name + '-build-container-pod';
+            // Read the yaml of the given pod
+            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace);
+            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`);
+            result = false;
+        }  
+    }
+    return result;
+    
+>>>>>>> 3a6d1ff (update)
 }

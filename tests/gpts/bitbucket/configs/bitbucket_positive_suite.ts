@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, geBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -21,13 +21,12 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
 
-        const bitbucketUsername = process.env.BITBUCKET_USERNAME || '';
-        const bitbucketAppPassword = process.env.BITBUCKET_APP_PASSWORD || '';
+        let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const imageName = `rhtap-qe-${generateRandomChars(4)}`;
+        const imageName = "rhtap-qe";
         const imageOrg = process.env.QUAY_IMAGE_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
@@ -47,13 +46,14 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
-            bitbucketClient = await geBitbucketClient(kubeClient);
+            bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
+            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketUsername, bitbucketAppPassword, bitbucketWorkspace, bitbucketProject, imageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, developmentNamespace, kubeClient);
         });
 
         /**

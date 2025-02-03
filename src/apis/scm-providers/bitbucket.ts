@@ -21,49 +21,70 @@ export class BitbucketProvider extends Utils {
         });
     }
 
-    // Method to fetch repository
-    public async checkIfRepositoryExists(workspace: string, repoName: string) {
+    /**
+     * checkifRepositoryExists checks if a repository exists in Bitbucket
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository
+     */
+    public async checkIfRepositoryExists(workspace: string, repoSlug: string): Promise<boolean> {
         try {
-            const projects = await this.bitbucket.get(`/repositories/${workspace}/${repoName}`);
-            if (projects) {
-                console.info(`Repository '${repoName}' found in Workspace '${workspace}'
-                    created at '${projects.data.created_on}' and Status '${projects.status}' `);
-                return projects.status === 200;
-                }
+            const projects = await this.bitbucket.get(`/repositories/${workspace}/${repoSlug}`);
+            console.info(`Repository '${repoSlug}' found in Workspace '${workspace}'
+                created at '${projects.data.created_on}' and Status '${projects.status}' `);
+            return projects.status === 200;
         } catch (error) {
             console.error('Error fetching repositories:', error);
+            return false;
         }
     }
 
-    // Method to fetch folder in repository
-    public async checkIfFolderExistsInRepository(workspace: string, repoName: string, folderPath: string) {
+    /**
+     * checkIfFolderExistsInRepository checks if a folder exists in Bitbucket repository
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository
+     * @param folderPath folder path to check in repository
+     */
+    public async checkIfFolderExistsInRepository(workspace: string, repoSlug: string, folderPath: string): Promise<boolean> {
         try {
-            const response = await this.bitbucket.get(`/repositories/${workspace}/${repoName}/src/main/${folderPath}`);
+            const response = await this.bitbucket.get(`/repositories/${workspace}/${repoSlug}/src/main/${folderPath}`);
             return response.status === 200;
         } catch (error) {
             console.error(`Failed to fetch folderPath:`, error);
+            return false;
         }
     }
 
-    // Method to delete repository
-    public async deleteRepository(workspace: string, repoName: string) {
+    /**
+     * delete repository in bitbucket
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository
+     */
+    public async deleteRepository(workspace: string, repoSlug: string): Promise<boolean> {
         try {
-            const projects = await this.bitbucket.delete(`/repositories/${workspace}/${repoName}`);
-            console.info(`Delete repository '${repoName}' from Workspace '${workspace}' `);
-            return projects.status;
+            const projects = await this.bitbucket.delete(`/repositories/${workspace}/${repoSlug}`);
+            console.info(`Delete repository '${repoSlug}' from Workspace '${workspace}' `);
+            return projects.status === 204;
         } catch (error) {
             console.error('Error deleting repository:', error);
+            return false;
         }
     }
 
-    // Method to create commit repository
+    /**
+     * create commit in bitbucket repository
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository
+     * @param repoBranch valid branch in bitbucket repository
+     * @param fileName file name in bitbucket repo to add/update
+     * @param fileContent file content to be committed in file
+     */
     public async createCommit(
         workspace: string,
         repoSlug: string,
         repoBranch: string,
         fileName: string,
         fileContent: string,
-    ): Promise<void> {
+    ):Promise<string | undefined> {
         try {
 
             const commitData = qs.stringify({
@@ -90,15 +111,20 @@ export class BitbucketProvider extends Utils {
         }
     }
 
-    // Method to create WebHook in repository
-    public async createRepoWebHook(workspace: string, repoSlug: string, webHookUrl: string){
+    /**
+     * create WebHook in bitbucket repository
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository
+     * @param webHookUrl valid webhook url to add in repository
+     */
+    public async createRepoWebHook(workspace: string, repoSlug: string, webHookUrl: string):Promise<string | undefined> {
         try{
             const webhookData = {
                 "description": "rhtap-push",
                 "url": webHookUrl,
                 "active": true,
                 "skip_cert_verification": true,
-                secret_set: false,
+                "secret_set": false,
                 "events": [
                     "repo:push",
                     "pullrequest:created",
@@ -112,61 +138,72 @@ export class BitbucketProvider extends Utils {
         }
     }
 
-    // Method to create Pull Request for repository
-    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string){
-        const test_branch = `test-${generateRandomChars(4)}`;
+    /**
+     * creates pullrequest in bitbucket repository
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository where PR to open
+     * @param fileName file name in bitbucket repo to add/update in PR
+     * @param fileContent file content to be committed in file
+     */
+    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string):Promise<string | undefined> {
+        const testBranch = `test-${generateRandomChars(4)}`;
 
         // create new branch
         try{
-        await this.bitbucket.post(
-            `/repositories/${workspace}/${repoSlug}/refs/branches`,
-            {
-                "name" : test_branch,
-                "target" : {
-                    "hash" : "main",
+            await this.bitbucket.post(
+                `/repositories/${workspace}/${repoSlug}/refs/branches`,
+                {
+                    "name" : testBranch,
+                    "target" : {
+                        "hash" : "main",
+                    }
+                },
+            );
+
+            // Make changes in new branch
+            await this.createCommit(workspace, repoSlug, testBranch, fileName, fileContent);
+
+            // Open PR to merge new branch into main branch
+            const prData = {
+                "title": "PR created by Automated Tests",
+                "source": {
+                    "branch": {
+                        "name": testBranch
+                    }
+                },
+                "destination": {
+                    "branch": {
+                        "name": "main"
+                    }
                 }
-            },
-        );
+            };
 
-        // Make changes in new branch
-        await this.createCommit(workspace, repoSlug, test_branch, fileName, fileContent);
+            const prResponse = await this.bitbucket.post(
+                `repositories/${workspace}/${repoSlug}/pullrequests`,
+                prData,
+            );
 
-        // Open PR to merge new branch into main branch
-        const prData = {
-            "title": "PR created by Automated Tests",
-            "source": {
-                "branch": {
-                    "name": test_branch
-                }
-            },
-            "destination": {
-                "branch": {
-                    "name": "main"
-                }
-            }
-        };
-
-        const prResponse = await this.bitbucket.post(
-            `repositories/${workspace}/${repoSlug}/pullrequests`,
-            prData,
-        );
-
-        console.log('Pull request created successfully:', prResponse.data.id);
-        return prResponse.data.id
+            console.log('Pull request created successfully:', prResponse.data.id);
+            return prResponse.data.id;
 
         } catch(error){
-            console.error("Error creating PR:", error)
+            console.error("Error creating PR:", error);
         }
     }
 
-    // Method to merge Pull Request
-    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: string){
+    /**
+     * merge pullrequest in bitbucket repository
+     * @param workspace valid workspace in Bitbucket
+     * @param repoSlug valid bitbucket repository where PR is open
+     * @param pullRequestID valid ID of pull request to merge
+     */
+    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: string) {
         const mergeData = {
             "type": "commit",
             "message": "PR merge by automated tests",
             "close_source_branch": true,
             "merge_strategy": "merge_commit"
-          };
+        };
 
         try {
             await this.bitbucket.post(

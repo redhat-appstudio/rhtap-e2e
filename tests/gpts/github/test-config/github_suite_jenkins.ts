@@ -5,7 +5,7 @@ import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
-import { Utils } from '../../../../src/apis/git-providers/utils';
+import { Utils } from '../../../../src/apis/scm-providers/utils';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
