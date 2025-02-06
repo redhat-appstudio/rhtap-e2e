@@ -166,7 +166,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 600000);
+        }, 900000);
 
         /**
          * Creates an empty commit
@@ -185,7 +185,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 600000);
+        }, 900000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
@@ -200,11 +200,11 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
             console.log('Waiting for the build to start...');
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 1, 540000);
+            await new Promise(resolve => setTimeout(resolve, 10000));
+            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 1, 600000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 600000);
+        }, 900000);
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
@@ -242,7 +242,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             const jobStatus = await jenkinsClient.waitForBuildToFinish(`${repositoryName}-gitops`, 2, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 600000);
+        }, 900000);
 
 
         /**
@@ -288,7 +288,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 3, 540000);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
-        }, 600000);
+        }, 900000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in prod environment

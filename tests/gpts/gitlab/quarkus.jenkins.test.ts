@@ -1,6 +1,6 @@
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts";
-import { gitLabJenkinsBasicTests } from "./suites-config/gitlab_suite_jenkins.ts";
+import { gitLabJenkinsAdvancedTests } from "./suites-config/gitlab_advanced_jenkins.ts";
 
 /**
  * Tests Quarkus template in Gitlab with Jenkins
@@ -17,8 +17,8 @@ const stringOnRoute = 'Congratulations, you have created a new Quarkus cloud app
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
-        gitLabJenkinsBasicTests(quarkusTemplateName, stringOnRoute)
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab && configuration.gitlab.jenkins) {
+        gitLabJenkinsAdvancedTests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);
     }

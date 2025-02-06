@@ -7,7 +7,9 @@ import { generateRandomChars } from "../../utils/generator";
 
 export class GitHubProvider extends Utils {
     private readonly octokit: Octokit;
-    private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
+    //Uncomment this, in case you want to build image for Jenkins Agent
+    //private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
+    private readonly jenkinsAgentImage="quay.io/jkopriva/rhtap-jenkins-agent:0.1";
 
     constructor(githubToken: string) {
         super();

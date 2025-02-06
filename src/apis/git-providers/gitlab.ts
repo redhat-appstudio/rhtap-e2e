@@ -7,7 +7,9 @@ export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
-    private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
+    //Uncomment this, in case you want to build image for Jenkins Agent
+    //private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
+    private readonly jenkinsAgentImage="quay.io/jkopriva/rhtap-jenkins-agent:0.1";
 
     constructor(gitlabToken: string) {
         super();
@@ -29,20 +31,20 @@ export class GitLabProvider extends Utils {
     }
 
     // Function to find a repository by name
-    public async checkIfRepositoryExists(namespace: string, repoName: string): Promise<number> {
+    public async checkIfRepositoryExists(organization: string, repoName: string): Promise<number> {
         //RHTAPBUGS-1327: Added wait: it should improve stability of Gitlab test - sometimes request from tests could be faster, than GitLab responses
         while (true) {
             try {
-                const projects = await this.gitlab.Projects.show(`${namespace}/${repoName}`);
+                const projects = await this.gitlab.Projects.show(`${organization}/${repoName}`);
                 if (projects) {
-                    console.info(`Repository with name '${repoName}' found in organization '${namespace}'
-                        created at '${projects.created_at}' url: gitlab.com/${namespace}/${repoName}`);
+                    console.info(`Repository with name '${repoName}' found in organization '${organization}'
+                       created at '${projects.created_at}' url: gitlab.com/${organization}/${repoName}`);
                     return projects.id;
                 }
 
                 await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (_) {
-                console.info(`Failed to check if repository ${repoName} exists`);
+                console.info(`Failed to check if repository ${organization}/${repoName} exists`);
             }
         }
     }
@@ -111,15 +113,14 @@ export class GitLabProvider extends Utils {
         }
     }
 
-
-    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
+    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
         const stringToFind = "agent any";
-        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + ":latest'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
     public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
-        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') Uncomment this when using GitLab */";
+        const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */";
         const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
@@ -249,12 +250,40 @@ export class GitLabProvider extends Utils {
      */
     public async mergeMergeRequest(projectId: number, mergeRequestId: number) {
         try {
+            console.log(`Merging merge request "${mergeRequestId}"`);
             await this.gitlab.MergeRequests.accept(projectId, mergeRequestId);
 
             console.log(`Pull request "${mergeRequestId}" merged successfully.`);
         } catch (error) {
             console.log(error);
             throw new Error("Failed to merge Merge Request. Check bellow error");
+        }
+    }
+
+    /**
+     * Wait until merge request have mergeable status
+     * 
+     * @param {number} projectId - The ID number of GitLab repo.
+     * @param {number} mergeRequestId - The ID number of GitLab merge request.
+     */
+    public async waitForMergeableMergeRequest(projectId: number, mergeRequestId: number, timeoutMs: number) {
+        console.log(`Waiting for new pipeline to be created...`);
+        const retryInterval = 10 * 1000;
+        let totalTimeMs = 0;
+
+        while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
+            try {
+                const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status;
+                if(detailedStatus.toString() == "mergeable"){
+                    return;
+                }
+
+                await this.sleep(5000); // Wait 5 seconds
+            } catch (error) {
+                console.error('Error checking merge status:', error);
+                await new Promise(resolve => setTimeout(resolve, 15000)); // Wait for 15 seconds
+            }
+            totalTimeMs += retryInterval;
         }
     }
 
@@ -354,14 +383,12 @@ export class GitLabProvider extends Utils {
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const pipeline = await this.gitlab.Pipelines.show(projectId, pipelineId);
-                console.log(`Pipeline status: ${pipeline.status}`);
 
                 if (
                     pipeline.status === 'success' ||
                     pipeline.status === 'failed' ||
                     pipeline.status === 'canceled'
                 ) {
-                    console.log(`Pipeline finished with status: ${pipeline.status}`);
                     return pipeline.status;
                 }
 
@@ -394,11 +421,11 @@ export class GitLabProvider extends Utils {
     }
 
     public async updateRekorHost(repositoryID: number, branchName: string, rekorHost: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `rekor-server.rhtap-tas.svc`, rekorHost);
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `http://rekor-server.rhtap-tas.svc`, rekorHost);
     }
 
     public async updateTufMirror(repositoryID: number, branchName: string, tufMirror: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `tuf.rhtap-tas.svc`, tufMirror);
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `http://tuf.rhtap-tas.svc`, tufMirror);
     }
 
     public async updateEnvFileForGitLabCI(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string): Promise<boolean> {
@@ -439,7 +466,7 @@ export class GitLabProvider extends Utils {
                 }
             );
 
-            console.log(`${filePath} updated successfully for username.`);
+            console.log(`${filePath} updated successfully with commit message: ${commitMessage}`);
             return true;
         } catch (error: unknown) {
             console.error('Error updating ${filePath}:', error);

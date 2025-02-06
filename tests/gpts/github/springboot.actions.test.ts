@@ -6,13 +6,13 @@ const springBootTemplateName = 'java-springboot';
 const stringOnRoute =  'Hello World!';
 
 const runSpringBootBasicTests = () => {
-    const configuration = loadSoftwareTemplatesTestsGlobals()
+    const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.github.active && configuration.github.actions) {
-        gitHubActionsBasicGoldenPathTemplateTests(springBootTemplateName, stringOnRoute)
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.github && configuration.github.actions) {
+        gitHubActionsBasicGoldenPathTemplateTests(springBootTemplateName, stringOnRoute);
     } else {
-        skipSuite(springBootTemplateName)
+        skipSuite(springBootTemplateName);
     }
-}
+};
 
-runSpringBootBasicTests()
+runSpringBootBasicTests();
