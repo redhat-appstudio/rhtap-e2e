@@ -21,7 +21,7 @@ import { Utils } from "../../../../src/apis/git-providers/utils";
  * 
  * @param softwareTemplateName The name of the software template.
  */
-export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringOnRoute: string) => {
+export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringOnRoute: string, gitLabOrganization: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry with promotion pipeline`, () => {
 
         let backstageClient: DeveloperHubClient;
@@ -44,7 +44,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe";

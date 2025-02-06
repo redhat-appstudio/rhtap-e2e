@@ -9,10 +9,11 @@ import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.
  * @group quarkus
  * @group gitlab
  * @group advanced
+ * @group private
  */
 
 const quarkusTemplateName = 'java-quarkus';
-const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PUBLIC || '';
+const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PRIVATE || '';
 
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
