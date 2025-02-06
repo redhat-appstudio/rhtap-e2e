@@ -9,11 +9,7 @@ import { OpenshiftRoute } from "./types/oc.routes.cr";
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-<<<<<<< HEAD
 const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE ??'rhtap';
-=======
-const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE ?? 'rhtap';
->>>>>>> f7ebbca (RHTAP-2538 SBOM upload check)
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -27,7 +23,6 @@ export class Kubernetes extends Utils {
      */
     constructor() {
         super();
-
         this.kubeConfig = new KubeConfig();
         this.kubeConfig.loadFromDefault();
     }
@@ -42,14 +37,8 @@ export class Kubernetes extends Utils {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             const response = await k8sCoreApi.readNamespace(name);
-
-<<<<<<< HEAD
-            if (response.body && response.body.metadata && response.body.metadata.name === name) {
-                return true;
-=======
             if (response?.body?.metadata?.name === name) {
-                return true
->>>>>>> f7ebbca (RHTAP-2538 SBOM upload check)
+                return true;
             }
 
             return false;
@@ -132,7 +121,7 @@ export class Kubernetes extends Utils {
         }
     }
 
-     /**
+    /**
      * Reads logs from a particular container from a specified pod and namespace and return logs
      *
      * @param {string} podName - The name of the pod.
@@ -140,11 +129,7 @@ export class Kubernetes extends Utils {
      * @param {string} ContainerName - The name of the Container.
      * @returns {Promise<any>} A Promise that resolves once the logs are read and written to artifact files and return logs
      */
-<<<<<<< HEAD
     async readContainerLogs(podName: string, namespace: string, containerName: string): Promise<unknown> {
-=======
-     async readContainerLogs(podName: string, namespace: string, containerName: string): Promise<any> {
->>>>>>> f7ebbca (RHTAP-2538 SBOM upload check)
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Get logs from the given container
@@ -514,8 +499,7 @@ export class Kubernetes extends Utils {
         return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
     }
 
-<<<<<<< HEAD
-     /**
+    /**
      * Returns the pod yaml file given podname and namespace
      * 
      * @param {string} PodName - The name of the pod
@@ -533,8 +517,7 @@ export class Kubernetes extends Utils {
             return null;
         }
     }
-}
-=======
+
     /**
     * Gets bombastic api URL.
     * 
@@ -585,4 +568,3 @@ export class Kubernetes extends Utils {
         return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
     }
 }
->>>>>>> f7ebbca (RHTAP-2538 SBOM upload check)

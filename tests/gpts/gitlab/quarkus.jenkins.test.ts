@@ -17,11 +17,7 @@ const stringOnRoute = 'Congratulations, you have created a new Quarkus cloud app
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-<<<<<<< HEAD
     if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab && configuration.gitlab.jenkins) {
-=======
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab.active && configuration.gitlab.jenkins) {
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
         gitLabJenkinsAdvancedTests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);

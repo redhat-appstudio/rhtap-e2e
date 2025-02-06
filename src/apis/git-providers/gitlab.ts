@@ -39,19 +39,11 @@ export class GitLabProvider extends Utils {
                 if (projects) {
                     console.info(`Repository with name '${repoName}' found in organization '${organization}'
                        created at '${projects.created_at}' url: gitlab.com/${organization}/${repoName}`);
-<<<<<<< HEAD
                     return projects.id;
                 }
 
                 await this.sleep(10000); // Wait 10 seconds before checking again
             } catch (_) {
-=======
-                    return projects.id
-                }
-
-                await this.sleep(10000); // Wait 10 seconds before checking again
-            } catch (error) {
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
                 console.info(`Failed to check if repository ${organization}/${repoName} exists`);
             }
         }
@@ -122,24 +114,14 @@ export class GitLabProvider extends Utils {
     }
 
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
-<<<<<<< HEAD
         const stringToFind = "agent any";
         const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
-=======
-        let stringToFind = "agent any";
-        let replacementString =  "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
     public async createUsernameCommit(repositoryID: number, branchName: string): Promise<boolean> {
-<<<<<<< HEAD
         const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */";
         const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
-=======
-        let stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */"
-        let replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
@@ -291,15 +273,9 @@ export class GitLabProvider extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-<<<<<<< HEAD
                 const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status;
                 if(detailedStatus.toString() == "mergeable"){
                     return;
-=======
-                const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status
-                if(detailedStatus.toString() == "mergeable"){
-                    return
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
                 }
 
                 await this.sleep(5000); // Wait 5 seconds

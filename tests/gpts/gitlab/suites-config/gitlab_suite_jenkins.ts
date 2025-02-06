@@ -88,34 +88,19 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Checks if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
         */
         it(`verifies if component ${softwareTemplateName} was created in GitLab and contains Jenkinsfile`, async () => {
-<<<<<<< HEAD
             gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName);
             expect(gitlabRepositoryID).toBeDefined();
             expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true);
         });
-=======
-            gitlabRepositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, repositoryName)
-            expect(gitlabRepositoryID).toBeDefined()
-
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(gitlabRepositoryID, 'Jenkinsfile')).toBe(true)
-        })
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
         /**
         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
         * The repository should contain the source code of the application and a 'Jenkinsfile.
         */
         it(`verifies if component ${softwareTemplateName} have a valid gitops repository and there exists a Jenkinsfile`, async () => {
-<<<<<<< HEAD
             const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
             expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true);
         });
-=======
-            const repositoryID = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`)
-
-            expect(await gitLabProvider.checkIfRepositoryHaveFile(repositoryID, 'Jenkinsfile')).toBe(true)
-        })
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
         /**
         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
@@ -173,11 +158,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
          */
         it('container component is successfully synced by gitops in development environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
-<<<<<<< HEAD
         }, 900000);
-=======
-        }, 900000)
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
         /**
         * Deletes created applications

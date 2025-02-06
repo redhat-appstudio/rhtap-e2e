@@ -39,7 +39,6 @@
     "@azure/logger" "^1.0.0"
     tslib "^2.6.2"
 
-<<<<<<< HEAD
 "@azure/core-http-compat@^2.0.0":
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/@azure/core-http-compat/-/core-http-compat-2.1.2.tgz#d1585ada24ba750dc161d816169b33b35f762f0d"
@@ -66,16 +65,24 @@
   dependencies:
     tslib "^2.6.2"
 
-"@azure/core-rest-pipeline@^1.10.1", "@azure/core-rest-pipeline@^1.17.0", "@azure/core-rest-pipeline@^1.3.0", "@azure/core-rest-pipeline@^1.9.1":
+"@azure/core-rest-pipeline@^1.10.1", "@azure/core-rest-pipeline@^1.3.0":
   version "1.18.2"
   resolved "https://registry.yarnpkg.com/@azure/core-rest-pipeline/-/core-rest-pipeline-1.18.2.tgz#fa3a83b412d4b3e33edca30a71b1d5838306c075"
   integrity sha512-IkTf/DWKyCklEtN/WYW3lqEsIaUDshlzWRlZNNwSYtFcCBQz++OtOjxNpm8rr1VcbMS6RpjybQa3u6B6nG0zNw==
-=======
+  dependencies:
+    "@azure/abort-controller" "^2.0.0"
+    "@azure/core-auth" "^1.8.0"
+    "@azure/core-tracing" "^1.0.1"
+    "@azure/core-util" "^1.11.0"
+    "@azure/logger" "^1.0.0"
+    http-proxy-agent "^7.0.0"
+    https-proxy-agent "^7.0.0"
+    tslib "^2.6.2"
+
 "@azure/core-rest-pipeline@^1.17.0", "@azure/core-rest-pipeline@^1.9.1":
   version "1.18.1"
   resolved "https://registry.npmjs.org/@azure/core-rest-pipeline/-/core-rest-pipeline-1.18.1.tgz"
   integrity sha512-/wS73UEDrxroUEVywEm7J0p2c+IIiVxyfigCGfsKvCxxCET4V/Hef2aURqltrXMRjNmdmt5IuOgIpl8f6xdO5A==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@azure/abort-controller" "^2.0.0"
     "@azure/core-auth" "^1.8.0"
@@ -110,15 +117,9 @@
     tslib "^2.6.2"
 
 "@azure/identity@^4.0.0":
-<<<<<<< HEAD
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-4.6.0.tgz#276957b59fed96cf48d5e50fc728c3c226e4f105"
-  integrity sha512-ANpO1iAvcZmpD4QY7/kaE/P2n66pRXsDp3nMUC6Ow3c9KfXOZF7qMU9VgqPw8m7adP7TVIbVyrCEmD9cth3KQQ==
-=======
   version "4.5.0"
   resolved "https://registry.npmjs.org/@azure/identity/-/identity-4.5.0.tgz"
   integrity sha512-EknvVmtBuSIic47xkOqyNabAme0RYTw52BTMz8eBgU1ysTyMrD1uOoM+JdS0J/4Yfp98IBT3osqq3BfwSaNaGQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@azure/abort-controller" "^2.0.0"
     "@azure/core-auth" "^1.9.0"
@@ -127,7 +128,7 @@
     "@azure/core-tracing" "^1.0.0"
     "@azure/core-util" "^1.11.0"
     "@azure/logger" "^1.0.0"
-    "@azure/msal-browser" "^4.0.1"
+    "@azure/msal-browser" "^3.26.1"
     "@azure/msal-node" "^2.15.0"
     events "^3.0.0"
     jws "^4.0.0"
@@ -142,17 +143,10 @@
   dependencies:
     tslib "^2.6.2"
 
-<<<<<<< HEAD
 "@azure/msal-browser@^4.0.1":
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-4.0.1.tgz#60dc84a803c13c6293df7b642fea0b09efe83276"
   integrity sha512-jqiwVJPArnEOUhmc+dvo481OP8b2PMcsu3EtGtxt7sxmKgFtdQyGDCndj+2me62JVG/HEgArEgKyMA7L0aNhdA==
-=======
-"@azure/msal-browser@^3.26.1":
-  version "3.28.0"
-  resolved "https://registry.npmjs.org/@azure/msal-browser/-/msal-browser-3.28.0.tgz"
-  integrity sha512-1c1qUF6vB52mWlyoMem4xR1gdwiQWYEQB2uhDkbAL4wVJr8WmAcXybc1Qs33y19N4BdPI8/DHI7rPE8L5jMtWw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@azure/msal-common" "15.0.1"
 
@@ -175,7 +169,6 @@
     jsonwebtoken "^9.0.0"
     uuid "^8.3.0"
 
-<<<<<<< HEAD
 "@azure/storage-blob@^12.5.0":
   version "12.26.0"
   resolved "https://registry.yarnpkg.com/@azure/storage-blob/-/storage-blob-12.26.0.tgz#1fae3a0b68d8a91b56c89f353507916bf8705d1c"
@@ -195,26 +188,14 @@
     events "^3.0.0"
     tslib "^2.2.0"
 
-"@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13", "@babel/code-frame@^7.25.9", "@babel/code-frame@^7.26.0", "@babel/code-frame@^7.26.2":
-  version "7.26.2"
-  resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.26.2.tgz#4b5fab97d33338eff916235055f0ebc21e573a85"
-  integrity sha512-RJlIHRueQgwWitWgF8OdFYGZX328Ax5BCemNGlqHfplnRT9ESi8JkFlvaVYbS+UubVY6dpv87Fs2u5M29iNFVQ==
-=======
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13", "@babel/code-frame@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.24.7.tgz"
   integrity sha512-BcYH1CVJBO9tvyIZ2jVeXgSIMvGZ2FDRvDdOIVQyuklNKSsx+eppDEBq/g47Ayw+RqNFE+URvOShmf+f/qwAlA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/highlight" "^7.24.7"
     picocolors "^1.0.0"
 
-<<<<<<< HEAD
-"@babel/compat-data@^7.22.6", "@babel/compat-data@^7.26.0", "@babel/compat-data@^7.26.5":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.26.5.tgz#df93ac37f4417854130e21d72c66ff3d4b897fc7"
-  integrity sha512-XvcZi1KWf88RVbF9wn8MN6tYFloU5qX8KjuF3E1PVBmJ9eypXfs4GRiJwLuTZL0iSnJUKn1BFPa5BPZZJyFzPg==
-=======
 "@babel/code-frame@^7.22.13":
   version "7.23.5"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.23.5.tgz"
@@ -227,7 +208,6 @@
   version "7.25.2"
   resolved "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.25.2.tgz"
   integrity sha512-bYcppcpKBvX4znYaPEeFau03bp89ShqNMLs+rmdptMw+heSZh9+z84d2YG+K7cYLbWwzdjtDoW/uqZmPjulClQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/core@^7.11.6", "@babel/core@^7.12.3", "@babel/core@^7.23.7", "@babel/core@^7.23.9":
   version "7.25.2"
@@ -250,22 +230,12 @@
     json5 "^2.2.3"
     semver "^6.3.1"
 
-<<<<<<< HEAD
-"@babel/generator@^7.26.0", "@babel/generator@^7.26.5", "@babel/generator@^7.7.2":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/generator/-/generator-7.26.5.tgz#e44d4ab3176bbcaf78a5725da5f1dc28802a9458"
-  integrity sha512-2caSP6fN9I7HOe6nqhtft7V4g7/V/gfDsC3Ag4W7kEzzvRGKqiv0pu0HogPiZ3KaVSoNDhUws6IJjDjpfmYIXw==
-  dependencies:
-    "@babel/parser" "^7.26.5"
-    "@babel/types" "^7.26.5"
-=======
 "@babel/generator@^7.25.0":
   version "7.25.0"
   resolved "https://registry.npmjs.org/@babel/generator/-/generator-7.25.0.tgz"
   integrity sha512-3LEEcj3PVW8pW2R1SR1M89g/qrYk/m/mB/tLqn7dn4sbBUQyTqnlod+II2U4dqiGtUmkcnAmkMDralTFZttRiw==
   dependencies:
     "@babel/types" "^7.25.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.25"
     jsesc "^2.5.1"
@@ -280,16 +250,6 @@
     "@jridgewell/trace-mapping" "^0.3.17"
     jsesc "^2.5.1"
 
-<<<<<<< HEAD
-"@babel/helper-compilation-targets@^7.22.6", "@babel/helper-compilation-targets@^7.25.9":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/helper-compilation-targets/-/helper-compilation-targets-7.26.5.tgz#75d92bb8d8d51301c0d49e52a65c9a7fe94514d8"
-  integrity sha512-IXuyn5EkouFJscIDuFF5EsiSolseme1s0CZB+QxVugqJLYmKdxI1VfIBOst0SUu4rnk2Z7kqTwmoO1lp3HIfnA==
-  dependencies:
-    "@babel/compat-data" "^7.26.5"
-    "@babel/helper-validator-option" "^7.25.9"
-    browserslist "^4.24.0"
-=======
 "@babel/helper-annotate-as-pure@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/helper-annotate-as-pure/-/helper-annotate-as-pure-7.24.7.tgz"
@@ -313,7 +273,6 @@
     "@babel/compat-data" "^7.25.2"
     "@babel/helper-validator-option" "^7.24.8"
     browserslist "^4.23.1"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     lru-cache "^5.1.1"
     semver "^6.3.1"
 
@@ -330,15 +289,6 @@
     "@babel/traverse" "^7.25.0"
     semver "^6.3.1"
 
-<<<<<<< HEAD
-"@babel/helper-create-regexp-features-plugin@^7.18.6", "@babel/helper-create-regexp-features-plugin@^7.25.9":
-  version "7.26.3"
-  resolved "https://registry.yarnpkg.com/@babel/helper-create-regexp-features-plugin/-/helper-create-regexp-features-plugin-7.26.3.tgz#5169756ecbe1d95f7866b90bb555b022595302a0"
-  integrity sha512-G7ZRb40uUgdKOQqPLjfD12ZmGA54PzqDFUv2BKImnC9QIfGhIHKvVML0oN8IUiDq4iRqpq74ABpvOaerfWdong==
-  dependencies:
-    "@babel/helper-annotate-as-pure" "^7.25.9"
-    regexpu-core "^6.2.0"
-=======
 "@babel/helper-create-regexp-features-plugin@^7.18.6", "@babel/helper-create-regexp-features-plugin@^7.24.7", "@babel/helper-create-regexp-features-plugin@^7.25.0":
   version "7.25.2"
   resolved "https://registry.npmjs.org/@babel/helper-create-regexp-features-plugin/-/helper-create-regexp-features-plugin-7.25.2.tgz"
@@ -346,7 +296,6 @@
   dependencies:
     "@babel/helper-annotate-as-pure" "^7.24.7"
     regexpu-core "^5.3.1"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     semver "^6.3.1"
 
 "@babel/helper-define-polyfill-provider@^0.6.2":
@@ -393,17 +342,10 @@
   dependencies:
     "@babel/types" "^7.24.7"
 
-<<<<<<< HEAD
-"@babel/helper-plugin-utils@^7.0.0", "@babel/helper-plugin-utils@^7.10.4", "@babel/helper-plugin-utils@^7.12.13", "@babel/helper-plugin-utils@^7.14.5", "@babel/helper-plugin-utils@^7.18.6", "@babel/helper-plugin-utils@^7.22.5", "@babel/helper-plugin-utils@^7.25.9", "@babel/helper-plugin-utils@^7.26.5", "@babel/helper-plugin-utils@^7.8.0":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/helper-plugin-utils/-/helper-plugin-utils-7.26.5.tgz#18580d00c9934117ad719392c4f6585c9333cc35"
-  integrity sha512-RS+jZcRdZdRFzMyr+wcsaqOmld1/EqTghfaBGQQd/WnRdzdlvSZ//kF7U8VQTxf1ynZ4cjUcYgjVGx13ewNPMg==
-=======
 "@babel/helper-plugin-utils@^7.0.0", "@babel/helper-plugin-utils@^7.10.4", "@babel/helper-plugin-utils@^7.12.13", "@babel/helper-plugin-utils@^7.14.5", "@babel/helper-plugin-utils@^7.18.6", "@babel/helper-plugin-utils@^7.22.5", "@babel/helper-plugin-utils@^7.24.7", "@babel/helper-plugin-utils@^7.24.8", "@babel/helper-plugin-utils@^7.8.0", "@babel/helper-plugin-utils@^7.8.3":
   version "7.24.8"
   resolved "https://registry.npmjs.org/@babel/helper-plugin-utils/-/helper-plugin-utils-7.24.8.tgz"
   integrity sha512-FFWx5142D8h2Mgr/iPVGH5G7w6jDn4jUSpZTyDnQO0Yn7Ks2Kuz6Pci8H6MPCoUJegd/UZQ3tAvfLCxQSnWWwg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/helper-remap-async-to-generator@^7.24.7", "@babel/helper-remap-async-to-generator@^7.25.0":
   version "7.25.0"
@@ -414,16 +356,6 @@
     "@babel/helper-wrap-function" "^7.25.0"
     "@babel/traverse" "^7.25.0"
 
-<<<<<<< HEAD
-"@babel/helper-replace-supers@^7.25.9":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/helper-replace-supers/-/helper-replace-supers-7.26.5.tgz#6cb04e82ae291dae8e72335dfe438b0725f14c8d"
-  integrity sha512-bJ6iIVdYX1YooY2X7w1q6VITt+LnUILtNk7zT78ykuwStx8BauCzxvFqFaHjOpW1bVnSUM1PN1f0p5P21wHxvg==
-  dependencies:
-    "@babel/helper-member-expression-to-functions" "^7.25.9"
-    "@babel/helper-optimise-call-expression" "^7.25.9"
-    "@babel/traverse" "^7.26.5"
-=======
 "@babel/helper-replace-supers@^7.24.7", "@babel/helper-replace-supers@^7.25.0":
   version "7.25.0"
   resolved "https://registry.npmjs.org/@babel/helper-replace-supers/-/helper-replace-supers-7.25.0.tgz"
@@ -440,7 +372,6 @@
   dependencies:
     "@babel/traverse" "^7.24.7"
     "@babel/types" "^7.24.7"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/helper-skip-transparent-expression-wrappers@^7.24.7":
   version "7.24.7"
@@ -482,14 +413,6 @@
     "@babel/template" "^7.25.0"
     "@babel/types" "^7.25.0"
 
-<<<<<<< HEAD
-"@babel/parser@^7.1.0", "@babel/parser@^7.14.7", "@babel/parser@^7.20.7", "@babel/parser@^7.23.9", "@babel/parser@^7.25.9", "@babel/parser@^7.26.0", "@babel/parser@^7.26.5":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/parser/-/parser-7.26.5.tgz#6fec9aebddef25ca57a935c86dbb915ae2da3e1f"
-  integrity sha512-SRJ4jYmXRqV1/Xc+TIVG84WjHBXKlxO9sHQnA2Pf12QQEAp1LOh6kDzNHXcUnbH1QI0FDoPPVOt+vyUDucxpaw==
-  dependencies:
-    "@babel/types" "^7.26.5"
-=======
 "@babel/highlight@^7.23.4", "@babel/highlight@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/highlight/-/highlight-7.24.7.tgz"
@@ -499,7 +422,6 @@
     chalk "^2.4.2"
     js-tokens "^4.0.0"
     picocolors "^1.0.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/parser@^7.1.0", "@babel/parser@^7.20.7", "@babel/parser@^7.22.15":
   version "7.23.6"
@@ -750,21 +672,12 @@
     "@babel/helper-plugin-utils" "^7.24.7"
     "@babel/helper-remap-async-to-generator" "^7.24.7"
 
-<<<<<<< HEAD
-"@babel/plugin-transform-block-scoped-functions@^7.25.9":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-block-scoped-functions/-/plugin-transform-block-scoped-functions-7.26.5.tgz#3dc4405d31ad1cbe45293aa57205a6e3b009d53e"
-  integrity sha512-chuTSY+hq09+/f5lMj8ZSYgCFpppV2CbYrhNFJ1BFoXpiWPnnAb7R0MqrafCpN8E1+YRrtM1MXZHJdIx8B6rMQ==
-  dependencies:
-    "@babel/helper-plugin-utils" "^7.26.5"
-=======
 "@babel/plugin-transform-block-scoped-functions@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-block-scoped-functions/-/plugin-transform-block-scoped-functions-7.24.7.tgz"
   integrity sha512-yO7RAz6EsVQDaBH18IDJcMB1HnrUn2FJ/Jslc/WtPPWcjhpUJXU/rjbwmluzp7v/ZzWcEhTMXELnnsz8djWDwQ==
   dependencies:
     "@babel/helper-plugin-utils" "^7.24.7"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/plugin-transform-block-scoping@^7.25.0":
   version "7.25.0"
@@ -848,14 +761,6 @@
     "@babel/helper-plugin-utils" "^7.24.7"
     "@babel/plugin-syntax-dynamic-import" "^7.8.3"
 
-<<<<<<< HEAD
-"@babel/plugin-transform-exponentiation-operator@^7.25.9":
-  version "7.26.3"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-exponentiation-operator/-/plugin-transform-exponentiation-operator-7.26.3.tgz#e29f01b6de302c7c2c794277a48f04a9ca7f03bc"
-  integrity sha512-7CAHcQ58z2chuXPWblnn1K6rLDnDWieghSOEmqQsrBenH0P9InCUtOJYD89pvngljmZlJcz3fcmgYsXFNGa1ZQ==
-  dependencies:
-    "@babel/helper-plugin-utils" "^7.25.9"
-=======
 "@babel/plugin-transform-exponentiation-operator@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-exponentiation-operator/-/plugin-transform-exponentiation-operator-7.24.7.tgz"
@@ -863,7 +768,6 @@
   dependencies:
     "@babel/helper-builder-binary-assignment-operator-visitor" "^7.24.7"
     "@babel/helper-plugin-utils" "^7.24.7"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/plugin-transform-export-namespace-from@^7.24.7":
   version "7.24.7"
@@ -928,15 +832,6 @@
     "@babel/helper-module-transforms" "^7.24.7"
     "@babel/helper-plugin-utils" "^7.24.7"
 
-<<<<<<< HEAD
-"@babel/plugin-transform-modules-commonjs@^7.25.9":
-  version "7.26.3"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-modules-commonjs/-/plugin-transform-modules-commonjs-7.26.3.tgz#8f011d44b20d02c3de44d8850d971d8497f981fb"
-  integrity sha512-MgR55l4q9KddUDITEzEFYn5ZsGDXMSsU9E+kh7fjRXTIC3RHqfCo8RPRbyReYJh44HQ/yomFkqbOFohXvDCiIQ==
-  dependencies:
-    "@babel/helper-module-transforms" "^7.26.0"
-    "@babel/helper-plugin-utils" "^7.25.9"
-=======
 "@babel/plugin-transform-modules-commonjs@^7.24.7", "@babel/plugin-transform-modules-commonjs@^7.24.8":
   version "7.24.8"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-modules-commonjs/-/plugin-transform-modules-commonjs-7.24.8.tgz"
@@ -945,7 +840,6 @@
     "@babel/helper-module-transforms" "^7.24.8"
     "@babel/helper-plugin-utils" "^7.24.8"
     "@babel/helper-simple-access" "^7.24.7"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/plugin-transform-modules-systemjs@^7.25.0":
   version "7.25.0"
@@ -980,14 +874,6 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.24.7"
 
-<<<<<<< HEAD
-"@babel/plugin-transform-nullish-coalescing-operator@^7.25.9":
-  version "7.26.6"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-nullish-coalescing-operator/-/plugin-transform-nullish-coalescing-operator-7.26.6.tgz#fbf6b3c92cb509e7b319ee46e3da89c5bedd31fe"
-  integrity sha512-CKW8Vu+uUZneQCPtXmSBUC6NCAUdya26hWCElAWh5mVSlSRsmiCPUUDKb3Z0szng1hiAJa098Hkhg9o4SE35Qw==
-  dependencies:
-    "@babel/helper-plugin-utils" "^7.26.5"
-=======
 "@babel/plugin-transform-nullish-coalescing-operator@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-nullish-coalescing-operator/-/plugin-transform-nullish-coalescing-operator-7.24.7.tgz"
@@ -995,7 +881,6 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.24.7"
     "@babel/plugin-syntax-nullish-coalescing-operator" "^7.8.3"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/plugin-transform-numeric-separator@^7.24.7":
   version "7.24.7"
@@ -1134,25 +1019,12 @@
     "@babel/helper-skip-transparent-expression-wrappers" "^7.24.7"
     "@babel/plugin-syntax-typescript" "^7.24.7"
 
-<<<<<<< HEAD
-"@babel/plugin-transform-typescript@^7.25.9":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/plugin-transform-typescript/-/plugin-transform-typescript-7.26.5.tgz#6d9b48e8ee40a45a3ed12ebc013449fdf261714c"
-  integrity sha512-GJhPO0y8SD5EYVCy2Zr+9dSZcEgaSmq5BLR0Oc25TOEhC+ba49vUAGZFjy8v79z9E1mdldq4x9d1xgh4L1d5dQ==
-  dependencies:
-    "@babel/helper-annotate-as-pure" "^7.25.9"
-    "@babel/helper-create-class-features-plugin" "^7.25.9"
-    "@babel/helper-plugin-utils" "^7.26.5"
-    "@babel/helper-skip-transparent-expression-wrappers" "^7.25.9"
-    "@babel/plugin-syntax-typescript" "^7.25.9"
-=======
 "@babel/plugin-transform-unicode-escapes@^7.24.7":
   version "7.24.7"
   resolved "https://registry.npmjs.org/@babel/plugin-transform-unicode-escapes/-/plugin-transform-unicode-escapes-7.24.7.tgz"
   integrity sha512-U3ap1gm5+4edc2Q/P+9VrBNhGkfnf+8ZqppY71Bo/pzZmXhhLdqgaUl6cuB07O1+AQJtCLfaOmswiNbSQ9ivhw==
   dependencies:
     "@babel/helper-plugin-utils" "^7.24.7"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@babel/plugin-transform-unicode-property-regex@^7.24.7":
   version "7.24.7"
@@ -1308,25 +1180,6 @@
     "@babel/parser" "^7.25.0"
     "@babel/types" "^7.25.0"
 
-<<<<<<< HEAD
-"@babel/traverse@^7.25.9", "@babel/traverse@^7.26.5":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/traverse/-/traverse-7.26.5.tgz#6d0be3e772ff786456c1a37538208286f6e79021"
-  integrity sha512-rkOSPOw+AXbgtwUga3U4u8RpoK9FEFWBNAlTpcnkLFjL5CT+oyHNuUUC/xx6XefEJ16r38r8Bc/lfp6rYuHeJQ==
-  dependencies:
-    "@babel/code-frame" "^7.26.2"
-    "@babel/generator" "^7.26.5"
-    "@babel/parser" "^7.26.5"
-    "@babel/template" "^7.25.9"
-    "@babel/types" "^7.26.5"
-    debug "^4.3.1"
-    globals "^11.1.0"
-
-"@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.25.9", "@babel/types@^7.26.0", "@babel/types@^7.26.5", "@babel/types@^7.3.3", "@babel/types@^7.4.4":
-  version "7.26.5"
-  resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.26.5.tgz#7a1e1c01d28e26d1fe7f8ec9567b3b92b9d07747"
-  integrity sha512-L6mZmwFDK6Cjh1nRCLXpa6no13ZIioJDz7mdkzHv399pThrTa/k0nUlNaenOeh2kWu/iaOQYElEpKPUswUa9Vg==
-=======
 "@babel/template@^7.3.3":
   version "7.22.15"
   resolved "https://registry.npmjs.org/@babel/template/-/template-7.22.15.tgz"
@@ -1353,7 +1206,6 @@
   version "7.23.6"
   resolved "https://registry.npmjs.org/@babel/types/-/types-7.23.6.tgz"
   integrity sha512-+uarb83brBzPKN38NX1MkB6vb6+mwvR6amUulqAE7ccQw1pEl+bCia9TbdG1lsnFP7lZySvUn37CHyXQdfTwzg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/helper-string-parser" "^7.23.4"
     "@babel/helper-validator-identifier" "^7.22.20"
@@ -1377,7 +1229,7 @@
     "@babel/helper-validator-identifier" "^7.24.7"
     to-fast-properties "^2.0.0"
 
-"@backstage/catalog-client@^1.9.1":
+"@backstage/catalog-client@^1.9.0", "@backstage/catalog-client@^1.9.1":
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/@backstage/catalog-client/-/catalog-client-1.9.1.tgz#f625895a019778111b4ece0373a5ac2adabf08a4"
   integrity sha512-8LpTbW3QQoNDNvPtHAlr1BUEbOZsbj2iGHbaZWBM6Hc+jHfl+VQC6pkHnG3XoeU6prXY/j6o4p/fDuxYEX22sQ==
@@ -1387,12 +1239,6 @@
     cross-fetch "^4.0.0"
     uri-template "^2.0.0"
 
-<<<<<<< HEAD
-"@backstage/catalog-model@^1.7.0", "@backstage/catalog-model@^1.7.3":
-  version "1.7.3"
-  resolved "https://registry.yarnpkg.com/@backstage/catalog-model/-/catalog-model-1.7.3.tgz#c74f680cbdbe4209a4a9c17de34b1949f1d19a2d"
-  integrity sha512-eqSRo7briHyVXMBkNdgQ8rdrw5W2LZifqrIabGwjcvoV8YDG2hFBuCPfqpdpfsgeCIk45iyXilTi9rg1Nt1fgw==
-=======
 "@backstage/catalog-model@1.5.0", "@backstage/catalog-model@^1.5.0":
   version "1.5.0"
   resolved "https://registry.npmjs.org/@backstage/catalog-model/-/catalog-model-1.5.0.tgz"
@@ -1403,23 +1249,16 @@
     ajv "^8.10.0"
     lodash "^4.17.21"
 
-"@backstage/catalog-model@^1.7.1":
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/@backstage/catalog-model/-/catalog-model-1.7.1.tgz#ac158f9e66f559614ea5546f01a66bb03090663b"
-  integrity sha512-TdtcpMzMMcSXlmJylEG2KbEHwxhd9XkxnvUFPKaF35Q6PjV9MhERw4qBSrINCzaIU5zn8baiyQBbg6j93r+kyA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+"@backstage/catalog-model@^1.7.2", "@backstage/catalog-model@^1.7.3":
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/@backstage/catalog-model/-/catalog-model-1.7.3.tgz#c74f680cbdbe4209a4a9c17de34b1949f1d19a2d"
+  integrity sha512-eqSRo7briHyVXMBkNdgQ8rdrw5W2LZifqrIabGwjcvoV8YDG2hFBuCPfqpdpfsgeCIk45iyXilTi9rg1Nt1fgw==
   dependencies:
     "@backstage/errors" "^1.2.7"
     "@backstage/types" "^1.2.1"
     ajv "^8.10.0"
     lodash "^4.17.21"
 
-<<<<<<< HEAD
-"@backstage/config@^1.2.0", "@backstage/config@^1.3.2":
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.3.2.tgz#ddea2f7646fba459316566dad770af9265dd1241"
-  integrity sha512-9na5EAf5AJzrwAysnIbNqFmPN1ES9IiUwy9uGMhwFzxXeHjDz+RAmiqFYFL6tNMwuFwrW1zxpvzKAUXvvYDe6Q==
-=======
 "@backstage/config@^1.2.0":
   version "1.3.1"
   resolved "https://registry.npmjs.org/@backstage/config/-/config-1.3.1.tgz"
@@ -1429,11 +1268,10 @@
     "@backstage/types" "^1.2.0"
     ms "^2.1.3"
 
-"@backstage/config@^1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.3.0.tgz#ca5771175451410bb7977e80e2b192a4dc2efd9d"
-  integrity sha512-DXrcPIwgZAHrKj3MRHt6yC63E1/LXXgM0hdAFJYkRYb7r+VX3KGBfxo1NtWdB6A4gTXhxfEWc7FWvdloIDDoGg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+"@backstage/config@^1.3.1", "@backstage/config@^1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@backstage/config/-/config-1.3.2.tgz#ddea2f7646fba459316566dad770af9265dd1241"
+  integrity sha512-9na5EAf5AJzrwAysnIbNqFmPN1ES9IiUwy9uGMhwFzxXeHjDz+RAmiqFYFL6tNMwuFwrW1zxpvzKAUXvvYDe6Q==
   dependencies:
     "@backstage/errors" "^1.2.7"
     "@backstage/types" "^1.2.1"
@@ -1467,12 +1305,6 @@
     "@backstage/version-bridge" "^1.0.10"
     lodash "^4.17.21"
 
-<<<<<<< HEAD
-"@backstage/core-components@^0.15.1":
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/@backstage/core-components/-/core-components-0.15.1.tgz#263a2d519e6e286e9a403d33d631f8affe9dbd65"
-  integrity sha512-Vqll9vyExGln1K+M6FriWKlU1jkpwEg0X6WtxrwxcykdKQNAfiyJwU7K/NuPCUEP80TsbHycOPFHdU+SWygI8A==
-=======
 "@backstage/core-components@^0.14.8":
   version "0.14.10"
   resolved "https://registry.npmjs.org/@backstage/core-components/-/core-components-0.14.10.tgz"
@@ -1516,50 +1348,7 @@
     zen-observable "^0.10.0"
     zod "^3.22.4"
 
-"@backstage/core-components@^0.16.1":
-  version "0.16.1"
-  resolved "https://registry.yarnpkg.com/@backstage/core-components/-/core-components-0.16.1.tgz#f7aa1cbfd6735b4cd7cca283f9f6a74cbb333d44"
-  integrity sha512-NJXhcdYVeFo08PnJBjOS0jV2rlDic8aIaqM6P+VepS6dG5toDOl3L5MryciVDyEgT/q/Alq3wXEctL4BmkKjAw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
-  dependencies:
-    "@backstage/config" "^1.2.0"
-    "@backstage/core-plugin-api" "^1.10.0"
-    "@backstage/errors" "^1.2.4"
-    "@backstage/theme" "^0.6.0"
-    "@backstage/version-bridge" "^1.0.10"
-    "@date-io/core" "^1.3.13"
-    "@material-table/core" "^3.1.0"
-    "@material-ui/core" "^4.12.2"
-    "@material-ui/icons" "^4.9.1"
-    "@material-ui/lab" "4.0.0-alpha.61"
-    "@react-hookz/web" "^24.0.0"
-    "@types/react-sparklines" "^1.7.0"
-    ansi-regex "^6.0.1"
-    classnames "^2.2.6"
-    d3-selection "^3.0.0"
-    d3-shape "^3.0.0"
-    d3-zoom "^3.0.0"
-    dagre "^0.8.5"
-    linkify-react "4.1.3"
-    linkifyjs "4.1.3"
-    lodash "^4.17.21"
-    pluralize "^8.0.0"
-    qs "^6.9.4"
-    rc-progress "3.5.1"
-    react-helmet "6.1.0"
-    react-hook-form "^7.12.2"
-    react-idle-timer "5.7.2"
-    react-markdown "^8.0.0"
-    react-sparklines "^1.7.0"
-    react-syntax-highlighter "^15.4.5"
-    react-use "^17.3.2"
-    react-virtualized-auto-sizer "^1.0.11"
-    react-window "^1.8.6"
-    remark-gfm "^3.0.1"
-    zen-observable "^0.10.0"
-    zod "^3.22.4"
-
-"@backstage/core-components@^0.16.3":
+"@backstage/core-components@^0.16.2", "@backstage/core-components@^0.16.3":
   version "0.16.3"
   resolved "https://registry.yarnpkg.com/@backstage/core-components/-/core-components-0.16.3.tgz#3e0da7421c66580ff8e6f2ed08cf64ca4f7d4c38"
   integrity sha512-B+A8bdWY57gMIyRrp8s9MIsQvJ0oaGAFHjKEjguQMkSq/kYVtr8MszNlaCsABPHyfXhY3eIrQnLCMZzj+70m2A==
@@ -1602,7 +1391,7 @@
     zen-observable "^0.10.0"
     zod "^3.22.4"
 
-"@backstage/core-plugin-api@^1.10.0", "@backstage/core-plugin-api@^1.10.3":
+"@backstage/core-plugin-api@^1.10.2", "@backstage/core-plugin-api@^1.10.3":
   version "1.10.3"
   resolved "https://registry.yarnpkg.com/@backstage/core-plugin-api/-/core-plugin-api-1.10.3.tgz#232b3a19b574dd85ab146081bb587d03d871e9ef"
   integrity sha512-Wxd9SGXOfpaQacHkzNVlBmDPtjKQJeUjZKrXgaoc3IDE5hnCViQprULLOmuBTtmDrgnGxKLKOKTe88c3nPggGQ==
@@ -1613,12 +1402,6 @@
     "@backstage/version-bridge" "^1.0.10"
     history "^5.0.0"
 
-<<<<<<< HEAD
-"@backstage/errors@^1.2.4", "@backstage/errors@^1.2.7":
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.7.tgz#6da0251d78192328e1b7893420b92aec90df5aad"
-  integrity sha512-XsH0w4hW0aJs3NuANbvgpQoKrQGYIMUaVKeDoGO/99uDgBbJ2QyDb/m9onbKV7tG9HkEe/NKixKqRhxRLx4wzA==
-=======
 "@backstage/core-plugin-api@^1.9.3":
   version "1.10.2"
   resolved "https://registry.npmjs.org/@backstage/core-plugin-api/-/core-plugin-api-1.10.2.tgz"
@@ -1638,11 +1421,10 @@
     "@backstage/types" "^1.2.0"
     serialize-error "^8.0.1"
 
-"@backstage/errors@^1.2.5":
-  version "1.2.5"
-  resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.5.tgz#447177ac5a5e904b5d54019f6f14eda3c1073177"
-  integrity sha512-JoLzSdCt5uHPYvC/aR/UE10+d1WlTEsR0L7xWBgcTluC9VUpFmV5W15bNL+ckZHi14nQV3V1DOk9uhsR1ER45w==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+"@backstage/errors@^1.2.6", "@backstage/errors@^1.2.7":
+  version "1.2.7"
+  resolved "https://registry.yarnpkg.com/@backstage/errors/-/errors-1.2.7.tgz#6da0251d78192328e1b7893420b92aec90df5aad"
+  integrity sha512-XsH0w4hW0aJs3NuANbvgpQoKrQGYIMUaVKeDoGO/99uDgBbJ2QyDb/m9onbKV7tG9HkEe/NKixKqRhxRLx4wzA==
   dependencies:
     "@backstage/types" "^1.2.1"
     serialize-error "^8.0.1"
@@ -1675,7 +1457,7 @@
     "@backstage/plugin-app" "^0.1.5"
     "@react-hookz/web" "^24.0.0"
 
-"@backstage/frontend-plugin-api@^0.9.4":
+"@backstage/frontend-plugin-api@^0.9.3", "@backstage/frontend-plugin-api@^0.9.4":
   version "0.9.4"
   resolved "https://registry.yarnpkg.com/@backstage/frontend-plugin-api/-/frontend-plugin-api-0.9.4.tgz#d25be97732482f820920c9014a04a2b51f7194db"
   integrity sha512-TFMCTxf84VtWDlHu56mPjLAVs6TJcNF1BZ6PU9+YkXoX7J+lmqzazGKYEm0JtmltwWoP7za/rPI7c33oIPSL6Q==
@@ -1755,7 +1537,7 @@
     "@backstage/plugin-permission-common" "^0.8.4"
     "@backstage/plugin-search-common" "^1.2.17"
 
-"@backstage/plugin-catalog-react@^1.15.1":
+"@backstage/plugin-catalog-react@^1.15.0":
   version "1.15.1"
   resolved "https://registry.yarnpkg.com/@backstage/plugin-catalog-react/-/plugin-catalog-react-1.15.1.tgz#1c28fe840aaf237ac9ef8c3adb1ed662b5f5d601"
   integrity sha512-cIZaQbHqg/xVaqNO0MtXlq4nnVi7/TwPjX5iP0PnVQFXepiVkmQs5rU+yXmyNRAtvWimbXT0UMZyq7e0FDjACg==
@@ -1786,12 +1568,6 @@
     yaml "^2.0.0"
     zen-observable "^0.10.0"
 
-<<<<<<< HEAD
-"@backstage/plugin-kubernetes-common@^0.8.3":
-  version "0.8.3"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-kubernetes-common/-/plugin-kubernetes-common-0.8.3.tgz#0c64f2d1d57edb1998d55b637e67340904c1a7f7"
-  integrity sha512-ZJ+Hbt/1sZ2O8WKMj4iZtzAk5bflSD4L8rqwcsEWH7pAXqhtjBxHFEHBSvyi0pDS/Q4qxmxauSvCByAfgmvnVQ==
-=======
 "@backstage/plugin-kubernetes-common@0.8.0":
   version "0.8.0"
   resolved "https://registry.npmjs.org/@backstage/plugin-kubernetes-common/-/plugin-kubernetes-common-0.8.0.tgz"
@@ -1871,48 +1647,7 @@
     zod "^3.22.4"
     zod-to-json-schema "^3.20.4"
 
-"@backstage/plugin-permission-common@^0.8.2":
-  version "0.8.2"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-common/-/plugin-permission-common-0.8.2.tgz#d0e94d39f66ca2ffb5f1ba0e566b61e3bf26010c"
-  integrity sha512-rq8AMUufiFMOUeXZAJ/y1JzRpUSRFVs7ddhtsmX5nvkZP07ONT8WwnVZPYFywfX8rDt/Ym4wZuPnPk4xqHX04A==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
-  dependencies:
-    "@backstage/catalog-model" "^1.7.0"
-    "@backstage/plugin-permission-common" "^0.8.1"
-    "@backstage/types" "^1.1.1"
-    "@kubernetes/client-node" "0.20.0"
-    kubernetes-models "^4.3.1"
-    lodash "^4.17.21"
-    luxon "^3.0.0"
-
-"@backstage/plugin-kubernetes-react@^0.4.4":
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-kubernetes-react/-/plugin-kubernetes-react-0.4.4.tgz#39074e03a65c494344c2018abc2cd329529e7862"
-  integrity sha512-YjIn769RrvQWxBMgOBI/uQddAwXZr/f9Im3cI0+Devx40GaBKeDCKqgc4TQCaITGb/kwghDsaZH4FhKMlEEjuw==
-  dependencies:
-    "@backstage/catalog-model" "^1.7.0"
-    "@backstage/core-components" "^0.15.1"
-    "@backstage/core-plugin-api" "^1.10.0"
-    "@backstage/errors" "^1.2.4"
-    "@backstage/plugin-kubernetes-common" "^0.8.3"
-    "@backstage/types" "^1.1.1"
-    "@kubernetes-models/apimachinery" "^2.0.0"
-    "@kubernetes-models/base" "^5.0.0"
-    "@kubernetes/client-node" "^0.20.0"
-    "@material-ui/core" "^4.9.13"
-    "@material-ui/icons" "^4.11.3"
-    "@material-ui/lab" "^4.0.0-alpha.61"
-    cronstrue "^2.32.0"
-    js-yaml "^4.1.0"
-    kubernetes-models "^4.3.1"
-    lodash "^4.17.21"
-    luxon "^3.0.0"
-    react-use "^17.4.0"
-    xterm "^5.3.0"
-    xterm-addon-attach "^0.9.0"
-    xterm-addon-fit "^0.8.0"
-
-"@backstage/plugin-permission-common@^0.8.1", "@backstage/plugin-permission-common@^0.8.4":
+"@backstage/plugin-permission-common@^0.8.3", "@backstage/plugin-permission-common@^0.8.4":
   version "0.8.4"
   resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-common/-/plugin-permission-common-0.8.4.tgz#9f9a166041853833b50e844bbe35a2d9b9aca37f"
   integrity sha512-zZSfXadycRCP/YG2Cf4p/hxDU4fhrYDAVneo9PKZMfy3O4ERdtrYehGuOspcak2NkeMmaj2KfsFuWFuWK2xBTQ==
@@ -1925,7 +1660,7 @@
     zod "^3.22.4"
     zod-to-json-schema "^3.20.4"
 
-"@backstage/plugin-permission-react@^0.4.30":
+"@backstage/plugin-permission-react@^0.4.29", "@backstage/plugin-permission-react@^0.4.30":
   version "0.4.30"
   resolved "https://registry.yarnpkg.com/@backstage/plugin-permission-react/-/plugin-permission-react-0.4.30.tgz#92e7eb6f175fcb84415b5cff7f83a6a98687d104"
   integrity sha512-mVH6Sz6JJVfk38tE4UiRUr5dvNgTZunJxvDwWvY9uzz0hZF45lREJEthKnq7naB0Hn1s5GbGJ8d2taPY+EiC+g==
@@ -1935,12 +1670,6 @@
     "@backstage/plugin-permission-common" "^0.8.4"
     swr "^2.0.0"
 
-<<<<<<< HEAD
-"@backstage/plugin-scaffolder-common@^1.5.5", "@backstage/plugin-scaffolder-common@^1.5.9":
-  version "1.5.9"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.9.tgz#20525c1f9a4c5edde689a6e186cfa7642bf37d4c"
-  integrity sha512-lcUQDzn/YjnsBnMGVA+Z7XbDS7T4nc8wdMO+D15WDfkC/WVVmWdRnlkfM0UTuWPg7QMIkUtqpFplidkNNwWf5w==
-=======
 "@backstage/plugin-scaffolder-common@^1.5.5":
   version "1.5.8"
   resolved "https://registry.npmjs.org/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.8.tgz"
@@ -1950,33 +1679,16 @@
     "@backstage/plugin-permission-common" "^0.8.3"
     "@backstage/types" "^1.2.0"
 
-"@backstage/plugin-scaffolder-common@^1.5.7":
-  version "1.5.7"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.7.tgz#49dc144699eef1ff2c1002f00b8d02207c7b2669"
-  integrity sha512-hHtgXiFi6Fbta7rXHV/0jGB4Cguig33Qjah07ZPXp5wfz4aVvn3YYV/z8aezExxLtoqVYUpwn8PkasFh0opoPg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+"@backstage/plugin-scaffolder-common@^1.5.8":
+  version "1.5.9"
+  resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-common/-/plugin-scaffolder-common-1.5.9.tgz#20525c1f9a4c5edde689a6e186cfa7642bf37d4c"
+  integrity sha512-lcUQDzn/YjnsBnMGVA+Z7XbDS7T4nc8wdMO+D15WDfkC/WVVmWdRnlkfM0UTuWPg7QMIkUtqpFplidkNNwWf5w==
   dependencies:
     "@backstage/catalog-model" "^1.7.3"
     "@backstage/plugin-permission-common" "^0.8.4"
     "@backstage/types" "^1.2.1"
 
 "@backstage/plugin-scaffolder-react@^1.11.0":
-<<<<<<< HEAD
-  version "1.14.3"
-  resolved "https://registry.yarnpkg.com/@backstage/plugin-scaffolder-react/-/plugin-scaffolder-react-1.14.3.tgz#c5bc5f1d6c0060255f0466c23e47632d092f33e9"
-  integrity sha512-MScxWEVhYhC6pBGJtPB9YF0Mlz3QwsyJW3Bltyt8A+xwGDHwmookWwtxXWLGPFm5YDePptjzyUSAJ8zlsSHpVQ==
-  dependencies:
-    "@backstage/catalog-client" "^1.9.1"
-    "@backstage/catalog-model" "^1.7.3"
-    "@backstage/core-components" "^0.16.3"
-    "@backstage/core-plugin-api" "^1.10.3"
-    "@backstage/frontend-plugin-api" "^0.9.4"
-    "@backstage/plugin-catalog-react" "^1.15.1"
-    "@backstage/plugin-permission-react" "^0.4.30"
-    "@backstage/plugin-scaffolder-common" "^1.5.9"
-    "@backstage/theme" "^0.6.3"
-    "@backstage/types" "^1.2.1"
-=======
   version "1.14.2"
   resolved "https://registry.npmjs.org/@backstage/plugin-scaffolder-react/-/plugin-scaffolder-react-1.14.2.tgz"
   integrity sha512-nRqmYSF6U+tMxMrSPaegaQgNUkXR7ym0v3zm17m7XmpLJZXuHJ1JAD6ilByB4dPRhYTm0nt09Ki7w50m57uZzA==
@@ -1991,23 +1703,15 @@
     "@backstage/plugin-scaffolder-common" "^1.5.8"
     "@backstage/theme" "^0.6.3"
     "@backstage/types" "^1.2.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@backstage/version-bridge" "^1.0.10"
     "@material-ui/core" "^4.12.2"
     "@material-ui/icons" "^4.9.1"
     "@material-ui/lab" "4.0.0-alpha.61"
     "@react-hookz/web" "^24.0.0"
-<<<<<<< HEAD
-    "@rjsf/core" "5.23.2"
-    "@rjsf/material-ui" "5.23.2"
-    "@rjsf/utils" "5.23.2"
-    "@rjsf/validator-ajv8" "5.23.2"
-=======
     "@rjsf/core" "5.23.1"
     "@rjsf/material-ui" "5.23.1"
     "@rjsf/utils" "5.23.1"
     "@rjsf/validator-ajv8" "5.23.1"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@types/json-schema" "^7.0.9"
     ajv-errors "^3.0.0"
     classnames "^2.2.6"
@@ -2050,12 +1754,6 @@
     i18next "^22.4.15"
     zen-observable "^0.10.0"
 
-<<<<<<< HEAD
-"@backstage/theme@^0.6.0", "@backstage/theme@^0.6.3":
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/@backstage/theme/-/theme-0.6.3.tgz#75e05ff46dd6d9139d4d2dae15dc58403da3de64"
-  integrity sha512-5AmSqPciPsYYJ8pCvGEElXZK2gKILcv/p7CspZP2Zkz9AxGZHqdj1OdP0K0rZi9lUsc+Gvwl43z9Ty851dfLHw==
-=======
 "@backstage/theme@^0.5.6":
   version "0.5.7"
   resolved "https://registry.npmjs.org/@backstage/theme/-/theme-0.5.7.tgz"
@@ -2065,27 +1763,24 @@
     "@emotion/styled" "^11.10.5"
     "@mui/material" "^5.12.2"
 
-"@backstage/theme@^0.6.2":
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/@backstage/theme/-/theme-0.6.2.tgz#b4c867496f4b622229d455eb5014f49991740437"
-  integrity sha512-OC4cqE1K7zvY76WdrgvWTXJGQ7vSxe+E3dbxpd1D0nyMaO353A/n+xUBh/JN+EMVbNyLvJoYLkU7EDraCVDEiQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+"@backstage/theme@^0.6.3":
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/@backstage/theme/-/theme-0.6.3.tgz#75e05ff46dd6d9139d4d2dae15dc58403da3de64"
+  integrity sha512-5AmSqPciPsYYJ8pCvGEElXZK2gKILcv/p7CspZP2Zkz9AxGZHqdj1OdP0K0rZi9lUsc+Gvwl43z9Ty851dfLHw==
   dependencies:
     "@emotion/react" "^11.10.5"
     "@emotion/styled" "^11.10.5"
     "@mui/material" "^5.12.2"
 
-<<<<<<< HEAD
-"@backstage/types@^1.1.1", "@backstage/types@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@backstage/types/-/types-1.2.1.tgz#8c15c71e6b629806d3dc00227aaa4fd1c19cef16"
-  integrity sha512-0GkrZthoIkUzoeop+8fZZk2MWlLd1q0LB59tMarsjw7ccMtFYR96jhlf1qGvcbw7Gn5ETtJfTC2C1aUzvgvF+w==
-=======
 "@backstage/types@^1.1.1", "@backstage/types@^1.2.0":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@backstage/types/-/types-1.2.0.tgz"
   integrity sha512-YoWvCLJNOgvRXSqH8EoWmmQ8G8+emiYpn5dqDZcMrqAA6Xa8yFFVsQTujEusx5ZSwahPMbSDobNJgiSoXL3XyA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+
+"@backstage/types@^1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@backstage/types/-/types-1.2.1.tgz#8c15c71e6b629806d3dc00227aaa4fd1c19cef16"
+  integrity sha512-0GkrZthoIkUzoeop+8fZZk2MWlLd1q0LB59tMarsjw7ccMtFYR96jhlf1qGvcbw7Gn5ETtJfTC2C1aUzvgvF+w==
 
 "@backstage/version-bridge@^1.0.10", "@backstage/version-bridge@^1.0.8":
   version "1.0.10"
@@ -2126,21 +1821,25 @@
     source-map "^0.5.7"
     stylis "4.2.0"
 
-<<<<<<< HEAD
-"@emotion/cache@^11.13.5", "@emotion/cache@^11.14.0":
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@emotion/cache/-/cache-11.14.0.tgz#ee44b26986eeb93c8be82bb92f1f7a9b21b2ed76"
-  integrity sha512-L/B1lc/TViYk4DcpGxtAVbx0ZyiKM5ktoIyafGkH6zg/tj+mA+NE//aPYKG0k8kCHSHVJrpLpcAlOBEXQ3SavA==
-=======
-"@emotion/cache@^11.11.0", "@emotion/cache@^11.13.0":
+"@emotion/cache@^11.13.0":
   version "11.13.1"
   resolved "https://registry.npmjs.org/@emotion/cache/-/cache-11.13.1.tgz"
   integrity sha512-iqouYkuEblRcXmylXIwwOodiEK5Ifl7JcX7o6V4jI3iW4mLXX3dmt5xwBtIkJiQEXFAI+pC8X0i67yiPkH9Ucw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@emotion/memoize" "^0.9.0"
     "@emotion/sheet" "^1.4.0"
     "@emotion/utils" "^1.4.0"
+    "@emotion/weak-memoize" "^0.4.0"
+    stylis "4.2.0"
+
+"@emotion/cache@^11.13.5":
+  version "11.14.0"
+  resolved "https://registry.yarnpkg.com/@emotion/cache/-/cache-11.14.0.tgz#ee44b26986eeb93c8be82bb92f1f7a9b21b2ed76"
+  integrity sha512-L/B1lc/TViYk4DcpGxtAVbx0ZyiKM5ktoIyafGkH6zg/tj+mA+NE//aPYKG0k8kCHSHVJrpLpcAlOBEXQ3SavA==
+  dependencies:
+    "@emotion/memoize" "^0.9.0"
+    "@emotion/sheet" "^1.4.0"
+    "@emotion/utils" "^1.4.2"
     "@emotion/weak-memoize" "^0.4.0"
     stylis "4.2.0"
 
@@ -2167,18 +1866,6 @@
   integrity sha512-30FAj7/EoJ5mwVPOWhAyCX+FPfMDrVecJAM+Iw9NRoSl4BBAQeqj4cApHHUXOVvIPgLVDsCFoz/hGD+5QQD1GQ==
 
 "@emotion/react@^11.10.5":
-<<<<<<< HEAD
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@emotion/react/-/react-11.14.0.tgz#cfaae35ebc67dd9ef4ea2e9acc6cd29e157dd05d"
-  integrity sha512-O000MLDBDdk/EohJPFUqvnp4qnHeYkVP5B0xEG0D/L7cOKP9kefu2DXn8dj74cQfsEzUqh+sr1RzFqiL1o+PpA==
-  dependencies:
-    "@babel/runtime" "^7.18.3"
-    "@emotion/babel-plugin" "^11.13.5"
-    "@emotion/cache" "^11.14.0"
-    "@emotion/serialize" "^1.3.3"
-    "@emotion/use-insertion-effect-with-fallbacks" "^1.2.0"
-    "@emotion/utils" "^1.4.2"
-=======
   version "11.13.3"
   resolved "https://registry.npmjs.org/@emotion/react/-/react-11.13.3.tgz"
   integrity sha512-lIsdU6JNrmYfJ5EbUCf4xW1ovy5wKQ2CkPRM4xogziOxH1nXxBSjpC9YqbFAP7circxMfYp+6x676BqWcEiixg==
@@ -2189,7 +1876,6 @@
     "@emotion/serialize" "^1.3.1"
     "@emotion/use-insertion-effect-with-fallbacks" "^1.1.0"
     "@emotion/utils" "^1.4.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@emotion/weak-memoize" "^0.4.0"
     hoist-non-react-statics "^3.3.1"
 
@@ -2210,45 +1896,26 @@
   integrity sha512-fTBW9/8r2w3dXWYM4HCB1Rdp8NLibOw2+XELH5m5+AkWiL/KqYX6dc0kKYlaYyKjrQ6ds33MCdMPEwgs2z1rqg==
 
 "@emotion/styled@^11.10.5":
-<<<<<<< HEAD
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@emotion/styled/-/styled-11.14.0.tgz#f47ca7219b1a295186d7661583376fcea95f0ff3"
-  integrity sha512-XxfOnXFffatap2IyCeJyNov3kiDQWoR08gPUQxvbL7fxKryGBKUZUkG6Hz48DZwVrJSVh9sJboyV1Ds4OW6SgA==
-=======
   version "11.13.0"
   resolved "https://registry.npmjs.org/@emotion/styled/-/styled-11.13.0.tgz"
   integrity sha512-tkzkY7nQhW/zC4hztlwucpT8QEZ6eUzpXDRhww/Eej4tFfO0FxQYWRyg/c5CCXa4d/f174kqeXYjuQRnhzf6dA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.18.3"
     "@emotion/babel-plugin" "^11.12.0"
     "@emotion/is-prop-valid" "^1.3.0"
-<<<<<<< HEAD
-    "@emotion/serialize" "^1.3.3"
-    "@emotion/use-insertion-effect-with-fallbacks" "^1.2.0"
-    "@emotion/utils" "^1.4.2"
-=======
     "@emotion/serialize" "^1.3.0"
     "@emotion/use-insertion-effect-with-fallbacks" "^1.1.0"
     "@emotion/utils" "^1.4.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@emotion/unitless@^0.10.0":
   version "0.10.0"
   resolved "https://registry.npmjs.org/@emotion/unitless/-/unitless-0.10.0.tgz"
   integrity sha512-dFoMUuQA20zvtVTuxZww6OHoJYgrzfKM1t52mVySDJnMSEa08ruEvdYQbhvyu6soU+NeLVd3yKfTfT0NeV6qGg==
 
-<<<<<<< HEAD
-"@emotion/use-insertion-effect-with-fallbacks@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@emotion/use-insertion-effect-with-fallbacks/-/use-insertion-effect-with-fallbacks-1.2.0.tgz#8a8cb77b590e09affb960f4ff1e9a89e532738bf"
-  integrity sha512-yJMtVdH59sxi/aVJBpk9FQq+OR8ll5GT8oWd57UpeaKEVGab41JWaCFA7FRLoMLloOZF/c/wsPoe+bfGmRKgDg==
-=======
 "@emotion/use-insertion-effect-with-fallbacks@^1.1.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@emotion/use-insertion-effect-with-fallbacks/-/use-insertion-effect-with-fallbacks-1.1.0.tgz"
   integrity sha512-+wBOcIV5snwGgI2ya3u99D7/FJquOIniQT1IKyDsBmEgwvpxMNeS65Oib7OnE2d2aY+3BU4OiH+0Wchf8yk3Hw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@emotion/utils@^1.4.0", "@emotion/utils@^1.4.1":
   version "1.4.1"
@@ -2272,40 +1939,19 @@
   resolved "https://registry.npmjs.org/@eslint-community/regexpp/-/regexpp-4.11.0.tgz"
   integrity sha512-G/M/tIiMrTAxEWRfLfQJMmGNX28IxBg4PBz8XqQhqUHLFI6TL2htpIB1iQCj144V5ee/JaKyT9/WZ0MGZWfA7A==
 
-<<<<<<< HEAD
-"@eslint/config-array@^0.19.0":
-  version "0.19.1"
-  resolved "https://registry.yarnpkg.com/@eslint/config-array/-/config-array-0.19.1.tgz#734aaea2c40be22bbb1f2a9dac687c57a6a4c984"
-  integrity sha512-fo6Mtm5mWyKjA/Chy1BYTdn5mGJoDNjC7C64ug20ADsRDGrA85bN3uK3MaKbeRkRuuIEAR5N33Jr1pbm411/PA==
-=======
 "@eslint/config-array@^0.17.1":
   version "0.17.1"
   resolved "https://registry.npmjs.org/@eslint/config-array/-/config-array-0.17.1.tgz"
   integrity sha512-BlYOpej8AQ8Ev9xVqroV7a02JK3SkBAaN9GfMMH9W6Ch8FlQlkjGw4Ir7+FgYwfirivAf4t+GtzuAxqfukmISA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
-    "@eslint/object-schema" "^2.1.5"
+    "@eslint/object-schema" "^2.1.4"
     debug "^4.3.1"
     minimatch "^3.1.2"
 
-<<<<<<< HEAD
-"@eslint/core@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@eslint/core/-/core-0.10.0.tgz#23727063c21b335f752dbb3a16450f6f9cbc9091"
-  integrity sha512-gFHJ+xBOo4G3WRlR1e/3G8A6/KZAH6zcE/hkLRCZTi/B9avAG365QhFA8uOGzTMqgTghpn7/fSnscW++dpMSAw==
-  dependencies:
-    "@types/json-schema" "^7.0.15"
-
-"@eslint/eslintrc@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@eslint/eslintrc/-/eslintrc-3.2.0.tgz#57470ac4e2e283a6bf76044d63281196e370542c"
-  integrity sha512-grOjVNN8P3hjJn/eIETF1wwd12DdnwFDoyceUJLYYdkpbwq3nLi+4fqrTAONx7XDALqlL220wC/RHSC/QTI/0w==
-=======
 "@eslint/eslintrc@^3.1.0":
   version "3.1.0"
   resolved "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-3.1.0.tgz"
   integrity sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     ajv "^6.12.4"
     debug "^4.3.2"
@@ -2317,41 +1963,15 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-<<<<<<< HEAD
-"@eslint/js@9.18.0":
-  version "9.18.0"
-  resolved "https://registry.yarnpkg.com/@eslint/js/-/js-9.18.0.tgz#3356f85d18ed3627ab107790b53caf7e1e3d1e84"
-  integrity sha512-fK6L7rxcq6/z+AaQMtiFTkvbHkBLNlwyRxHpKawP0x3u9+NC6MQTnFW+AdpwC6gfHTW0051cokQgtTN2FqlxQA==
-
-"@eslint/object-schema@^2.1.5":
-  version "2.1.5"
-  resolved "https://registry.yarnpkg.com/@eslint/object-schema/-/object-schema-2.1.5.tgz#8670a8f6258a2be5b2c620ff314a1d984c23eb2e"
-  integrity sha512-o0bhxnL89h5Bae5T318nFoFzGy+YE5i/gGkoPAgkmTVdRKTiv3p8JHevPiPaMwoloKfEiiaHlawCqaZMqRm+XQ==
-
-"@eslint/plugin-kit@^0.2.5":
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/@eslint/plugin-kit/-/plugin-kit-0.2.5.tgz#ee07372035539e7847ef834e3f5e7b79f09e3a81"
-  integrity sha512-lB05FkqEdUg2AA0xEbUz0SnkXT1LcCTa438W4IWTUh4hdOnVbQyOJ81OrDXsJk/LSiJHubgGEFoR5EHq1NsH1A==
-  dependencies:
-    "@eslint/core" "^0.10.0"
-    levn "^0.4.1"
-
-"@gitbeaker/core@^41.3.0":
-  version "41.3.0"
-  resolved "https://registry.yarnpkg.com/@gitbeaker/core/-/core-41.3.0.tgz#c1e263b6da5c56e6d70eec8907a7728b15b63d03"
-  integrity sha512-ZPy0v71WTSKdELLhG5FkMCxIWCJwRpA7QkvnULiE36sIynQE0WwBNux+GPjjEh6xQ6PfBAB4E/1Uu2YZXiJlNg==
-  dependencies:
-    "@gitbeaker/requester-utils" "^41.3.0"
-=======
 "@eslint/js@9.9.0":
   version "9.9.0"
   resolved "https://registry.npmjs.org/@eslint/js/-/js-9.9.0.tgz"
   integrity sha512-hhetes6ZHP3BlXLxmd8K2SNgkhNSi+UcecbnwWKwpP7kyi/uC75DJ1lOOBO3xrC4jyojtGE3YxKZPHfk4yrgug==
 
-"@eslint/object-schema@^2.1.4":
-  version "2.1.4"
-  resolved "https://registry.npmjs.org/@eslint/object-schema/-/object-schema-2.1.4.tgz"
-  integrity sha512-BsWiH1yFGjXXS2yvrf5LyuoSIIbPrGUWob917o+BTKuZ7qJdxX8aJLRxs1fS9n6r7vESrq1OUqb68dANcFXuQQ==
+"@eslint/object-schema@^2.1.5":
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/@eslint/object-schema/-/object-schema-2.1.5.tgz#8670a8f6258a2be5b2c620ff314a1d984c23eb2e"
+  integrity sha512-o0bhxnL89h5Bae5T318nFoFzGy+YE5i/gGkoPAgkmTVdRKTiv3p8JHevPiPaMwoloKfEiiaHlawCqaZMqRm+XQ==
 
 "@gitbeaker/core@^41.1.0":
   version "41.1.0"
@@ -2359,7 +1979,6 @@
   integrity sha512-OyxX1pTF+Gr4y172b+hlKNIHeLmC0qWlKm3Vn5gCC69o7UVoBXGUFEp853+A+jz0xlVVEUK3x9G30R/WY9Sgbg==
   dependencies:
     "@gitbeaker/requester-utils" "^41.1.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     qs "^6.12.2"
     xcase "^2.0.1"
 
@@ -2427,21 +2046,6 @@
   integrity sha512-ZXRY4jNvVgSVQ8DL3LTcakaAtXwTVUxE81hslsyD2AtoXW/wVob10HkOJ1X/pAlcI7D+2YoZKg5do8G/w6RYgA==
 
 "@janus-idp/shared-react@^2.4.0":
-<<<<<<< HEAD
-  version "2.14.1"
-  resolved "https://registry.yarnpkg.com/@janus-idp/shared-react/-/shared-react-2.14.1.tgz#0e31c75ccd664f08fd3d54673414c9f29e7d3135"
-  integrity sha512-pNbTrngqScInrXbau7Kgt5ylXzD18lIfxBY/nKxn95BVeKw9WCrwqaSZr33GPM7c1dqXkPUlvgjBANKvha2rgw==
-  dependencies:
-    "@backstage/catalog-model" "^1.7.0"
-    "@backstage/core-components" "^0.15.1"
-    "@backstage/core-plugin-api" "^1.10.0"
-    "@backstage/plugin-kubernetes-common" "^0.8.3"
-    "@backstage/plugin-kubernetes-react" "^0.4.4"
-    "@kubernetes/client-node" "^0.22.1"
-    "@material-ui/core" "^4.12.4"
-    "@mui/icons-material" "5.15.17"
-    "@mui/material" "^5.15.17"
-=======
   version "2.10.0"
   resolved "https://registry.npmjs.org/@janus-idp/shared-react/-/shared-react-2.10.0.tgz"
   integrity sha512-rjhpg8xmK+yQWytu/5MmhjjpB+7LMfjlGOiy1yZLphyqKNlJgD+ATGpId85rqNwwDa8U/KG+EzFz+OTd+YlQdA==
@@ -2451,7 +2055,6 @@
     "@backstage/plugin-kubernetes-common" "0.8.0"
     "@backstage/plugin-kubernetes-react" "0.4.0"
     "@kubernetes/client-node" "^0.20.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     classnames "^2.3.2"
     date-fns "^2.30.0"
     file-saver "^2.0.5"
@@ -2661,15 +2264,9 @@
     "@jridgewell/trace-mapping" "^0.3.9"
 
 "@jridgewell/gen-mapping@^0.3.5":
-<<<<<<< HEAD
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/@jridgewell/gen-mapping/-/gen-mapping-0.3.8.tgz#4f0e06362e01362f823d348f1872b08f666d8142"
-  integrity sha512-imAbBGkb+ebQyxKgzv5Hu2nmROxoDOXHh80evxdoXNOrvAnVx7zimzc1Oo5h9RlfV4vPXaE2iM5pOFbvOCClWA==
-=======
   version "0.3.5"
   resolved "https://registry.npmjs.org/@jridgewell/gen-mapping/-/gen-mapping-0.3.5.tgz"
   integrity sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@jridgewell/set-array" "^1.2.1"
     "@jridgewell/sourcemap-codec" "^1.4.10"
@@ -2716,21 +2313,6 @@
   resolved "https://registry.npmjs.org/@jsep-plugin/regex/-/regex-1.0.4.tgz"
   integrity sha512-q7qL4Mgjs1vByCaTnDFcBnV9HS7GVPJX5vyVoCgZHNSC9rjwIlmbXG5sUuorR5ndfHAIlJ8pVStxvjXHbNvtUg==
 
-<<<<<<< HEAD
-"@kubernetes-models/apimachinery@^2.0.0", "@kubernetes-models/apimachinery@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@kubernetes-models/apimachinery/-/apimachinery-2.0.2.tgz#01d17a72032b3d878280bdbfc2cfb337030d65d8"
-  integrity sha512-4gDnPbIPCdmFx+v+bDtP/5J/z7RfCbAQ6iBwTAP5DFX+VPq3ulZ0C++4Ih/M+GRIk6FGejDxZxmkEmh5cs55xQ==
-  dependencies:
-    "@kubernetes-models/base" "^5.0.1"
-    "@kubernetes-models/validate" "^4.0.0"
-    "@swc/helpers" "^0.5.8"
-
-"@kubernetes-models/base@^5.0.0", "@kubernetes-models/base@^5.0.1":
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/@kubernetes-models/base/-/base-5.0.1.tgz#0a4a73b98b0732c757538ae5cac2fe069e6035fb"
-  integrity sha512-Yfzmh965y/hT8qs9eE+Ms9sO1iT31c/sPoJerBFRGS9KechXXfxHgeqtpOzq+eByQ1INblkcZ09rt2V0FxG0lA==
-=======
 "@kubernetes-models/apimachinery@^1.1.0":
   version "1.2.2"
   resolved "https://registry.npmjs.org/@kubernetes-models/apimachinery/-/apimachinery-1.2.2.tgz"
@@ -2762,17 +2344,11 @@
   version "5.0.0"
   resolved "https://registry.npmjs.org/@kubernetes-models/base/-/base-5.0.0.tgz"
   integrity sha512-b+pVrlF1691ft/nc/tJ/v0DEPq9NK5gKWO1OHuTEBRRk/z1inH30svoqrqQL90VZhthVJNi8L7rQRQBUWuxZiw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@kubernetes-models/validate" "^4.0.0"
     is-plain-object "^5.0.0"
     tslib "^2.4.0"
 
-<<<<<<< HEAD
-"@kubernetes-models/validate@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@kubernetes-models/validate/-/validate-4.0.0.tgz#669314ec4a4f0e8271d23ce4fdfa9dfffb278a9c"
-=======
 "@kubernetes-models/validate@^3.1.2":
   version "3.1.2"
   resolved "https://registry.npmjs.org/@kubernetes-models/validate/-/validate-3.1.2.tgz"
@@ -2786,7 +2362,6 @@
 "@kubernetes-models/validate@^4.0.0":
   version "4.0.0"
   resolved "https://registry.npmjs.org/@kubernetes-models/validate/-/validate-4.0.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-rsfF5t3sd5c+3ejUgcy8q0cVG2/BxT064L4Xz+CuKEe014u8T4MtFZiWjWZFpfMXSGKzFYEA6DJYm9CqjmIfZg==
   dependencies:
     ajv "^8.12.0"
@@ -2800,11 +2375,7 @@
 
 "@kubernetes/client-node@0.20.0", "@kubernetes/client-node@^0.20.0":
   version "0.20.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@kubernetes/client-node/-/client-node-0.20.0.tgz#4447ae27fd6eef3d4830a5a039f3b84ffd5c5913"
-=======
   resolved "https://registry.npmjs.org/@kubernetes/client-node/-/client-node-0.20.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-xxlv5GLX4FVR/dDKEsmi4SPeuB49aRc35stndyxcC73XnUEEwF39vXbROpHOirmDse8WE9vxOjABnSVS+jb7EA==
   dependencies:
     "@types/js-yaml" "^4.0.1"
@@ -2824,11 +2395,7 @@
   optionalDependencies:
     openid-client "^5.3.0"
 
-<<<<<<< HEAD
-"@kubernetes/client-node@^0.22.1", "@kubernetes/client-node@^0.22.3":
-=======
 "@kubernetes/client-node@^0.22.3":
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   version "0.22.3"
   resolved "https://registry.npmjs.org/@kubernetes/client-node/-/client-node-0.22.3.tgz"
   integrity sha512-dG8uah3+HDJLpJEESshLRZlAZ4PgDeV9mZXT0u1g7oy4KMRzdZ7n5g0JEIlL6QhK51/2ztcIqURAnjfjJt6Z+g==
@@ -2968,30 +2535,6 @@
     prop-types "^15.7.2"
     react-is "^16.8.0 || ^17.0.0"
 
-<<<<<<< HEAD
-"@mui/core-downloads-tracker@^5.16.14":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.14.tgz#e6536f1b6caa873f7915fbf9703fdc840a5a98d9"
-  integrity sha512-sbjXW+BBSvmzn61XyTMun899E7nGPTXwqD9drm1jBUAvWEhJpPFIRxwQQiATWZnd9rvdxtnhhdsDxEGWI0jxqA==
-
-"@mui/icons-material@5.15.17":
-  version "5.15.17"
-  resolved "https://registry.yarnpkg.com/@mui/icons-material/-/icons-material-5.15.17.tgz#518c02354036f7df28c8f9890b1db6a3269fcc2f"
-  integrity sha512-xVzl2De7IY36s/keHX45YMiCpsIx3mNv2xwDgtBkRSnZQtVk+Gqufwj1ktUxEyjzEhBl0+PiNJqYC31C+n1n6A==
-  dependencies:
-    "@babel/runtime" "^7.23.9"
-
-"@mui/material@^5.12.2", "@mui/material@^5.15.17":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/material/-/material-5.16.14.tgz#da8a75822f039d8c1b0ab7fb4146d767c2f9248a"
-  integrity sha512-eSXQVCMKU2xc7EcTxe/X/rC9QsV2jUe8eLM3MUCPYbo6V52eCE436akRIvELq/AqZpxx2bwkq7HC0cRhLB+yaw==
-  dependencies:
-    "@babel/runtime" "^7.23.9"
-    "@mui/core-downloads-tracker" "^5.16.14"
-    "@mui/system" "^5.16.14"
-    "@mui/types" "^7.2.15"
-    "@mui/utils" "^5.16.14"
-=======
 "@mui/core-downloads-tracker@^5.16.7":
   version "5.16.7"
   resolved "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.16.7.tgz"
@@ -3007,30 +2550,14 @@
     "@mui/system" "^5.16.7"
     "@mui/types" "^7.2.15"
     "@mui/utils" "^5.16.6"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@popperjs/core" "^2.11.8"
     "@types/react-transition-group" "^4.4.10"
     clsx "^2.1.0"
     csstype "^3.1.3"
     prop-types "^15.8.1"
-    react-is "^19.0.0"
+    react-is "^18.3.1"
     react-transition-group "^4.4.5"
 
-<<<<<<< HEAD
-"@mui/private-theming@^5.16.14":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/private-theming/-/private-theming-5.16.14.tgz#7ad2b8a8fe0417f9fdfd05011806b9cb33c1a20a"
-  integrity sha512-12t7NKzvYi819IO5IapW2BcR33wP/KAVrU8d7gLhGHoAmhDxyXlRoKiRij3TOD8+uzk0B6R9wHUNKi4baJcRNg==
-  dependencies:
-    "@babel/runtime" "^7.23.9"
-    "@mui/utils" "^5.16.14"
-    prop-types "^15.8.1"
-
-"@mui/styled-engine@^5.16.14":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/styled-engine/-/styled-engine-5.16.14.tgz#f90fef5b4f8ebf11d48e1b1df8854a45bb31a9f5"
-  integrity sha512-UAiMPZABZ7p8mUW4akDV6O7N3+4DatStpXMZwPlt+H/dA0lt67qawN021MNND+4QTpjaiMYxbhKZeQcyWCbuKw==
-=======
 "@mui/private-theming@^5.16.6":
   version "5.16.6"
   resolved "https://registry.npmjs.org/@mui/private-theming/-/private-theming-5.16.6.tgz"
@@ -3044,25 +2571,12 @@
   version "5.16.6"
   resolved "https://registry.npmjs.org/@mui/styled-engine/-/styled-engine-5.16.6.tgz"
   integrity sha512-zaThmS67ZmtHSWToTiHslbI8jwrmITcN93LQaR2lKArbvS7Z3iLkwRoiikNWutx9MBs8Q6okKvbZq1RQYB3v7g==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.23.9"
-    "@emotion/cache" "^11.13.5"
+    "@emotion/cache" "^11.11.0"
     csstype "^3.1.3"
     prop-types "^15.8.1"
 
-<<<<<<< HEAD
-"@mui/system@^5.16.14":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/system/-/system-5.16.14.tgz#92765ba01a3d1f8ee4967248cb00077d7aed225b"
-  integrity sha512-KBxMwCb8mSIABnKvoGbvM33XHyT+sN0BzEBG+rsSc0lLQGzs7127KWkCA6/H8h6LZ00XpBEME5MAj8mZLiQ1tw==
-  dependencies:
-    "@babel/runtime" "^7.23.9"
-    "@mui/private-theming" "^5.16.14"
-    "@mui/styled-engine" "^5.16.14"
-    "@mui/types" "^7.2.15"
-    "@mui/utils" "^5.16.14"
-=======
 "@mui/system@^5.16.7":
   version "5.16.7"
   resolved "https://registry.npmjs.org/@mui/system/-/system-5.16.7.tgz"
@@ -3073,22 +2587,11 @@
     "@mui/styled-engine" "^5.16.6"
     "@mui/types" "^7.2.15"
     "@mui/utils" "^5.16.6"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     clsx "^2.1.0"
     csstype "^3.1.3"
     prop-types "^15.8.1"
 
 "@mui/types@^7.2.15":
-<<<<<<< HEAD
-  version "7.2.21"
-  resolved "https://registry.yarnpkg.com/@mui/types/-/types-7.2.21.tgz#63f50874eda8e4a021a69aaa8ba9597369befda2"
-  integrity sha512-6HstngiUxNqLU+/DPqlUJDIPbzUBxIVHb1MmXP0eTWDIROiCR2viugXpEif0PPe2mLqqakPzzRClWAnK+8UJww==
-
-"@mui/utils@^5.16.14":
-  version "5.16.14"
-  resolved "https://registry.yarnpkg.com/@mui/utils/-/utils-5.16.14.tgz#7217e876a5092cd04c184b34bca348e0befaef8c"
-  integrity sha512-wn1QZkRzSmeXD1IguBVvJJHV3s6rxJrfb6YuC9Kk6Noh9f8Fb54nUs5JRkKm+BOerRhj5fLg05Dhx/H3Ofb8Mg==
-=======
   version "7.2.19"
   resolved "https://registry.npmjs.org/@mui/types/-/types-7.2.19.tgz"
   integrity sha512-6XpZEM/Q3epK9RN8ENoXuygnqUQxE+siN/6rGRi2iwJPgBUR25mphYQ9ZI87plGh58YoZ5pp40bFvKYOCDJ3tA==
@@ -3097,14 +2600,13 @@
   version "5.16.6"
   resolved "https://registry.npmjs.org/@mui/utils/-/utils-5.16.6.tgz"
   integrity sha512-tWiQqlhxAt3KENNiSRL+DIn9H5xNVK6Jjf70x3PnfQPz1MPBdh7yyIcAyVBT9xiw7hP3SomRhPR7hzBMBCjqEA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.23.9"
     "@mui/types" "^7.2.15"
     "@types/prop-types" "^15.7.12"
     clsx "^2.1.1"
     prop-types "^15.8.1"
-    react-is "^19.0.0"
+    react-is "^18.3.1"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -3269,17 +2771,10 @@
   resolved "https://registry.npmjs.org/@octokit/openapi-types/-/openapi-types-18.1.1.tgz"
   integrity sha512-VRaeH8nCDtF5aXWnjPuEMIYf1itK/s3JYyJcWFJT8X9pSNnBtriDf7wlEWsGuhPLl4QIH4xM8fqTXDwJ3Mu6sw==
 
-<<<<<<< HEAD
 "@octokit/openapi-types@^23.0.1":
   version "23.0.1"
   resolved "https://registry.yarnpkg.com/@octokit/openapi-types/-/openapi-types-23.0.1.tgz#3721646ecd36b596ddb12650e0e89d3ebb2dd50e"
   integrity sha512-izFjMJ1sir0jn0ldEKhZ7xegCTj/ObmEDlEfpFrx4k/JyZSMRHbO3/rBwgE7f3m2DHt+RrNGIVw4wSmwnm3t/g==
-=======
-"@octokit/openapi-types@^22.2.0":
-  version "22.2.0"
-  resolved "https://registry.npmjs.org/@octokit/openapi-types/-/openapi-types-22.2.0.tgz"
-  integrity sha512-QBhVjcUa9W7Wwhm6DBFu6ZZ+1/t/oYxqc2tp81Pi41YNuJinbFRx8B133qVOrAaBbF7D/m0Et6f9/pZt9Rc+tg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@octokit/plugin-paginate-rest@11.3.1":
   version "11.3.1"
@@ -3393,17 +2888,11 @@
     "@octokit/openapi-types" "^18.0.0"
 
 "@octokit/types@^13.0.0", "@octokit/types@^13.1.0", "@octokit/types@^13.5.0":
-<<<<<<< HEAD
-  version "13.7.0"
-  resolved "https://registry.yarnpkg.com/@octokit/types/-/types-13.7.0.tgz#22d0e26a8c9f53599bfb907213d8ccde547f36aa"
-  integrity sha512-BXfRP+3P3IN6fd4uF3SniaHKOO4UXWBfkdR3vA8mIvaoO/wLjGN5qivUtW0QRitBHHMcfC41SLhNVYIZZE+wkA==
-=======
   version "13.5.0"
   resolved "https://registry.npmjs.org/@octokit/types/-/types-13.5.0.tgz"
   integrity sha512-HdqWTf5Z3qwDVlzCrP8UJquMwunpDiMPt5er+QjGzL4hqr/vBVY/MauQgS1xWxCDT1oMx1EULyqxncdCY/NVSQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
-    "@octokit/openapi-types" "^23.0.1"
+    "@octokit/openapi-types" "^22.2.0"
 
 "@octokit/types@^9.0.0", "@octokit/types@^9.2.3":
   version "9.3.2"
@@ -3434,10 +2923,10 @@
   dependencies:
     "@react-hookz/deep-equal" "^1.0.4"
 
-"@rjsf/core@5.23.2":
-  version "5.23.2"
-  resolved "https://registry.yarnpkg.com/@rjsf/core/-/core-5.23.2.tgz#f8ef7ce3f6b929b4cf505b23cce3e8ababa8213e"
-  integrity sha512-jSz3X8SOZ1xL3wMPhBt01j/cA4FszhdGTLBhHfncM9nme4SpbQ6GRAiePOBakEVhT89GAM11ML1DA888YTZfmg==
+"@rjsf/core@5.23.1":
+  version "5.23.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/core/-/core-5.23.1.tgz#97b22b552e0e38f1a2d16e87d0053d77b697c44e"
+  integrity sha512-yO0vlseZiomYNqpy/Jkd2gaP9BGqa+f3q1VIc17SGkQidHBqBNURAvOvqWFgvvALRZRNYoqnDuolWxT0AaoAog==
   dependencies:
     lodash "^4.17.21"
     lodash-es "^4.17.21"
@@ -3445,15 +2934,15 @@
     nanoid "^3.3.7"
     prop-types "^15.8.1"
 
-"@rjsf/material-ui@5.23.2":
-  version "5.23.2"
-  resolved "https://registry.yarnpkg.com/@rjsf/material-ui/-/material-ui-5.23.2.tgz#e4ecb29428b06d0779c6ad84f339a2248bd60096"
-  integrity sha512-2ZxuXkYgBGARwBRH4gCn/hj+ds245oLkjW9sfnAgV8xW3NprukhaqN3jyR5IUcLDg5irHi23KP8IEjBvtlWo2g==
+"@rjsf/material-ui@5.23.1":
+  version "5.23.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/material-ui/-/material-ui-5.23.1.tgz#27b14635f28e78d2fd74902b099a0d6217e8cef3"
+  integrity sha512-zCe0R+oDeiyoKBtqPd8B3V7de6U9Uogd5HFOgXmvXv6UTfxQFQUpO77OpZdz9V2ADrfbRH57PiKEDh9TwQYZ5g==
 
-"@rjsf/utils@5.23.2":
-  version "5.23.2"
-  resolved "https://registry.yarnpkg.com/@rjsf/utils/-/utils-5.23.2.tgz#a64aeaa8a0bba862a6a9feed311fc2d4ae934db6"
-  integrity sha512-CDpZTroRE1O2lkZBNYsWCRj7moF3fqnwIo/Vf3flhoS7rGwb8kWlIHakOOBZxlqorKZB1UPzhQZn+FcwhzNldw==
+"@rjsf/utils@5.23.1":
+  version "5.23.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/utils/-/utils-5.23.1.tgz#f9282d0fff2fd929778f91b14db88601476fbacf"
+  integrity sha512-cXnWgUdfeWWCsTIKamMdaP8q8lfFTvJfNQ8UyQlAumU/+hQQMOzVcyd/cVOlqWyV/JyTKrQMZOuQc9yXkka9FA==
   dependencies:
     json-schema-merge-allof "^0.8.1"
     jsonpointer "^5.0.1"
@@ -3461,10 +2950,10 @@
     lodash-es "^4.17.21"
     react-is "^18.2.0"
 
-"@rjsf/validator-ajv8@5.23.2":
-  version "5.23.2"
-  resolved "https://registry.yarnpkg.com/@rjsf/validator-ajv8/-/validator-ajv8-5.23.2.tgz#88049afbb4c2b77c424f335bd1977d4f1db23224"
-  integrity sha512-EHOTZ/YxTcFHpCj2p42PD3daxJyozZ5gkIVCfbtIXgTtubt/pOMFvM2OxNcQ6OBQ+ulo96OmnDxYGsNPpZZVaw==
+"@rjsf/validator-ajv8@5.23.1":
+  version "5.23.1"
+  resolved "https://registry.yarnpkg.com/@rjsf/validator-ajv8/-/validator-ajv8-5.23.1.tgz#d9a743be481bd7753a935cbcff1a305d341487a7"
+  integrity sha512-h2iD4ymt4yD6V/V0jJBUZeBR5NvQyy2J0p7B+roNRpBXnmbCH/O3y4TBqnSPzQiO0mI9qDNQ9XgkQp7z9zo9uw==
   dependencies:
     ajv "^8.12.0"
     ajv-formats "^2.1.1"
@@ -3504,18 +2993,6 @@
     "@sinonjs/commons" "^3.0.0"
 
 "@swc/helpers@^0.5.8":
-<<<<<<< HEAD
-  version "0.5.15"
-  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.5.15.tgz#79efab344c5819ecf83a43f3f9f811fc84b516d7"
-  integrity sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==
-  dependencies:
-    tslib "^2.8.0"
-
-"@testing-library/react@^16.0.0":
-  version "16.2.0"
-  resolved "https://registry.yarnpkg.com/@testing-library/react/-/react-16.2.0.tgz#c96126ee01a49cdb47175721911b4a9432afc601"
-  integrity sha512-2cSskAvA1QNtKc8Y9VJQRv0tm3hLVgxRGDB+KYhIaPQJ1I+RHbhIXcM+zClKXzMes/wshsMVzf4B9vS4IZpqDQ==
-=======
   version "0.5.12"
   resolved "https://registry.npmjs.org/@swc/helpers/-/helpers-0.5.12.tgz"
   integrity sha512-KMZNXiGibsW9kvZAO1Pam2JPTDBm+KSHMMHWdsyI/1DbIZjT2A6Gy3hblVXUMEDvUAKq+e0vL0X0o54owWji7g==
@@ -3526,7 +3003,6 @@
   version "16.1.0"
   resolved "https://registry.npmjs.org/@testing-library/react/-/react-16.1.0.tgz"
   integrity sha512-Q2ToPvg0KsVL0ohND9A3zLJWcOXXcO8IDu3fj11KhNt0UlCWyFyvnCIBkd12tidB2lkiVRG8VFqdhcqhqnAQtg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.12.5"
 
@@ -3570,11 +3046,7 @@
 
 "@types/caseless@*":
   version "0.12.5"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@types/caseless/-/caseless-0.12.5.tgz#db9468cb1b1b5a925b8f34822f1669df0c5472f5"
-=======
   resolved "https://registry.npmjs.org/@types/caseless/-/caseless-0.12.5.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-hWtVTC2q7hc7xZ/RLbxapMvDMgUnDvKvMOpKal4DrMyfGBUfB1oKaZlIRr6mJL+If3bAP6sV/QneGzF6tJjZDg==
 
 "@types/debug@^4.0.0":
@@ -3599,15 +3071,9 @@
     "@types/unist" "^2"
 
 "@types/hoist-non-react-statics@^3.3.0":
-<<<<<<< HEAD
-  version "3.3.6"
-  resolved "https://registry.yarnpkg.com/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.6.tgz#6bba74383cdab98e8db4e20ce5b4a6b98caed010"
-  integrity sha512-lPByRJUer/iN/xa4qpyL0qmL11DqNW81iU/IG1S3uvRUq4oKagz8VCxZjiWkumgt66YT3vOdDgZ0o32sGKtCEw==
-=======
   version "3.3.5"
   resolved "https://registry.npmjs.org/@types/hoist-non-react-statics/-/hoist-non-react-statics-3.3.5.tgz"
   integrity sha512-SbcrWzkKBw2cdwRTwQAswfpB9g9LJWfjtUeW/jvNwbhC8cpmmNYVePa+ncbUe0rGTQ7G3Ff6mYUN2VMfLVr+Sg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@types/react" "*"
     hoist-non-react-statics "^3.3.0"
@@ -3646,17 +3112,10 @@
 
 "@types/js-yaml@^4.0.1":
   version "4.0.9"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@types/js-yaml/-/js-yaml-4.0.9.tgz#cd82382c4f902fed9691a2ed79ec68c5898af4c2"
-  integrity sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==
-
-"@types/json-schema@^7.0.15", "@types/json-schema@^7.0.9":
-=======
   resolved "https://registry.npmjs.org/@types/js-yaml/-/js-yaml-4.0.9.tgz"
   integrity sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==
 
 "@types/json-schema@^7.0.9":
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   version "7.0.15"
   resolved "https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.15.tgz"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
@@ -3681,16 +3140,6 @@
     "@types/unist" "^2"
 
 "@types/ms@*":
-<<<<<<< HEAD
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@types/ms/-/ms-2.1.0.tgz#052aa67a48eccc4309d7f0191b7e41434b90bb78"
-  integrity sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==
-
-"@types/node@*":
-  version "22.10.7"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.10.7.tgz#14a1ca33fd0ebdd9d63593ed8d3fbc882a6d28d7"
-  integrity sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg==
-=======
   version "0.7.34"
   resolved "https://registry.npmjs.org/@types/ms/-/ms-0.7.34.tgz"
   integrity sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==
@@ -3699,16 +3148,8 @@
   version "22.2.0"
   resolved "https://registry.npmjs.org/@types/node/-/node-22.2.0.tgz"
   integrity sha512-bm6EG6/pCpkxDf/0gDNDdtDILMOHgaQBVOJGdwsqClnxA3xL6jtMv76rLBc006RVMWbmaf0xbmom4Z/5o2nRkQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     undici-types "~6.13.0"
-
-"@types/node@^20.1.1":
-  version "20.14.15"
-  resolved "https://registry.npmjs.org/@types/node/-/node-20.14.15.tgz"
-  integrity sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==
-  dependencies:
-    undici-types "~5.26.4"
 
 "@types/node@^20.1.1":
   version "20.17.14"
@@ -3722,17 +3163,10 @@
   resolved "https://registry.npmjs.org/@types/parse-json/-/parse-json-4.0.2.tgz"
   integrity sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==
 
-<<<<<<< HEAD
-"@types/prop-types@^15.0.0", "@types/prop-types@^15.7.12", "@types/prop-types@^15.7.3":
-  version "15.7.14"
-  resolved "https://registry.yarnpkg.com/@types/prop-types/-/prop-types-15.7.14.tgz#1433419d73b2a7ebfc6918dcefd2ec0d5cd698f2"
-  integrity sha512-gNMvNH49DJ7OJYv+KAKn0Xp45p8PLl6zo2YnvDIbTd4J6MER2BmWN49TG7n9LvkyihINxeKW8+3bfS2yDC9dzQ==
-=======
 "@types/prop-types@*", "@types/prop-types@^15.0.0", "@types/prop-types@^15.7.12", "@types/prop-types@^15.7.3":
   version "15.7.12"
   resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.12.tgz"
   integrity sha512-5zvhXYtRNRluoE/jAp4GVsSduVUzNWKkOZrCDBWYtE7biZywwdC2AcEzg+cSMLFRfVgeAFqpfNabiPjxFddV1Q==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 "@types/react-redux@^7.1.20":
   version "7.1.34"
@@ -3752,17 +3186,6 @@
     "@types/react" "*"
 
 "@types/react-transition-group@^4.2.0", "@types/react-transition-group@^4.4.10":
-<<<<<<< HEAD
-  version "4.4.12"
-  resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.12.tgz#b5d76568485b02a307238270bfe96cb51ee2a044"
-  integrity sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==
-
-"@types/react@*":
-  version "19.0.7"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.0.7.tgz#c451968b999d1cb2d9207dc5ff56496164cf511d"
-  integrity sha512-MoFsEJKkAtZCrC1r6CM8U22GzhG7u2Wir8ons/aCKH6MBdD1ibV24zOSSkdZVUKqN5i396zG5VKLYZ3yaUZdLA==
-  dependencies:
-=======
   version "4.4.11"
   resolved "https://registry.npmjs.org/@types/react-transition-group/-/react-transition-group-4.4.11.tgz"
   integrity sha512-RM05tAniPZ5DZPzzNFP+DmrcOdD0efDUxMy3145oljWSl3x9ZV5vhme98gTxFrj2lhXvmGNnUiuDyJgY9IKkNA==
@@ -3776,16 +3199,11 @@
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "^0.16"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     csstype "^3.0.2"
 
 "@types/request@^2.47.1":
   version "2.48.12"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@types/request/-/request-2.48.12.tgz#0f590f615a10f87da18e9790ac94c29ec4c5ef30"
-=======
   resolved "https://registry.npmjs.org/@types/request/-/request-2.48.12.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-G3sY+NpsA9jnwm0ixhAFQSJ3Q9JkpLZpJbI3GMv0mIAT0y3mRabYeINzal5WOChIiaTEGQYlHOKgkaM9EisWHw==
   dependencies:
     "@types/caseless" "*"
@@ -3793,14 +3211,11 @@
     "@types/tough-cookie" "*"
     form-data "^2.5.0"
 
-<<<<<<< HEAD
-=======
 "@types/scheduler@^0.16":
   version "0.16.8"
   resolved "https://registry.npmjs.org/@types/scheduler/-/scheduler-0.16.8.tgz"
   integrity sha512-WZLiwShhwLRmeV6zH+GkbOFT6Z6VklCItrDioxUnv+u4Ll+8vKeFySoFyK/0ctcRpOmwAicELfmys1sDc/Rw+A==
 
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 "@types/stack-utils@^2.0.0":
   version "2.0.3"
   resolved "https://registry.npmjs.org/@types/stack-utils/-/stack-utils-2.0.3.tgz"
@@ -3815,11 +3230,7 @@
 
 "@types/tough-cookie@*":
   version "4.0.5"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-4.0.5.tgz#cb6e2a691b70cb177c6e3ae9c1d2e8b2ea8cd304"
-=======
   resolved "https://registry.npmjs.org/@types/tough-cookie/-/tough-cookie-4.0.5.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==
 
 "@types/unist@^2", "@types/unist@^2.0.0":
@@ -3828,15 +3239,9 @@
   integrity sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==
 
 "@types/ws@^8.5.3":
-<<<<<<< HEAD
-  version "8.5.13"
-  resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.13.tgz#6414c280875e2691d0d1e080b05addbf5cb91e20"
-  integrity sha512-osM/gWBTPKgHV8XkTunnegTRIsvF6owmf5w+JtAfOw472dptdm0dlGv4xCt6GwQRcC2XVOvvRE/0bAoQcL2QkA==
-=======
   version "8.5.12"
   resolved "https://registry.npmjs.org/@types/ws/-/ws-8.5.12.tgz"
   integrity sha512-3tPRkv1EtkDpzlgyKyI8pGsGZAGPEaXeu0DOj5DI25Ja91bdAYddYHbADRYVrZMRbfW+1l5YwXVDKohDJNQxkQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@types/node" "*"
 
@@ -3852,8 +3257,7 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-<<<<<<< HEAD
-"@typescript-eslint/eslint-plugin@8.20.0", "@typescript-eslint/eslint-plugin@^8.0.0":
+"@typescript-eslint/eslint-plugin@8.20.0":
   version "8.20.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.20.0.tgz#b47a398e0e551cb008c60190b804394e6852c863"
   integrity sha512-naduuphVw5StFfqp4Gq4WhIBE2gN1GEmMUExpJYknZJdRnc+2gDzB8Z3+5+/Kv33hPQRDGzQO/0opHE72lZZ6A==
@@ -3863,7 +3267,11 @@
     "@typescript-eslint/type-utils" "8.20.0"
     "@typescript-eslint/utils" "8.20.0"
     "@typescript-eslint/visitor-keys" "8.20.0"
-=======
+    graphemer "^1.4.0"
+    ignore "^5.3.1"
+    natural-compare "^1.4.0"
+    ts-api-utils "^2.0.0"
+
 "@typescript-eslint/eslint-plugin@^8.0.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-8.11.0.tgz"
@@ -3874,14 +3282,12 @@
     "@typescript-eslint/type-utils" "8.11.0"
     "@typescript-eslint/utils" "8.11.0"
     "@typescript-eslint/visitor-keys" "8.11.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     graphemer "^1.4.0"
     ignore "^5.3.1"
     natural-compare "^1.4.0"
-    ts-api-utils "^2.0.0"
+    ts-api-utils "^1.3.0"
 
-<<<<<<< HEAD
-"@typescript-eslint/parser@8.20.0", "@typescript-eslint/parser@^8.0.0":
+"@typescript-eslint/parser@8.20.0":
   version "8.20.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/parser/-/parser-8.20.0.tgz#5caf2230a37094dc0e671cf836b96dd39b587ced"
   integrity sha512-gKXG7A5HMyjDIedBi6bUrDcun8GIjnI8qOwVLiY3rx6T/sHP/19XLJOnIq/FgQvWLHja5JN/LSE7eklNBr612g==
@@ -3892,22 +3298,6 @@
     "@typescript-eslint/visitor-keys" "8.20.0"
     debug "^4.3.4"
 
-"@typescript-eslint/scope-manager@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/scope-manager/-/scope-manager-8.20.0.tgz#aaf4198b509fb87a6527c02cfbfaf8901179e75c"
-  integrity sha512-J7+VkpeGzhOt3FeG1+SzhiMj9NzGD/M6KoGn9f4dbz3YzK9hvbhVTmLj/HiTp9DazIzJ8B4XcM80LrR9Dm1rJw==
-  dependencies:
-    "@typescript-eslint/types" "8.20.0"
-    "@typescript-eslint/visitor-keys" "8.20.0"
-
-"@typescript-eslint/type-utils@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/type-utils/-/type-utils-8.20.0.tgz#958171d86b213a3f32b5b16b91db267968a4ef19"
-  integrity sha512-bPC+j71GGvA7rVNAHAtOjbVXbLN5PkwqMvy1cwGeaxUoRQXVuKCebRoLzm+IPW/NtFFpstn1ummSIasD5t60GA==
-  dependencies:
-    "@typescript-eslint/typescript-estree" "8.20.0"
-    "@typescript-eslint/utils" "8.20.0"
-=======
 "@typescript-eslint/parser@^8.0.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/parser/-/parser-8.11.0.tgz"
@@ -3927,6 +3317,14 @@
     "@typescript-eslint/types" "8.11.0"
     "@typescript-eslint/visitor-keys" "8.11.0"
 
+"@typescript-eslint/scope-manager@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/scope-manager/-/scope-manager-8.20.0.tgz#aaf4198b509fb87a6527c02cfbfaf8901179e75c"
+  integrity sha512-J7+VkpeGzhOt3FeG1+SzhiMj9NzGD/M6KoGn9f4dbz3YzK9hvbhVTmLj/HiTp9DazIzJ8B4XcM80LrR9Dm1rJw==
+  dependencies:
+    "@typescript-eslint/types" "8.20.0"
+    "@typescript-eslint/visitor-keys" "8.20.0"
+
 "@typescript-eslint/type-utils@8.11.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/type-utils/-/type-utils-8.11.0.tgz"
@@ -3934,28 +3332,28 @@
   dependencies:
     "@typescript-eslint/typescript-estree" "8.11.0"
     "@typescript-eslint/utils" "8.11.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+    debug "^4.3.4"
+    ts-api-utils "^1.3.0"
+
+"@typescript-eslint/type-utils@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/type-utils/-/type-utils-8.20.0.tgz#958171d86b213a3f32b5b16b91db267968a4ef19"
+  integrity sha512-bPC+j71GGvA7rVNAHAtOjbVXbLN5PkwqMvy1cwGeaxUoRQXVuKCebRoLzm+IPW/NtFFpstn1ummSIasD5t60GA==
+  dependencies:
+    "@typescript-eslint/typescript-estree" "8.20.0"
+    "@typescript-eslint/utils" "8.20.0"
     debug "^4.3.4"
     ts-api-utils "^2.0.0"
 
-<<<<<<< HEAD
-"@typescript-eslint/types@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/types/-/types-8.20.0.tgz#487de5314b5415dee075e95568b87a75a3e730cf"
-  integrity sha512-cqaMiY72CkP+2xZRrFt3ExRBu0WmVitN/rYPZErA80mHjHx/Svgp8yfbzkJmDoQ/whcytOPO9/IZXnOc+wigRA==
-
-"@typescript-eslint/typescript-estree@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/typescript-estree/-/typescript-estree-8.20.0.tgz#658cea07b7e5981f19bce5cf1662cb70ad59f26b"
-  integrity sha512-Y7ncuy78bJqHI35NwzWol8E0X7XkRVS4K4P4TCyzWkOJih5NDvtoRDW4Ba9YJJoB2igm9yXDdYI/+fkiiAxPzA==
-  dependencies:
-    "@typescript-eslint/types" "8.20.0"
-    "@typescript-eslint/visitor-keys" "8.20.0"
-=======
 "@typescript-eslint/types@8.11.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/types/-/types-8.11.0.tgz"
   integrity sha512-tn6sNMHf6EBAYMvmPUaKaVeYvhUsrE6x+bXQTxjQRp360h1giATU0WvgeEys1spbvb5R+VpNOZ+XJmjD8wOUHw==
+
+"@typescript-eslint/types@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/types/-/types-8.20.0.tgz#487de5314b5415dee075e95568b87a75a3e730cf"
+  integrity sha512-cqaMiY72CkP+2xZRrFt3ExRBu0WmVitN/rYPZErA80mHjHx/Svgp8yfbzkJmDoQ/whcytOPO9/IZXnOc+wigRA==
 
 "@typescript-eslint/typescript-estree@8.11.0":
   version "8.11.0"
@@ -3964,7 +3362,20 @@
   dependencies:
     "@typescript-eslint/types" "8.11.0"
     "@typescript-eslint/visitor-keys" "8.11.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+    debug "^4.3.4"
+    fast-glob "^3.3.2"
+    is-glob "^4.0.3"
+    minimatch "^9.0.4"
+    semver "^7.6.0"
+    ts-api-utils "^1.3.0"
+
+"@typescript-eslint/typescript-estree@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/typescript-estree/-/typescript-estree-8.20.0.tgz#658cea07b7e5981f19bce5cf1662cb70ad59f26b"
+  integrity sha512-Y7ncuy78bJqHI35NwzWol8E0X7XkRVS4K4P4TCyzWkOJih5NDvtoRDW4Ba9YJJoB2igm9yXDdYI/+fkiiAxPzA==
+  dependencies:
+    "@typescript-eslint/types" "8.20.0"
+    "@typescript-eslint/visitor-keys" "8.20.0"
     debug "^4.3.4"
     fast-glob "^3.3.2"
     is-glob "^4.0.3"
@@ -3972,25 +3383,6 @@
     semver "^7.6.0"
     ts-api-utils "^2.0.0"
 
-<<<<<<< HEAD
-"@typescript-eslint/utils@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/utils/-/utils-8.20.0.tgz#53127ecd314b3b08836b4498b71cdb86f4ef3aa2"
-  integrity sha512-dq70RUw6UK9ei7vxc4KQtBRk7qkHZv447OUZ6RPQMQl71I3NZxQJX/f32Smr+iqWrB02pHKn2yAdHBb0KNrRMA==
-  dependencies:
-    "@eslint-community/eslint-utils" "^4.4.0"
-    "@typescript-eslint/scope-manager" "8.20.0"
-    "@typescript-eslint/types" "8.20.0"
-    "@typescript-eslint/typescript-estree" "8.20.0"
-
-"@typescript-eslint/visitor-keys@8.20.0":
-  version "8.20.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/visitor-keys/-/visitor-keys-8.20.0.tgz#2df6e24bc69084b81f06aaaa48d198b10d382bed"
-  integrity sha512-v/BpkeeYAsPkKCkR8BDwcno0llhzWVqPOamQrAEMdpZav2Y9OVjd9dwJyBLJWwf335B5DmlifECIkZRJCaGaHA==
-  dependencies:
-    "@typescript-eslint/types" "8.20.0"
-    eslint-visitor-keys "^4.2.0"
-=======
 "@typescript-eslint/utils@8.11.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/utils/-/utils-8.11.0.tgz"
@@ -4001,6 +3393,16 @@
     "@typescript-eslint/types" "8.11.0"
     "@typescript-eslint/typescript-estree" "8.11.0"
 
+"@typescript-eslint/utils@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/utils/-/utils-8.20.0.tgz#53127ecd314b3b08836b4498b71cdb86f4ef3aa2"
+  integrity sha512-dq70RUw6UK9ei7vxc4KQtBRk7qkHZv447OUZ6RPQMQl71I3NZxQJX/f32Smr+iqWrB02pHKn2yAdHBb0KNrRMA==
+  dependencies:
+    "@eslint-community/eslint-utils" "^4.4.0"
+    "@typescript-eslint/scope-manager" "8.20.0"
+    "@typescript-eslint/types" "8.20.0"
+    "@typescript-eslint/typescript-estree" "8.20.0"
+
 "@typescript-eslint/visitor-keys@8.11.0":
   version "8.11.0"
   resolved "https://registry.npmjs.org/@typescript-eslint/visitor-keys/-/visitor-keys-8.11.0.tgz"
@@ -4008,7 +3410,14 @@
   dependencies:
     "@typescript-eslint/types" "8.11.0"
     eslint-visitor-keys "^3.4.3"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+
+"@typescript-eslint/visitor-keys@8.20.0":
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/visitor-keys/-/visitor-keys-8.20.0.tgz#2df6e24bc69084b81f06aaaa48d198b10d382bed"
+  integrity sha512-v/BpkeeYAsPkKCkR8BDwcno0llhzWVqPOamQrAEMdpZav2Y9OVjd9dwJyBLJWwf335B5DmlifECIkZRJCaGaHA==
+  dependencies:
+    "@typescript-eslint/types" "8.20.0"
+    eslint-visitor-keys "^4.2.0"
 
 "@xobotyi/scrollbar-width@^1.9.5":
   version "1.9.5"
@@ -4032,11 +3441,7 @@ acorn@^8.12.0:
 
 agent-base@^7.1.0, agent-base@^7.1.2:
   version "7.1.3"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-7.1.3.tgz#29435eb821bc4194633a5b89e5bc4703bafc25a1"
-=======
   resolved "https://registry.npmjs.org/agent-base/-/agent-base-7.1.3.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-jRR5wdylq8CkOe6hei19GGZnxM6rBGwFl3Bg0YItGDimvjGtAvdZk4Pu6Cl4u4Igsws4a1fd1Vq3ezrhn4KmFw==
 
 ajv-errors@^3.0.0:
@@ -4046,11 +3451,7 @@ ajv-errors@^3.0.0:
 
 ajv-formats-draft2019@^1.6.1:
   version "1.6.1"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/ajv-formats-draft2019/-/ajv-formats-draft2019-1.6.1.tgz#6affe2220e7828360793776f1976de0420acccfb"
-=======
   resolved "https://registry.npmjs.org/ajv-formats-draft2019/-/ajv-formats-draft2019-1.6.1.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-JQPvavpkWDvIsBp2Z33UkYCtXCSpW4HD3tAZ+oL4iEFOk9obQZffx0yANwECt6vzr6ET+7HN5czRyqXbnq/u0Q==
   dependencies:
     punycode "^2.1.1"
@@ -4067,11 +3468,7 @@ ajv-formats@^2.1.1:
 
 ajv-i18n@^4.2.0:
   version "4.2.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/ajv-i18n/-/ajv-i18n-4.2.0.tgz#d48750ba60e283b3dee31e3c22c8c9f7410e326f"
-=======
   resolved "https://registry.npmjs.org/ajv-i18n/-/ajv-i18n-4.2.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-v/ei2UkCEeuKNXh8RToiFsUclmU+G57LO1Oo22OagNMENIw+Yb8eMwvHu7Vn9fmkjJyv6XclhJ8TbuigSglPkg==
 
 ajv@^6.12.3, ajv@^6.12.4:
@@ -4194,11 +3591,7 @@ aws4@^1.8.0:
 
 axios@^1.7.8:
   version "1.7.9"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.9.tgz#d7d071380c132a24accda1b2cfc1535b79ec650a"
-=======
   resolved "https://registry.npmjs.org/axios/-/axios-1.7.9.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-LhLcE7Hbiryz8oMDdDptSrWowmB4Bl6RCt6sIJKpRB4XtVf0iEgewX3au/pJqm+Py1kCASkb/FFKjxQaLtxJvw==
   dependencies:
     follow-redirects "^1.15.6"
@@ -4347,17 +3740,6 @@ braces@^3.0.3:
   dependencies:
     fill-range "^7.1.1"
 
-<<<<<<< HEAD
-browserslist@^4.24.0, browserslist@^4.24.3:
-  version "4.24.4"
-  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.24.4.tgz#c6b2865a3f08bcb860a0e827389003b9fe686e4b"
-  integrity sha512-KDi1Ny1gSePi1vm0q4oxSF8b4DR44GF4BbmS2YdhPLOEqd8pDviZOGH/GsmRwoWJ2+5Lr085X7naowMwKHDG1A==
-  dependencies:
-    caniuse-lite "^1.0.30001688"
-    electron-to-chromium "^1.5.73"
-    node-releases "^2.0.19"
-    update-browserslist-db "^1.1.1"
-=======
 browserslist@^4.23.1, browserslist@^4.23.3:
   version "4.23.3"
   resolved "https://registry.npmjs.org/browserslist/-/browserslist-4.23.3.tgz"
@@ -4367,7 +3749,6 @@ browserslist@^4.23.1, browserslist@^4.23.3:
     electron-to-chromium "^1.5.4"
     node-releases "^2.0.18"
     update-browserslist-db "^1.1.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 bs-logger@0.x:
   version "0.2.6"
@@ -4403,17 +3784,10 @@ byline@^5.0.0:
   resolved "https://registry.npmjs.org/byline/-/byline-5.0.0.tgz"
   integrity sha512-s6webAy+R4SR8XVuJWt2V2rGvhnrhxN+9S15GNuTK3wKPOXFF6RNc+8ug2XhH+2s4f+uudG4kUVYmYOQWL2g0Q==
 
-<<<<<<< HEAD
 call-bind-apply-helpers@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.1.tgz#32e5892e6361b29b0b545ba6f7763378daca2840"
   integrity sha512-BhYE+WDaywFg2TBWYNXAE+8B1ATnThNBqXHP5nQu0jWJdVvY2hvkpyB3qOmtmDePiS5/BDQ8wASEWGMWRG148g==
-=======
-call-bind@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.npmjs.org/call-bind/-/call-bind-1.0.7.tgz"
-  integrity sha512-GHTSNSYICQ7scH7sZ+M2rFopRoLh8t2bLSW6BbgrtLsahOIB5iyAVJf9GjWK3cYTDaMj4XdBpM1cA6pIS0Kv2w==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     es-errors "^1.3.0"
     function-bind "^1.1.2"
@@ -4441,17 +3815,10 @@ camelcase@^6.2.0:
   resolved "https://registry.npmjs.org/camelcase/-/camelcase-6.3.0.tgz"
   integrity sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==
 
-<<<<<<< HEAD
-caniuse-lite@^1.0.30001688:
-  version "1.0.30001695"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001695.tgz#39dfedd8f94851132795fdf9b79d29659ad9c4d4"
-  integrity sha512-vHyLade6wTgI2u1ec3WQBxv+2BrTERV28UXQu9LO6lZ9pYeMk34vjXFLOxo1A4UBA8XTL4njRQZdno/yYaSmWw==
-=======
 caniuse-lite@^1.0.30001646:
   version "1.0.30001651"
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001651.tgz"
   integrity sha512-9Cf+Xv1jJNe1xPZLGuUXLNkE1BoDkqRqYyFJ9TDYSqhduqA4hu4oR9HluGoWYQC/aj8WHjsGVV+bwkh0+tegRg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 caseless@~0.12.0:
   version "0.12.0"
@@ -4514,11 +3881,7 @@ chart.js@^4.1.2:
 
 chownr@^2.0.0:
   version "2.0.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/chownr/-/chownr-2.0.0.tgz#15bfbe53d2eab4cf70f18a8cd68ebe5b3cb1dece"
-=======
   resolved "https://registry.npmjs.org/chownr/-/chownr-2.0.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-bIomtDF5KGpdogkLd9VspvFzk9KfpyyGlS8YFVZl7TGPBHL5snIOnxeshwVgPteQ9b4Eydl+pVbIyE1DcvCWgQ==
 
 chownr@^3.0.0:
@@ -4533,11 +3896,7 @@ ci-info@^3.2.0:
 
 cidr-regex@^3.1.1:
   version "3.1.1"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/cidr-regex/-/cidr-regex-3.1.1.tgz#ba1972c57c66f61875f18fd7dd487469770b571d"
-=======
   resolved "https://registry.npmjs.org/cidr-regex/-/cidr-regex-3.1.1.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-RBqYd32aDwbCMFJRL6wHOlDNYJsPNTt8vC82ErHF5vKt8QQzxm1FrkW8s/R5pVrXMf17sba09Uoy91PKiddAsw==
   dependencies:
     ip-regex "^4.1.0"
@@ -4673,21 +4032,12 @@ copy-to-clipboard@^3.3.1:
   dependencies:
     toggle-selection "^1.0.6"
 
-<<<<<<< HEAD
-core-js-compat@^3.38.0, core-js-compat@^3.38.1:
-  version "3.40.0"
-  resolved "https://registry.yarnpkg.com/core-js-compat/-/core-js-compat-3.40.0.tgz#7485912a5a4a4315c2fdb2cbdc623e6881c88b38"
-  integrity sha512-0XEDpr5y5mijvw8Lbc6E5AkjrHfp7eEoPlu36SWeAbcL8fn1G1ANe8DBlo2XoNN89oVpxWwOjYIPVzR4ZvsKCQ==
-  dependencies:
-    browserslist "^4.24.3"
-=======
 core-js-compat@^3.37.1, core-js-compat@^3.38.0:
   version "3.38.0"
   resolved "https://registry.npmjs.org/core-js-compat/-/core-js-compat-3.38.0.tgz"
   integrity sha512-75LAicdLa4OJVwFxFbQR3NdnZjNgX6ILpVcVzcC4T2smerB5lELMrJQQQoWV6TiuC/vlaFqgU2tKQx9w5s0e0A==
   dependencies:
     browserslist "^4.23.3"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 core-util-is@1.0.2:
   version "1.0.2"
@@ -4719,23 +4069,6 @@ create-jest@^29.7.0:
     prompts "^2.0.1"
 
 cronstrue@^2.32.0:
-<<<<<<< HEAD
-  version "2.53.0"
-  resolved "https://registry.yarnpkg.com/cronstrue/-/cronstrue-2.53.0.tgz#5bbcd7483636b99379480f624faef5056f3efbd8"
-  integrity sha512-CkAcaI94xL8h6N7cGxgXfR5D7oV2yVtDzB9vMZP8tIgPyEv/oc/7nq9rlk7LMxvc3N+q6LKZmNLCVxJRpyEg8A==
-
-cross-fetch@^4.0.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/cross-fetch/-/cross-fetch-4.1.0.tgz#8f69355007ee182e47fa692ecbaa37a52e43c3d2"
-  integrity sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==
-  dependencies:
-    node-fetch "^2.7.0"
-
-cross-spawn@^7.0.0, cross-spawn@^7.0.3, cross-spawn@^7.0.6:
-  version "7.0.6"
-  resolved "https://registry.yarnpkg.com/cross-spawn/-/cross-spawn-7.0.6.tgz#8a58fe78f00dcd70c370451759dfbfaf03e8ee9f"
-  integrity sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==
-=======
   version "2.50.0"
   resolved "https://registry.npmjs.org/cronstrue/-/cronstrue-2.50.0.tgz"
   integrity sha512-ULYhWIonJzlScCCQrPUG5uMXzXxSixty4djud9SS37DoNxDdkeRocxzHuAo4ImRBUK+mAuU5X9TSwEDccnnuPg==
@@ -4751,7 +4084,6 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
   version "7.0.3"
   resolved "https://registry.npmjs.org/cross-spawn/-/cross-spawn-7.0.3.tgz"
   integrity sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
@@ -4899,15 +4231,9 @@ debounce@^1.2.0:
   integrity sha512-XRRe6Glud4rd/ZGQfiV1ruXSfbvfJedlV9Y6zOlP+2K04vBYiJEte6stfFkCP03aMnY5tsipamumUjL14fofug==
 
 debug@4, debug@^4.0.0, debug@^4.1.0, debug@^4.1.1, debug@^4.3.1, debug@^4.3.2, debug@^4.3.4:
-<<<<<<< HEAD
-  version "4.4.0"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-4.4.0.tgz#2b3f2aea2ffeb776477460267377dc8710faba8a"
-  integrity sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==
-=======
   version "4.3.6"
   resolved "https://registry.npmjs.org/debug/-/debug-4.3.6.tgz"
   integrity sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     ms "2.1.2"
 
@@ -4938,18 +4264,6 @@ deepmerge@^4.2.2, deepmerge@^4.3.1:
   resolved "https://registry.npmjs.org/deepmerge/-/deepmerge-4.3.1.tgz"
   integrity sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==
 
-<<<<<<< HEAD
-=======
-define-data-property@^1.1.4:
-  version "1.1.4"
-  resolved "https://registry.npmjs.org/define-data-property/-/define-data-property-1.1.4.tgz"
-  integrity sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==
-  dependencies:
-    es-define-property "^1.0.0"
-    es-errors "^1.3.0"
-    gopd "^1.0.1"
-
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 define-lazy-prop@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/define-lazy-prop/-/define-lazy-prop-2.0.0.tgz"
@@ -4981,37 +4295,24 @@ diff-sequences@^29.6.3:
   integrity sha512-EjePK1srD3P08o2j4f0ExnylqRs5B9tJjcp9t1krH2qRi8CCdsYfwe9JgSLurFBWwq4uOlipzfk5fHNvwFKr8Q==
 
 diff2html@^3.4.40:
-<<<<<<< HEAD
-  version "3.4.51"
-  resolved "https://registry.yarnpkg.com/diff2html/-/diff2html-3.4.51.tgz#6355170d09d8625525f0846be2c73bc2838ab797"
-  integrity sha512-/rVCSDyokkzSCEGaGjkkElXtIRwyNDRzIa3S8VUhR6pjk25p6+AMnb1s2zGmhjl66D5m/HnV3IeZoxnWsvTy+w==
-=======
   version "3.4.48"
   resolved "https://registry.npmjs.org/diff2html/-/diff2html-3.4.48.tgz"
   integrity sha512-1lzNSg0G0VPKZPTyi4knzV2nAWTXBy/QaWCKzDto6iEIlcuOJEG0li4bElJfpHNz+pBqPu4AcC1i9ZCo9KMUOg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
-    diff "^7.0.0"
+    diff "5.1.0"
     hogan.js "3.0.2"
   optionalDependencies:
     highlight.js "11.9.0"
 
-<<<<<<< HEAD
 diff@^5.0.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/diff/-/diff-5.2.0.tgz#26ded047cd1179b78b9537d5ef725503ce1ae531"
-  integrity sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==
+  version "5.1.0"
+  resolved "https://registry.npmjs.org/diff/-/diff-5.1.0.tgz"
+  integrity sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==
 
 diff@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-7.0.0.tgz#3fb34d387cd76d803f6eebea67b921dab0182a9a"
   integrity sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==
-=======
-diff@5.1.0, diff@^5.0.0:
-  version "5.1.0"
-  resolved "https://registry.npmjs.org/diff/-/diff-5.1.0.tgz"
-  integrity sha512-D+mk+qE8VC/PAUrlAU34N+VfXev0ghe5ywmpqrawphmVZc1bEfn56uo9qpyGp1p4xpzOHkSW4ztBd6L7Xx4ACw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 discontinuous-range@1.0.0:
   version "1.0.0"
@@ -5067,17 +4368,10 @@ ejs@^3.1.10:
   dependencies:
     jake "^10.8.5"
 
-<<<<<<< HEAD
-electron-to-chromium@^1.5.73:
-  version "1.5.83"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.5.83.tgz#3f74078f0c83e24bf7e692eaa855a998d1bec34f"
-  integrity sha512-LcUDPqSt+V0QmI47XLzZrz5OqILSMGsPFkDYus22rIbgorSvBYEFqq854ltTmUdHkY92FSdAAvsh4jWEULMdfQ==
-=======
 electron-to-chromium@^1.5.4:
   version "1.5.6"
   resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.6.tgz"
   integrity sha512-jwXWsM5RPf6j9dPYzaorcBSUg6AiqocPEyMpkchkvntaH9HGfOOMZwxMJjDY/XEs3T5dM7uyH1VhRMkqUU9qVw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 emittery@^0.13.1:
   version "0.13.1"
@@ -5108,26 +4402,16 @@ error-stack-parser@^2.0.6:
   dependencies:
     stackframe "^1.3.4"
 
-<<<<<<< HEAD
 es-define-property@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/es-define-property/-/es-define-property-1.0.1.tgz#983eb2f9a6724e9303f61addf011c72e09e0b0fa"
   integrity sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==
-=======
-es-define-property@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/es-define-property/-/es-define-property-1.0.0.tgz"
-  integrity sha512-jxayLKShrEqqzJ0eumQbVhTYQM27CfT1T35+gCgDFoL82JLsXqTJ76zv6A0YLOgEnLUMvLzsDsGIrl8NFpT2gQ==
-  dependencies:
-    get-intrinsic "^1.2.4"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 es-errors@^1.3.0:
   version "1.3.0"
   resolved "https://registry.npmjs.org/es-errors/-/es-errors-1.3.0.tgz"
   integrity sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==
 
-<<<<<<< HEAD
 es-object-atoms@^1.0.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/es-object-atoms/-/es-object-atoms-1.1.1.tgz#1c4f2c4837327597ce69d2ca190a7fdd172338c1"
@@ -5135,16 +4419,10 @@ es-object-atoms@^1.0.0:
   dependencies:
     es-errors "^1.3.0"
 
-escalade@^3.1.1, escalade@^3.2.0:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.2.0.tgz#011a3f69856ba189dffa7dc8fcce99d2a87903e5"
-  integrity sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==
-=======
 escalade@^3.1.1, escalade@^3.1.2:
   version "3.1.2"
   resolved "https://registry.npmjs.org/escalade/-/escalade-3.1.2.tgz"
   integrity sha512-ErCHMCae19vR8vQGe50xIsVomy19rg6gFu3+r3jkEO46suLMWBksvVyoGgQV+jOfl84ZSOSlmv6Gxa89PmTGmA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 escape-latex@^1.2.0:
   version "1.2.0"
@@ -5199,21 +4477,12 @@ eslint-visitor-keys@^4.0.0:
   resolved "https://registry.npmjs.org/eslint-visitor-keys/-/eslint-visitor-keys-4.0.0.tgz"
   integrity sha512-OtIRv/2GyiF6o/d8K7MYKKbXrOUBIK6SfkIRM4Z0dY3w+LiQ0vy3F57m0Z71bjbyeiWFiHJ8brqnmE6H6/jEuw==
 
+eslint-visitor-keys@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/eslint-visitor-keys/-/eslint-visitor-keys-4.2.0.tgz#687bacb2af884fcdda8a6e7d65c606f46a14cd45"
+  integrity sha512-UyLnSehNt62FFhSwjZlHmeokpRK59rcz29j+F1/aDgbkbRTk7wIc9XzdoasMUbRNKDM0qQt/+BJ4BrpFeABemw==
+
 eslint@^9.0.0:
-<<<<<<< HEAD
-  version "9.18.0"
-  resolved "https://registry.yarnpkg.com/eslint/-/eslint-9.18.0.tgz#c95b24de1183e865de19f607fda6518b54827850"
-  integrity sha512-+waTfRWQlSbpt3KWE+CjrPPYnbq9kfZIYUqapc0uBXyjTp8aYXZDsUH16m39Ryq3NjAVP4tjuF7KaukeqoCoaA==
-  dependencies:
-    "@eslint-community/eslint-utils" "^4.2.0"
-    "@eslint-community/regexpp" "^4.12.1"
-    "@eslint/config-array" "^0.19.0"
-    "@eslint/core" "^0.10.0"
-    "@eslint/eslintrc" "^3.2.0"
-    "@eslint/js" "9.18.0"
-    "@eslint/plugin-kit" "^0.2.5"
-    "@humanfs/node" "^0.16.6"
-=======
   version "9.9.0"
   resolved "https://registry.npmjs.org/eslint/-/eslint-9.9.0.tgz"
   integrity sha512-JfiKJrbx0506OEerjK2Y1QlldtBxkAlLxT5OEcRF8uaQ86noDe2k31Vw9rnSWv+MXZHj7OOUV/dA0AhdLFcyvA==
@@ -5223,17 +4492,12 @@ eslint@^9.0.0:
     "@eslint/config-array" "^0.17.1"
     "@eslint/eslintrc" "^3.1.0"
     "@eslint/js" "9.9.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@humanwhocodes/module-importer" "^1.0.1"
     "@humanwhocodes/retry" "^0.3.0"
     "@nodelib/fs.walk" "^1.2.8"
     ajv "^6.12.4"
     chalk "^4.0.0"
-<<<<<<< HEAD
-    cross-spawn "^7.0.6"
-=======
     cross-spawn "^7.0.2"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     debug "^4.3.2"
     escape-string-regexp "^4.0.0"
     eslint-scope "^8.0.2"
@@ -5358,21 +4622,15 @@ fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
 
 fast-glob@^3.3.2:
-<<<<<<< HEAD
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.3.3.tgz#d06d585ce8dba90a16b0505c543c3ccfb3aeb818"
-  integrity sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==
-=======
   version "3.3.2"
   resolved "https://registry.npmjs.org/fast-glob/-/fast-glob-3.3.2.tgz"
   integrity sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@nodelib/fs.stat" "^2.0.2"
     "@nodelib/fs.walk" "^1.2.3"
     glob-parent "^5.1.2"
     merge2 "^1.3.0"
-    micromatch "^4.0.8"
+    micromatch "^4.0.4"
 
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0, fast-json-stable-stringify@^2.1.0:
   version "2.1.0"
@@ -5390,10 +4648,9 @@ fast-shallow-equal@^1.0.0:
   integrity sha512-HPtaa38cPgWvaCFmRNhlc6NG7pv6NUHqjPgVAkWGoB9mQMwYB27/K0CvOM5Czy+qpT3e8XJ6Q4aPAnzpNpzNaw==
 
 fast-uri@^3.0.1:
-<<<<<<< HEAD
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.0.5.tgz#19f5f9691d0dab9b85861a7bb5d98fca961da9cd"
-  integrity sha512-5JnBCWpFlMo0a3ciDy/JckMzzv1U9coZrIhedq+HXxxUfDTAiS0LA8OKVao4G9BxmCVck/jtA5r3KAtRWEyD8Q==
+  version "3.0.1"
+  resolved "https://registry.npmjs.org/fast-uri/-/fast-uri-3.0.1.tgz"
+  integrity sha512-MWipKbbYiYI0UC7cl8m/i/IWTqfC8YXsqjzybjddLsFjStroQzsHXkc73JutMvBiXmOvapk+axIl79ig5t55Bw==
 
 fast-xml-parser@^4.4.1:
   version "4.5.1"
@@ -5401,11 +4658,6 @@ fast-xml-parser@^4.4.1:
   integrity sha512-y655CeyUQ+jj7KBbYMc4FG01V8ZQqjN+gDYGJ50RtfsUB8iG9AmwmwoAgeKLJdmueKKMrH1RJ7yXHTSoczdv5w==
   dependencies:
     strnum "^1.0.5"
-=======
-  version "3.0.1"
-  resolved "https://registry.npmjs.org/fast-uri/-/fast-uri-3.0.1.tgz"
-  integrity sha512-MWipKbbYiYI0UC7cl8m/i/IWTqfC8YXsqjzybjddLsFjStroQzsHXkc73JutMvBiXmOvapk+axIl79ig5t55Bw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 fastest-stable-stringify@^2.0.2:
   version "2.0.2"
@@ -5413,15 +4665,9 @@ fastest-stable-stringify@^2.0.2:
   integrity sha512-bijHueCGd0LqqNK9b5oCMHc0MluJAx0cwqASgbWMvkO01lCYgIhacVRLcaDz3QnyYIRNJRDwMb41VuT6pHJ91Q==
 
 fastq@^1.6.0:
-<<<<<<< HEAD
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/fastq/-/fastq-1.18.0.tgz#d631d7e25faffea81887fe5ea8c9010e1b36fee0"
-  integrity sha512-QKHXPW0hD8g4UET03SdOdunzSouc9N4AuHdsX8XNcTsuz+yYFILVNIX4l9yHABMhiEI9Db0JTTIpu0wB+Y1QQw==
-=======
   version "1.17.1"
   resolved "https://registry.npmjs.org/fastq/-/fastq-1.17.1.tgz"
   integrity sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     reusify "^1.0.4"
 
@@ -5525,23 +4771,13 @@ forever-agent@~0.6.1:
   integrity sha512-j0KLYPhm6zeac4lz3oJ3o65qvgQCcPubiyotZrXqEaG4hNagNYO8qdlUrX5vwqv9ohqeT/Z3j6+yW067yWWdUw==
 
 form-data@^2.5.0:
-<<<<<<< HEAD
-  version "2.5.2"
-  resolved "https://registry.yarnpkg.com/form-data/-/form-data-2.5.2.tgz#dc653743d1de2fcc340ceea38079daf6e9069fd2"
-  integrity sha512-GgwY0PS7DbXqajuGf4OYlsrIu3zgxD6Vvql43IBhm6MahqA5SK/7mwhtNj2AdH2z35YR34ujJ7BN+3fFC3jP5Q==
-=======
   version "2.5.1"
   resolved "https://registry.npmjs.org/form-data/-/form-data-2.5.1.tgz"
   integrity sha512-m21N3WOmEEURgk6B9GLOE4RuWOFf28Lhh9qGYeNlGq4VDXUlJy2th2slBNU8Gp8EzloYZOibZJ7t5ecIrFSjVA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.6"
     mime-types "^2.1.12"
-<<<<<<< HEAD
-    safe-buffer "^5.2.1"
-=======
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 form-data@^4.0.0:
   version "4.0.0"
@@ -5582,11 +4818,7 @@ fs-extra@^10.0.0:
 
 fs-minipass@^2.0.0:
   version "2.1.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/fs-minipass/-/fs-minipass-2.1.0.tgz#7f5036fdbf12c63c169190cbe4199c852271f9fb"
-=======
   resolved "https://registry.npmjs.org/fs-minipass/-/fs-minipass-2.1.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-V/JgOLFCS+R6Vcq0slCuaeWEdNC3ouDlJMNIsacH2VtALiu9mV4LPrHc5cDl8k5aw6J8jwgWWpiTo5RYhmIzvg==
   dependencies:
     minipass "^3.0.0"
@@ -5616,17 +4848,10 @@ get-caller-file@^2.0.5:
   resolved "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz"
   integrity sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==
 
-<<<<<<< HEAD
 get-intrinsic@^1.2.5, get-intrinsic@^1.2.6:
   version "1.2.7"
   resolved "https://registry.yarnpkg.com/get-intrinsic/-/get-intrinsic-1.2.7.tgz#dcfcb33d3272e15f445d15124bc0a216189b9044"
   integrity sha512-VW6Pxhsrk0KAOqs3WEd0klDiF/+V7gQOpAvY1jVU/LHmaD/kQO4523aiJuikX/QAKYiW6x8Jh+RJej1almdtCA==
-=======
-get-intrinsic@^1.1.3, get-intrinsic@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.npmjs.org/get-intrinsic/-/get-intrinsic-1.2.4.tgz"
-  integrity sha512-5uYhsJH8VJBTv7oslg4BznJYhDoRI6waYCxMmCdnTrcCrHA/fCFKoTFz2JKKE0HdDFUF7/oQuhzumXJK7paBRQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     call-bind-apply-helpers "^1.0.1"
     es-define-property "^1.0.1"
@@ -5727,19 +4952,10 @@ globals@^14.0.0:
   resolved "https://registry.npmjs.org/globals/-/globals-14.0.0.tgz"
   integrity sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==
 
-<<<<<<< HEAD
 gopd@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/gopd/-/gopd-1.2.0.tgz#89f56b8217bdbc8802bd299df6d7f1081d7e51a1"
   integrity sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==
-=======
-gopd@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.npmjs.org/gopd/-/gopd-1.0.1.tgz"
-  integrity sha512-d65bNlIadxvpb/A2abVdlqKqV563juRnZ1Wtk6s1sIR8uNsXR70xqIzVqxVf1eTqDunwT2MkczEeaezCKTZhwA==
-  dependencies:
-    get-intrinsic "^1.1.3"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 graceful-fs@^4.1.6, graceful-fs@^4.2.0, graceful-fs@^4.2.9:
   version "4.2.11"
@@ -5781,33 +4997,12 @@ has-flag@^4.0.0:
   resolved "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz"
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
-<<<<<<< HEAD
 has-symbols@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/has-symbols/-/has-symbols-1.1.0.tgz#fc9c6a783a084951d0b971fe1018de813707a338"
   integrity sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==
 
 hasown@^2.0.2:
-=======
-has-property-descriptors@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/has-property-descriptors/-/has-property-descriptors-1.0.2.tgz"
-  integrity sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==
-  dependencies:
-    es-define-property "^1.0.0"
-
-has-proto@^1.0.1:
-  version "1.0.3"
-  resolved "https://registry.npmjs.org/has-proto/-/has-proto-1.0.3.tgz"
-  integrity sha512-SJ1amZAJUiZS+PhsVLf5tGydlaVB8EdFpaSO4gmiUKUOxk8qzn5AIy4ZeJUmh22znIdk/uMAUT2pl3FxzVUH+Q==
-
-has-symbols@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.npmjs.org/has-symbols/-/has-symbols-1.0.3.tgz"
-  integrity sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==
-
-hasown@^2.0.0, hasown@^2.0.2:
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   version "2.0.2"
   resolved "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz"
   integrity sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==
@@ -5901,11 +5096,7 @@ http-signature@~1.2.0:
 
 https-proxy-agent@^7.0.0:
   version "7.0.6"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz#da8dfeac7da130b05c2ba4b59c9b6cd66611a6b9"
-=======
   resolved "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-7.0.6.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-vK9P5/iUfdl95AI+JVyUuIcVtd4ofvtrOr3HNtM2yxC9bnMbEdp3x01OhQNnjb8IJYi38VlTE3mBXwcfvywuSw==
   dependencies:
     agent-base "^7.1.2"
@@ -5991,11 +5182,7 @@ inline-style-prefixer@^7.0.1:
 
 ip-regex@^4.1.0:
   version "4.3.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/ip-regex/-/ip-regex-4.3.0.tgz#687275ab0f57fa76978ff8f4dddc8a23d5990db5"
-=======
   resolved "https://registry.npmjs.org/ip-regex/-/ip-regex-4.3.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-B9ZWJxHHOHUhUjCPrMpLD4xEq35bUTClHM1S6CBU5ixQnkZmwipwgc96vAd7AAGM9TGHvJR+Uss+/Ak6UphK+Q==
 
 is-alphabetical@^1.0.0:
@@ -6023,26 +5210,15 @@ is-buffer@^2.0.0:
 
 is-cidr@^4.0.0:
   version "4.0.2"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/is-cidr/-/is-cidr-4.0.2.tgz#94c7585e4c6c77ceabf920f8cde51b8c0fda8814"
-=======
   resolved "https://registry.npmjs.org/is-cidr/-/is-cidr-4.0.2.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-z4a1ENUajDbEl/Q6/pVBpTR1nBjjEE1X7qb7bmWYanNnPoKAvUCPFKeXV6Fe4mgTkWKBqiHIcwsI3SndiO5FeA==
   dependencies:
     cidr-regex "^3.1.1"
 
-<<<<<<< HEAD
 is-core-module@^2.16.0:
   version "2.16.1"
   resolved "https://registry.yarnpkg.com/is-core-module/-/is-core-module-2.16.1.tgz#2a98801a849f43e2add644fbb6bc6229b19a4ef4"
   integrity sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w==
-=======
-is-core-module@^2.13.0:
-  version "2.15.0"
-  resolved "https://registry.npmjs.org/is-core-module/-/is-core-module-2.15.0.tgz"
-  integrity sha512-Dd+Lb2/zvk9SKy1TGCt1wFJFo/MWBPMX5x7KcvLajWTGuomczdQX61PvY5yK6SVACwpoexWo81IfFyoKY2QnTA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     hasown "^2.0.2"
 
@@ -6627,15 +5803,9 @@ jest@^29.7.0:
     import-local "^3.0.2"
     jest-cli "^29.7.0"
 
-<<<<<<< HEAD
-jose@^4.15.9:
-  version "4.15.9"
-  resolved "https://registry.yarnpkg.com/jose/-/jose-4.15.9.tgz#9b68eda29e9a0614c042fa29387196c7dd800100"
-=======
 jose@^4.15.5:
   version "4.15.9"
   resolved "https://registry.npmjs.org/jose/-/jose-4.15.9.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==
 
 jose@^5.9.6:
@@ -6683,17 +5853,6 @@ jsep@^1.4.0:
   resolved "https://registry.npmjs.org/jsep/-/jsep-1.4.0.tgz"
   integrity sha512-B7qPcEVE3NVkmSJbaYxvv4cHkVW7DQsZz13pUMrfS8z8Q/BuShN+gcTXrUlPiGqM2/t/EEaI030bpxMqY8gMlw==
 
-<<<<<<< HEAD
-jsesc@^3.0.2:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-3.1.0.tgz#74d335a234f67ed19907fdadfac7ccf9d409825d"
-  integrity sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==
-
-jsesc@~3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-3.0.2.tgz#bb8b09a6597ba426425f2e4a07245c3d00b9343e"
-  integrity sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==
-=======
 jsesc@^2.5.1:
   version "2.5.2"
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-2.5.2.tgz"
@@ -6703,7 +5862,6 @@ jsesc@~0.5.0:
   version "0.5.0"
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 json-buffer@3.0.1:
   version "3.0.1"
@@ -6794,11 +5952,7 @@ jsonpath-plus@^10.2.0:
 
 jsonpath-plus@^7.2.0:
   version "7.2.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/jsonpath-plus/-/jsonpath-plus-7.2.0.tgz#7ad94e147b3ed42f7939c315d2b9ce490c5a3899"
-=======
   resolved "https://registry.npmjs.org/jsonpath-plus/-/jsonpath-plus-7.2.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-zBfiUPM5nD0YZSBT/o/fbCUlCcepMIdP0CJZxM1+KgA4f2T206f6VAg9e7mX35+KlMaIc5qXW34f3BnwJ3w+RA==
 
 jsonpointer@^5.0.1:
@@ -6954,21 +6108,12 @@ kleur@^4.0.3:
   integrity sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==
 
 kubernetes-models@^4.3.1:
-<<<<<<< HEAD
-  version "4.4.2"
-  resolved "https://registry.yarnpkg.com/kubernetes-models/-/kubernetes-models-4.4.2.tgz#b4ddad0a1b129002a7c287cbac3ce203a789d75c"
-  integrity sha512-pqsB4kIkvJopFexZr4V7S9dAo9w7mrqS0wBQhaJvIG6pNt+wvmgyM4YHZXbZ+ci7bdw/lmYK/C7j0TS0DTKXQw==
-  dependencies:
-    "@kubernetes-models/apimachinery" "^2.0.2"
-    "@kubernetes-models/base" "^5.0.1"
-=======
   version "4.4.0"
   resolved "https://registry.npmjs.org/kubernetes-models/-/kubernetes-models-4.4.0.tgz"
   integrity sha512-EiQUjoDT42xrEyELYS5HGU8SKeAMdQFHyjeX6mPkWwAdSfH553Cp0do2NmB5ubiAo2WYS+TeLHzI/YQoigtm/w==
   dependencies:
     "@kubernetes-models/apimachinery" "^2.0.0"
     "@kubernetes-models/base" "^5.0.0"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     "@kubernetes-models/validate" "^4.0.0"
     "@swc/helpers" "^0.5.8"
 
@@ -7128,11 +6273,7 @@ lru-cache@^5.1.1:
 
 lru-cache@^6.0.0:
   version "6.0.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-6.0.0.tgz#6d6fe6570ebd96aaf90fcad1dafa3b2566db3a94"
-=======
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-6.0.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
@@ -7172,15 +6313,9 @@ markdown-table@^3.0.0:
   integrity sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==
 
 markdown-to-jsx@^7.4.1:
-<<<<<<< HEAD
-  version "7.7.3"
-  resolved "https://registry.yarnpkg.com/markdown-to-jsx/-/markdown-to-jsx-7.7.3.tgz#c75927252592696e9e8b2a9557628749d8ab023e"
-  integrity sha512-o35IhJDFP6Fv60zPy+hbvZSQMmgvSGdK5j8NRZ7FeZMY+Bgqw+dSg7SC1ZEzC26++CiOUCqkbq96/c3j/FfTEQ==
-=======
   version "7.7.2"
   resolved "https://registry.npmjs.org/markdown-to-jsx/-/markdown-to-jsx-7.7.2.tgz"
   integrity sha512-N3AKfYRvxNscvcIH6HDnDKILp4S8UWbebp+s92Y8SwIq0CuSbLW4Jgmrbjku3CWKjTQO0OyIMS6AhzqrwjEa3g==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 material-ui-popup-state@^1.9.3:
   version "1.9.3"
@@ -7643,17 +6778,18 @@ micromark@^3.0.0:
     micromark-util-types "^1.0.1"
     uvu "^0.5.0"
 
-<<<<<<< HEAD
-micromatch@^4.0.4, micromatch@^4.0.8:
-  version "4.0.8"
-  resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.8.tgz#d66fa18f3a47076789320b9b1af32bd86d9fa202"
-  integrity sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==
-=======
 micromatch@^4.0.4:
   version "4.0.7"
   resolved "https://registry.npmjs.org/micromatch/-/micromatch-4.0.7.tgz"
   integrity sha512-LPP/3KorzCwBxfeUuZmaR6bG2kdeHSbe0P2tY3FLRU4vYrjYz5hI4QZwV0njUx3jeuKe67YukQ1LSPZBKDqO/Q==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
+  dependencies:
+    braces "^3.0.3"
+    picomatch "^2.3.1"
+
+micromatch@^4.0.8:
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.8.tgz#d66fa18f3a47076789320b9b1af32bd86d9fa202"
+  integrity sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==
   dependencies:
     braces "^3.0.3"
     picomatch "^2.3.1"
@@ -7698,22 +6834,14 @@ minimatch@^9.0.4:
 
 minipass@^3.0.0:
   version "3.3.6"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/minipass/-/minipass-3.3.6.tgz#7bba384db3a1520d18c9c0e5251c3444e95dd94a"
-=======
   resolved "https://registry.npmjs.org/minipass/-/minipass-3.3.6.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-DxiNidxSEK+tHG6zOIklvNOwm3hvCrbUrdtzY74U6HKTJxvIDfOUL5W5P2Ghd3DTkhhKPYGqeNUIh5qcM4YBfw==
   dependencies:
     yallist "^4.0.0"
 
 minipass@^5.0.0:
   version "5.0.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/minipass/-/minipass-5.0.0.tgz#3e9788ffb90b694a5d0ec94479a45b5d8738133d"
-=======
   resolved "https://registry.npmjs.org/minipass/-/minipass-5.0.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-3FnjYuehv9k6ovOEbyOswadCDPX1piCfhV8ncmYtHOjuPwylVWsghTLo7rabjC3Rx5xD4HDx8Wm1xnMF7S5qFQ==
 
 "minipass@^5.0.0 || ^6.0.2 || ^7.0.0", minipass@^7.0.4, minipass@^7.1.2:
@@ -7723,11 +6851,7 @@ minipass@^5.0.0:
 
 minizlib@^2.1.1:
   version "2.1.2"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/minizlib/-/minizlib-2.1.2.tgz#e90d3466ba209b932451508a11ce3d3632145931"
-=======
   resolved "https://registry.npmjs.org/minizlib/-/minizlib-2.1.2.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-bAxsR8BVfj60DWXHE3u30oHzfl4G7khkSuPW+qvpd7jFRHm7dLxOjUk1EHACJ/hxLY8phGJ0YhYHZo7jil7Qdg==
   dependencies:
     minipass "^3.0.0"
@@ -7820,9 +6944,9 @@ nearley@^2.20.1:
     railroad-diagrams "^1.0.0"
     randexp "0.4.6"
 
-node-fetch@^2.6.7, node-fetch@^2.7.0:
+node-fetch@^2.6.12, node-fetch@^2.6.7:
   version "2.7.0"
-  resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.7.0.tgz"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
   dependencies:
     whatwg-url "^5.0.0"
@@ -7832,17 +6956,10 @@ node-int64@^0.4.0:
   resolved "https://registry.npmjs.org/node-int64/-/node-int64-0.4.0.tgz"
   integrity sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==
 
-<<<<<<< HEAD
-node-releases@^2.0.19:
-  version "2.0.19"
-  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.19.tgz#9e445a52950951ec4d177d843af370b411caf314"
-  integrity sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==
-=======
 node-releases@^2.0.18:
   version "2.0.18"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-2.0.18.tgz"
   integrity sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 nopt@1.0.10:
   version "1.0.10"
@@ -7870,11 +6987,7 @@ oauth-sign@~0.9.0:
 
 oauth4webapi@^3.1.4:
   version "3.1.4"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/oauth4webapi/-/oauth4webapi-3.1.4.tgz#50695385cea8e7a43f3e2e23bc33ea27faece4a7"
-=======
   resolved "https://registry.npmjs.org/oauth4webapi/-/oauth4webapi-3.1.4.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-eVfN3nZNbok2s/ROifO0UAc5G8nRoLSbrcKJ09OqmucgnhXEfdIQOR4gq1eJH1rN3gV7rNw62bDEgftsgFtBEg==
 
 object-assign@^4.1.1:
@@ -7884,28 +6997,13 @@ object-assign@^4.1.1:
 
 object-hash@^2.2.0:
   version "2.2.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.2.0.tgz#5ad518581eefc443bd763472b8ff2e9c2c0d54a5"
+  resolved "https://registry.npmjs.org/object-hash/-/object-hash-2.2.0.tgz"
   integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
 
 object-inspect@^1.13.3:
   version "1.13.3"
   resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.13.3.tgz#f14c183de51130243d6d18ae149375ff50ea488a"
   integrity sha512-kDCGIbxkDSXE3euJZZXzc6to7fCrKHNI/hSRQnRuQ+BWjFNzZwiFF8fj/6o2t2G9/jTj8PSIYTfCLelLZEeRpA==
-=======
-  resolved "https://registry.npmjs.org/object-hash/-/object-hash-2.2.0.tgz"
-  integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
-
-object-inspect@^1.13.1:
-  version "1.13.2"
-  resolved "https://registry.npmjs.org/object-inspect/-/object-inspect-1.13.2.tgz"
-  integrity sha512-IRZSRuzJiynemAXPYtPe5BoI/RESNYR7TYm50MC5Mqbd3Jmw5y790sErYw3V6SryFJD64b74qQQs9wn5Bg/k3g==
-
-oidc-token-hash@^5.0.3:
-  version "5.0.3"
-  resolved "https://registry.npmjs.org/oidc-token-hash/-/oidc-token-hash-5.0.3.tgz"
-  integrity sha512-IF4PcGgzAr6XXSff26Sk/+P4KZFJVuHAJZj3wgO3vX2bMdNVp/QXTP3P7CEm9V1IdG8lDLY3HhiqpsE/nOwpPw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 oidc-token-hash@^5.0.3:
   version "5.0.3"
@@ -7936,30 +7034,18 @@ open@^8.0.0, open@^8.0.3:
     is-wsl "^2.2.0"
 
 openid-client@^5.3.0:
-<<<<<<< HEAD
-  version "5.7.1"
-  resolved "https://registry.yarnpkg.com/openid-client/-/openid-client-5.7.1.tgz#34cace862a3e6472ed7d0a8616ef73b7fb85a9c3"
-  integrity sha512-jDBPgSVfTnkIh71Hg9pRvtJc6wTwqjRkN88+gCFtYWrlP4Yx2Dsrow8uPi3qLr/aeymPF3o2+dS+wOpglK04ew==
-  dependencies:
-    jose "^4.15.9"
-=======
   version "5.6.5"
   resolved "https://registry.npmjs.org/openid-client/-/openid-client-5.6.5.tgz"
   integrity sha512-5P4qO9nGJzB5PI0LFlhj4Dzg3m4odt0qsJTfyEtZyOlkgpILwEioOhVVJOrS1iVH494S4Ee5OCjjg6Bf5WOj3w==
   dependencies:
     jose "^4.15.5"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
     lru-cache "^6.0.0"
     object-hash "^2.2.0"
     oidc-token-hash "^5.0.3"
 
 openid-client@^6.1.3:
   version "6.1.7"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/openid-client/-/openid-client-6.1.7.tgz#cb23cbfc1a37690ae553ab72505605d8660da057"
-=======
   resolved "https://registry.npmjs.org/openid-client/-/openid-client-6.1.7.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-JfY/KvQgOutmG2P+oVNKInE7zIh+im1MQOaO7g5CtNnTWMociA563WweiEMKfR9ry9XG3K2HGvj9wEqhCQkPMg==
   dependencies:
     jose "^5.9.6"
@@ -8113,17 +7199,10 @@ performance-now@^2.1.0:
   resolved "https://registry.npmjs.org/performance-now/-/performance-now-2.1.0.tgz"
   integrity sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==
 
-<<<<<<< HEAD
-picocolors@^1.0.0, picocolors@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.1.1.tgz#3d321af3eab939b083c8f929a1d12cda81c26b6b"
-  integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
-=======
 picocolors@^1.0.0, picocolors@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.0.1.tgz"
   integrity sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 picomatch-browser@^2.2.6:
   version "2.2.6"
@@ -8176,11 +7255,7 @@ prelude-ls@^1.2.1:
 
 prettier@^3.0.0:
   version "3.4.2"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.4.2.tgz#a5ce1fb522a588bf2b78ca44c6e6fe5aa5a2b13f"
-=======
   resolved "https://registry.npmjs.org/prettier/-/prettier-3.4.2.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-e9MewbtFo+Fevyuxn/4rrcDAaq0IYxPGLvObpQjiZBMAzB9IGmzlnG9RZy3FFas+eBMu2vA0CszMeduow5dIuQ==
 
 pretty-format@^29.0.0, pretty-format@^29.7.0:
@@ -8242,17 +7317,9 @@ proxy-from-env@^1.1.0:
   integrity sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==
 
 psl@^1.1.28:
-<<<<<<< HEAD
-  version "1.15.0"
-  resolved "https://registry.yarnpkg.com/psl/-/psl-1.15.0.tgz#bdace31896f1d97cec6a79e8224898ce93d974c6"
-  integrity sha512-JZd3gMVBAVQkSs6HdNZo9Sdo0LNcQeMNP3CozBJb3JYC/QUYZTnKxP+f8oWRX4rHP5EurWxqAHTSwUCjlNKa1w==
-  dependencies:
-    punycode "^2.3.1"
-=======
   version "1.9.0"
   resolved "https://registry.npmjs.org/psl/-/psl-1.9.0.tgz"
   integrity sha512-E/ZsdU4HLs/68gYzgGTkMicWTLPdAftJLfJFlLUAAKZGkStNU72sZjT66SnMDVOfOWY/YAoiD7Jxa9iHvngcag==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 punycode@^2.1.0, punycode@^2.1.1:
   version "2.3.1"
@@ -8265,17 +7332,11 @@ pure-rand@^6.0.0:
   integrity sha512-LA0Y9kxMYv47GIPJy6MI84fqTd2HmYZI83W/kM/SkKfDlajnZYfmXFTxkbY+xSBPkLJxltMa9hIkmdc29eguMA==
 
 qs@^6.12.2, qs@^6.9.4:
-<<<<<<< HEAD
-  version "6.14.0"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.14.0.tgz#c63fa40680d2c5c941412a0e899c89af60c0a930"
-  integrity sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==
-=======
   version "6.13.0"
   resolved "https://registry.npmjs.org/qs/-/qs-6.13.0.tgz"
   integrity sha512-+38qI9SOr8tfZ4QmJNplMUxqjbe7LKvvZgWdExBOmd+egZTtjLB67Gu0HRX3u/XOq7UU2Nx6nsjvS16Z9uwfpg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
-    side-channel "^1.1.0"
+    side-channel "^1.0.6"
 
 qs@~6.5.2:
   version "6.5.3"
@@ -8320,26 +7381,16 @@ rc-progress@3.5.1:
     rc-util "^5.16.1"
 
 rc-util@^5.16.1:
-<<<<<<< HEAD
-  version "5.44.3"
-  resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-5.44.3.tgz#9eca5039906446113c4032859f88c15234547961"
-  integrity sha512-q6KCcOFk3rv/zD3MckhJteZxb0VjAIFuf622B7ElK4vfrZdAzs16XR5p3VTdy3+U5jfJU5ACz4QnhLSuAGe5dA==
-=======
   version "5.43.0"
   resolved "https://registry.npmjs.org/rc-util/-/rc-util-5.43.0.tgz"
   integrity sha512-AzC7KKOXFqAdIBqdGWepL9Xn7cm3vnAmjlHqUnoQaTMZYhM4VlXGLkkHHxj/BZ7Td0+SOPKB4RGPboBVKT9htw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.18.3"
     react-is "^18.2.0"
 
 re2-wasm@^1.0.2:
   version "1.0.2"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/re2-wasm/-/re2-wasm-1.0.2.tgz#78c09dc651b8962aa814b55ae7fe5e472ec15bbb"
-=======
   resolved "https://registry.npmjs.org/re2-wasm/-/re2-wasm-1.0.2.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-VXUdgSiUrE/WZXn6gUIVVIsg0+Hp6VPZPOaHCay+OuFKy6u/8ktmeNEf+U5qSA8jzGGFsg8jrDNu1BeHpz2pJA==
 
 react-beautiful-dnd@^13.0.0:
@@ -8376,15 +7427,9 @@ react-helmet@6.1.0:
     react-side-effect "^2.1.0"
 
 react-hook-form@^7.12.2:
-<<<<<<< HEAD
-  version "7.54.2"
-  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-7.54.2.tgz#8c26ed54c71628dff57ccd3c074b1dd377cfb211"
-  integrity sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==
-=======
   version "7.53.1"
   resolved "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.53.1.tgz"
   integrity sha512-6aiQeBda4zjcuaugWvim9WsGqisoUk+etmFEsSUMm451/Ic8L/UAb7sRtMj3V+Hdzm6mMjU1VhiSzYUZeBm0Vg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 react-idle-timer@5.7.2:
   version "5.7.2"
@@ -8484,15 +7529,9 @@ react-universal-interface@^0.6.2:
   integrity sha512-dg8yXdcQmvgR13RIlZbTRQOoUrDciFVoSBZILwjE2LFISxZZ8loVJKAkuzswl5js8BHda79bIb2b84ehU8IjXw==
 
 react-use@^17.2.4, react-use@^17.3.2, react-use@^17.4.0, react-use@^17.5.0:
-<<<<<<< HEAD
-  version "17.6.0"
-  resolved "https://registry.yarnpkg.com/react-use/-/react-use-17.6.0.tgz#2101a3a79dc965a25866b21f5d6de4b128488a14"
-  integrity sha512-OmedEScUMKFfzn1Ir8dBxiLLSOzhKe/dPZwVxcujweSj45aNM7BEGPb9BEVIgVEqEXx6f3/TsXzwIktNgUR02g==
-=======
   version "17.5.1"
   resolved "https://registry.npmjs.org/react-use/-/react-use-17.5.1.tgz"
   integrity sha512-LG/uPEVRflLWMwi3j/sZqR00nF6JGqTTDblkXK2nzXsIvij06hXl1V/MZIlwj1OKIQUtlh1l9jK8gLsRyCQxMg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@types/js-cookie" "^2.2.6"
     "@xobotyi/scrollbar-width" "^1.9.5"
@@ -8510,16 +7549,6 @@ react-use@^17.2.4, react-use@^17.3.2, react-use@^17.4.0, react-use@^17.5.0:
     tslib "^2.1.0"
 
 react-virtualized-auto-sizer@^1.0.11:
-<<<<<<< HEAD
-  version "1.0.25"
-  resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.25.tgz#b13cbc528ac200be2bd1ffa40c8bb19bcc60ac3f"
-  integrity sha512-YHsksEGDfsHbHuaBVDYwJmcktblcHGafz4ZVuYPQYuSHMUGjpwmUCrAOcvMSGMwwk1eFWj1M/1GwYpNPuyhaBg==
-
-react-window@^1.8.6:
-  version "1.8.11"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.11.tgz#a857b48fa85bd77042d59cc460964ff2e0648525"
-  integrity sha512-+SRbUVT2scadgFSWx+R1P754xHPEqvcfSfVX10QYg6POOz+WNgkN48pS+BtZNIMGiL1HYrSEiCkwsMS15QogEQ==
-=======
   version "1.0.24"
   resolved "https://registry.npmjs.org/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.24.tgz"
   integrity sha512-3kCn7N9NEb3FlvJrSHWGQ4iVl+ydQObq2fHMn12i5wbtm74zHOPhz/i64OL3c1S1vi9i2GXtZqNqUJTQ+BnNfg==
@@ -8528,7 +7557,6 @@ react-window@^1.8.6:
   version "1.8.10"
   resolved "https://registry.npmjs.org/react-window/-/react-window-1.8.10.tgz"
   integrity sha512-Y0Cx+dnU6NLa5/EvoHukUD0BklJ8qITCtVEPY1C/nL8wwoZ0b5aEw8Ff1dOVHw7fCzMt55XfJDd8S8W8LCaUCg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/runtime" "^7.0.0"
     memoize-one ">=3.1.1 <6"
@@ -8573,17 +7601,10 @@ regenerator-transform@^0.15.2:
   dependencies:
     "@babel/runtime" "^7.8.4"
 
-<<<<<<< HEAD
-regexpu-core@^6.2.0:
-  version "6.2.0"
-  resolved "https://registry.yarnpkg.com/regexpu-core/-/regexpu-core-6.2.0.tgz#0e5190d79e542bf294955dccabae04d3c7d53826"
-  integrity sha512-H66BPQMrv+V16t8xtmq+UC0CBpiTBA60V8ibS1QVReIp8T1z8hwFxqcGzm9K6lgsN7sB5edVH8a+ze6Fqm4weA==
-=======
 regexpu-core@^5.3.1:
   version "5.3.2"
   resolved "https://registry.npmjs.org/regexpu-core/-/regexpu-core-5.3.2.tgz"
   integrity sha512-RAM5FlZz+Lhmo7db9L298p2vHP5ZywrVXmVXpmAD9GuL5MPH6t9ROw1iA/wfHkQ76Qe7AaPF0nGuim96/IrQMQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     "@babel/regjsgen" "^0.8.0"
     regenerate "^1.4.2"
@@ -8687,16 +7708,6 @@ resolve-from@^5.0.0:
   integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
 
 resolve.exports@^2.0.0:
-<<<<<<< HEAD
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/resolve.exports/-/resolve.exports-2.0.3.tgz#41955e6f1b4013b7586f873749a635dea07ebe3f"
-  integrity sha512-OcXjMsGdhL4XnbShKpAcSqPMzQoYkYyhbEaeSko47MjRP9NfEQMhZkXL1DoFlt9LWQn4YttrdnV6X2OiyzBi+A==
-
-resolve@^1.14.2, resolve@^1.19.0, resolve@^1.20.0:
-  version "1.22.10"
-  resolved "https://registry.yarnpkg.com/resolve/-/resolve-1.22.10.tgz#b663e83ffb09bbf2386944736baae803029b8b39"
-  integrity sha512-NPRy+/ncIMeDlTAsuqwKIiferiawhefFJtkNSW0qZJEqMEb+qBt/77B/jGeeek+F0uOeN05CDa6HXbbIgtVX4w==
-=======
   version "2.0.2"
   resolved "https://registry.npmjs.org/resolve.exports/-/resolve.exports-2.0.2.tgz"
   integrity sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==
@@ -8705,9 +7716,8 @@ resolve@^1.14.2, resolve@^1.19.0, resolve@^1.20.0:
   version "1.22.8"
   resolved "https://registry.npmjs.org/resolve/-/resolve-1.22.8.tgz"
   integrity sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
-    is-core-module "^2.16.0"
+    is-core-module "^2.13.0"
     path-parse "^1.0.7"
     supports-preserve-symlinks-flag "^1.0.0"
 
@@ -8722,15 +7732,9 @@ reusify@^1.0.4:
   integrity sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==
 
 rfc4648@^1.3.0:
-<<<<<<< HEAD
-  version "1.5.4"
-  resolved "https://registry.yarnpkg.com/rfc4648/-/rfc4648-1.5.4.tgz#1174c0afba72423a0b70c386ecfeb80aa61b05ca"
-  integrity sha512-rRg/6Lb+IGfJqO05HZkN50UtY7K/JhxJag1kP23+zyMfrvoB0B7RWv06MbOzoc79RgCdNTiUaNsTT1AJZ7Z+cg==
-=======
   version "1.5.3"
   resolved "https://registry.npmjs.org/rfc4648/-/rfc4648-1.5.3.tgz"
   integrity sha512-MjOWxM065+WswwnmNONOT+bD1nXzY9Km6u3kzvnx8F8/HXGZdz3T6e6vZJ8Q/RIMUSp/nxqjH3GwvJDy8ijeQQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 rifm@^0.7.0:
   version "0.7.0"
@@ -8767,7 +7771,7 @@ sade@^1.7.3:
   dependencies:
     mri "^1.1.0"
 
-safe-buffer@^5.0.1, safe-buffer@^5.1.2, safe-buffer@^5.2.1:
+safe-buffer@^5.0.1, safe-buffer@^5.1.2:
   version "5.2.1"
   resolved "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz"
   integrity sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
@@ -8779,11 +7783,7 @@ safer-buffer@^2.0.2, safer-buffer@^2.1.0, safer-buffer@~2.1.0:
 
 schemes@^1.4.0:
   version "1.4.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/schemes/-/schemes-1.4.0.tgz#9d03302275e562488dd3afa7b654ed42e00569ec"
-=======
   resolved "https://registry.npmjs.org/schemes/-/schemes-1.4.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-ImFy9FbCsQlVgnE3TCWmLPCFnVzx0lHL/l+umHplDqAKd0dzFpnS6lFZIpagBlYhKwzVmlV36ec0Y1XTu8JBAQ==
   dependencies:
     extend "^3.0.0"
@@ -8815,21 +7815,6 @@ serialize-error@^8.0.1:
   dependencies:
     type-fest "^0.20.2"
 
-<<<<<<< HEAD
-=======
-set-function-length@^1.2.1:
-  version "1.2.2"
-  resolved "https://registry.npmjs.org/set-function-length/-/set-function-length-1.2.2.tgz"
-  integrity sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==
-  dependencies:
-    define-data-property "^1.1.4"
-    es-errors "^1.3.0"
-    function-bind "^1.1.2"
-    get-intrinsic "^1.2.4"
-    gopd "^1.0.1"
-    has-property-descriptors "^1.0.2"
-
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 set-harmonic-interval@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/set-harmonic-interval/-/set-harmonic-interval-1.0.1.tgz"
@@ -8847,17 +7832,10 @@ shebang-regex@^3.0.0:
   resolved "https://registry.npmjs.org/shebang-regex/-/shebang-regex-3.0.0.tgz"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
 
-<<<<<<< HEAD
 side-channel-list@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/side-channel-list/-/side-channel-list-1.0.0.tgz#10cb5984263115d3b7a0e336591e290a830af8ad"
   integrity sha512-FCLHtRD/gnpCiCHEiJLOwdmFP+wzCmDEkc9y7NsYxeF4u7Btsn1ZuwgwJGxImImHicJArLP4R0yX4c2KCrMrTA==
-=======
-side-channel@^1.0.6:
-  version "1.0.6"
-  resolved "https://registry.npmjs.org/side-channel/-/side-channel-1.0.6.tgz"
-  integrity sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   dependencies:
     es-errors "^1.3.0"
     object-inspect "^1.13.3"
@@ -8923,11 +7901,7 @@ smtp-address-parser@1.0.10:
 
 smtp-address-parser@^1.0.3:
   version "1.1.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/smtp-address-parser/-/smtp-address-parser-1.1.0.tgz#681a4cd27a2df5feb3c7425b235ac8f05ea34d49"
-=======
   resolved "https://registry.npmjs.org/smtp-address-parser/-/smtp-address-parser-1.1.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-Gz11jbNU0plrReU9Sj7fmshSBxxJ9ShdD2q4ktHIHo/rpTH6lFyQoYHYKINPJtPe8aHFnsbtW46Ls0tCCBsIZg==
   dependencies:
     nearley "^2.20.1"
@@ -9120,15 +8094,9 @@ stylis@4.2.0:
   integrity sha512-Orov6g6BB1sDfYgzWfTHDOxamtX1bE/zo104Dh9e6fqJ3PooipYyfJ0pUmrZO2wAvO8YbEyeFrkV91XTsGMSrw==
 
 stylis@^4.3.0:
-<<<<<<< HEAD
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/stylis/-/stylis-4.3.5.tgz#432cc99c81e28d7062c88d979d2163891e860489"
-  integrity sha512-K7npNOKGRYuhAFFzkzMGfxFDpN6gDwf8hcMiE+uveTVbBgm93HrNP3ZDUpKqzZ4pG7TP6fmb+EMAQPjq9FqqvA==
-=======
   version "4.3.4"
   resolved "https://registry.npmjs.org/stylis/-/stylis-4.3.4.tgz"
   integrity sha512-osIBl6BGUmSfDkyH2mB7EFvCJntXDrLhKjHTRj/rK6xLH0yuPrHULDRQzKokSOD4VoorhtKpfcfW1GAntu8now==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 supports-color@^5.3.0:
   version "5.5.0"
@@ -9158,11 +8126,7 @@ supports-preserve-symlinks-flag@^1.0.0:
 
 swr@^2.0.0:
   version "2.3.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/swr/-/swr-2.3.0.tgz#66fa45023efd4199f4e7ce608c255709a135943d"
-=======
   resolved "https://registry.npmjs.org/swr/-/swr-2.3.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-NyZ76wA4yElZWBHzSgEJc28a0u6QZvhb6w0azeL2k7+Q1gAzVK+IqQYXhVOC/mzi+HZIozrZvBVeSeOZNR2bqA==
   dependencies:
     dequal "^2.0.3"
@@ -9170,11 +8134,7 @@ swr@^2.0.0:
 
 tar@^6.1.11:
   version "6.2.1"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/tar/-/tar-6.2.1.tgz#717549c541bc3c2af15751bea94b1dd068d4b03a"
-=======
   resolved "https://registry.npmjs.org/tar/-/tar-6.2.1.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==
   dependencies:
     chownr "^2.0.0"
@@ -9275,17 +8235,10 @@ trough@^2.0.0:
   resolved "https://registry.npmjs.org/trough/-/trough-2.2.0.tgz"
   integrity sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==
 
-<<<<<<< HEAD
 ts-api-utils@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ts-api-utils/-/ts-api-utils-2.0.0.tgz#b9d7d5f7ec9f736f4d0f09758b8607979044a900"
   integrity sha512-xCt/TOAc+EOHS1XPnijD3/yzpH6qg2xppZO1YDqGoVsNXfQfzHpOdNuXwrwOU8u4ITXJyDCTyt8w5g1sZv9ynQ==
-=======
-ts-api-utils@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.npmjs.org/ts-api-utils/-/ts-api-utils-1.3.0.tgz"
-  integrity sha512-UQMIo7pb8WRomKR1/+MFVLTroIvDVtMX3K6OUir8ynLyzB8Jeriont2bTAtmNPa1ekAgN7YPDyf6V+ygrdU+eQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 ts-easing@^0.2.0:
   version "0.2.0"
@@ -9307,17 +8260,10 @@ ts-jest@^29.1.1:
     semver "^7.5.3"
     yargs-parser "^21.0.1"
 
-<<<<<<< HEAD
-tslib@^2.1.0, tslib@^2.2.0, tslib@^2.4.0, tslib@^2.4.1, tslib@^2.6.2, tslib@^2.8.0:
-  version "2.8.1"
-  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
-  integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
-=======
 tslib@^2.1.0, tslib@^2.2.0, tslib@^2.4.0, tslib@^2.4.1, tslib@^2.6.2:
   version "2.6.3"
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.6.3.tgz"
   integrity sha512-xNvxJEOUiWPGhUuUdQgAJPKOOJfGnIyKySOc09XkKsgdUV/3E2zvwZYdejjmRgPCgcym1juLH3226yA7sEFJKQ==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 tunnel-agent@^0.6.0:
   version "0.6.0"
@@ -9368,30 +8314,19 @@ typescript-eslint@^8.20.0:
     "@typescript-eslint/utils" "8.20.0"
 
 typescript@^5.3.3:
-<<<<<<< HEAD
-  version "5.7.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.7.3.tgz#919b44a7dbb8583a9b856d162be24a54bf80073e"
-  integrity sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==
-
-undici-types@~6.19.2:
-  version "6.19.8"
-  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.19.8.tgz#35111c9d1437ab83a7cdc0abae2f26d88eda0a02"
-  integrity sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==
-=======
   version "5.5.4"
   resolved "https://registry.npmjs.org/typescript/-/typescript-5.5.4.tgz"
   integrity sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
-
-undici-types@~5.26.4:
-  version "5.26.5"
-  resolved "https://registry.npmjs.org/undici-types/-/undici-types-5.26.5.tgz"
-  integrity sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==
 
 undici-types@~6.13.0:
   version "6.13.0"
   resolved "https://registry.npmjs.org/undici-types/-/undici-types-6.13.0.tgz"
   integrity sha512-xtFJHudx8S2DSoujjMd1WeWvn7KKWFRESZTMeL1RptAYERu29D6jphMjjY+vn96jvN3kVPDNxU/E13VTaXj6jg==
+
+undici-types@~6.19.2:
+  version "6.19.8"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-6.19.8.tgz#35111c9d1437ab83a7cdc0abae2f26d88eda0a02"
+  integrity sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==
 
 unicode-canonical-property-names-ecmascript@^2.0.0:
   version "2.0.0"
@@ -9495,15 +8430,6 @@ universalify@^2.0.0:
   resolved "https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz"
   integrity sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==
 
-<<<<<<< HEAD
-update-browserslist-db@^1.1.1:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.1.2.tgz#97e9c96ab0ae7bcac08e9ae5151d26e6bc6b5580"
-  integrity sha512-PPypAm5qvlD7XMZC3BujecnaOxwhrtoFR+Dqkk5Aa/6DssiH0ibKoketaj9w8LP7Bont1rYeoV5plxD7RTEPRg==
-  dependencies:
-    escalade "^3.2.0"
-    picocolors "^1.1.1"
-=======
 update-browserslist-db@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/update-browserslist-db/-/update-browserslist-db-1.1.0.tgz"
@@ -9511,7 +8437,6 @@ update-browserslist-db@^1.1.0:
   dependencies:
     escalade "^3.1.2"
     picocolors "^1.0.1"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 uri-js@^4.2.2, uri-js@^4.4.1:
   version "4.4.1"
@@ -9539,15 +8464,6 @@ use-memo-one@^1.1.1:
 
 use-sync-external-store@^1.4.0:
   version "1.4.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/use-sync-external-store/-/use-sync-external-store-1.4.0.tgz#adbc795d8eeb47029963016cefdf89dc799fcebc"
-  integrity sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==
-
-uuid@^11.0.0:
-  version "11.0.5"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.0.5.tgz#07b46bdfa6310c92c3fb3953a8720f170427fc62"
-  integrity sha512-508e6IcKLrhxKdBbcA2b4KQZlLVp2+J5UwQ6F7Drckkc5N9ZJwFa4TgWtsww9UG8fGHbm6gbV19TdM5pQ4GaIA==
-=======
   resolved "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.4.0.tgz"
   integrity sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==
 
@@ -9555,7 +8471,6 @@ uuid@^11.0.0:
   version "11.0.3"
   resolved "https://registry.npmjs.org/uuid/-/uuid-11.0.3.tgz"
   integrity sha512-d0z310fCWv5dJwnX1Y/MncBAqGMKEzlBb1AOf7z9K8ALnd0utBX/msg/fA0+sbyN1ihbMsLhrBlnl1ak7Wa0rg==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 uuid@^3.3.2, uuid@^3.4.0:
   version "3.4.0"
@@ -9747,29 +8662,17 @@ xtend@^4.0.0:
 
 xterm-addon-attach@^0.9.0:
   version "0.9.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/xterm-addon-attach/-/xterm-addon-attach-0.9.0.tgz#dd18057f147a402de1df852c1de4c8f3b63b37be"
-=======
   resolved "https://registry.npmjs.org/xterm-addon-attach/-/xterm-addon-attach-0.9.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-NykWWOsobVZPPK3P9eFkItrnBK9Lw0f94uey5zhqIVB1bhswdVBfl+uziEzSOhe2h0rT9wD0wOeAYsdSXeavPw==
 
 xterm-addon-fit@^0.8.0:
   version "0.8.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/xterm-addon-fit/-/xterm-addon-fit-0.8.0.tgz#48ca99015385141918f955ca7819e85f3691d35f"
-=======
   resolved "https://registry.npmjs.org/xterm-addon-fit/-/xterm-addon-fit-0.8.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-yj3Np7XlvxxhYF/EJ7p3KHaMt6OdwQ+HDu573Vx1lRXsVxOcnVJs51RgjZOouIZOczTsskaS+CpXspK81/DLqw==
 
 xterm@^5.3.0:
   version "5.3.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/xterm/-/xterm-5.3.0.tgz#867daf9cc826f3d45b5377320aabd996cb0fce46"
-=======
   resolved "https://registry.npmjs.org/xterm/-/xterm-5.3.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-8QqjlekLUFTrU6x7xck1MsPzPA571K5zNqWm0M0oroYEWVOptZ0+ubQSkQ3uxIEhcIHRujJy6emDWX4A7qyFzg==
 
 y18n@^5.0.5:
@@ -9784,11 +8687,7 @@ yallist@^3.0.2:
 
 yallist@^4.0.0:
   version "4.0.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/yallist/-/yallist-4.0.0.tgz#9bb92790d9c0effec63be73519e11a35019a3a72"
-=======
   resolved "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==
 
 yallist@^5.0.0:
@@ -9803,11 +8702,7 @@ yaml@^1.10.0:
 
 yaml@^2.0.0:
   version "2.7.0"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.7.0.tgz#aef9bb617a64c937a9a748803786ad8d3ffe1e98"
-=======
   resolved "https://registry.npmjs.org/yaml/-/yaml-2.7.0.tgz"
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
   integrity sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==
 
 yargs-parser@^21.0.1, yargs-parser@^21.1.1:
@@ -9839,16 +8734,6 @@ zen-observable@^0.10.0:
   integrity sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==
 
 zod-to-json-schema@^3.20.4, zod-to-json-schema@^3.21.4:
-<<<<<<< HEAD
-  version "3.24.1"
-  resolved "https://registry.yarnpkg.com/zod-to-json-schema/-/zod-to-json-schema-3.24.1.tgz#f08c6725091aadabffa820ba8d50c7ab527f227a"
-  integrity sha512-3h08nf3Vw3Wl3PK+q3ow/lIil81IT2Oa7YpQyUUDsEWbXveMesdfK1xBd2RhCkynwZndAxixji/7SYJJowr62w==
-
-zod@^3.22.4:
-  version "3.24.1"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.24.1.tgz#27445c912738c8ad1e9de1bea0359fa44d9d35ee"
-  integrity sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==
-=======
   version "3.23.2"
   resolved "https://registry.npmjs.org/zod-to-json-schema/-/zod-to-json-schema-3.23.2.tgz"
   integrity sha512-uSt90Gzc/tUfyNqxnjlfBs8W6WSGpNBv0rVsNxP/BVSMHMKGdthPYff4xtCHYloJGM0CFxFsb3NbC0eqPhfImw==
@@ -9857,7 +8742,6 @@ zod@^3.22.4:
   version "3.23.8"
   resolved "https://registry.npmjs.org/zod/-/zod-3.23.8.tgz"
   integrity sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==
->>>>>>> 2c3d200 (RHTAP-3358 Promotion pipeline for GitLab/Jenkins(+ some fixes for)
 
 zwitch@^2.0.0:
   version "2.0.4"
