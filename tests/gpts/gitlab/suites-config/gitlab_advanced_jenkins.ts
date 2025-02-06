@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Utils } from "../../../../src/apis/git-providers/utils";
 
@@ -188,7 +188,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
@@ -218,7 +217,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
@@ -231,14 +229,12 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
 
-
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
          */
         it('container component is successfully synced by gitops in staging environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
-
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
@@ -276,6 +272,13 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          */
         it('container component is successfully synced by gitops in prod environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000);
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            await checkSBOMInTrustification(kubeClient, repositoryName);
         }, 900000);
 
         /**

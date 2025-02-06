@@ -6,6 +6,8 @@ import { JenkinsCI } from "../../src/apis/ci/jenkins";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { syncArgoApplication } from "./argocd";
 import { TaskIdReponse } from "../../src/apis/backstage/types";
+import { TrustificationClient } from "../../src/apis/trustification/trustification";
+
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
@@ -301,6 +303,11 @@ export async function setSecretsForGitLabCI(gitLabProvider: GitLabProvider, gitl
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.QUAY_USERNAME ?? '');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()));
 }
 
 export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, pipelineRunNumber: number) {
@@ -346,5 +353,22 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
         }
     }
     return result;
+}
 
+export async function checkSBOMInTrustification(kubeClient: Kubernetes, componentId: string) {
+    let trust: TrustificationClient;
+    const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
+    const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
+    const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
+    const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace());
+    
+    trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl,oidcclientId, oidcclientSecret);
+
+    try {
+        await trust.initializeTpaToken();
+        const sbomData = await trust.waitForSbomSearchByName(componentId);
+        console.log('SBOM Data:', sbomData);
+    } catch (error) {
+        console.error('Error fetching SBOM data:', error);
+    }
 }
