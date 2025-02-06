@@ -116,6 +116,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
             await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
+            await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
         }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {

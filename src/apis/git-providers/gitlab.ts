@@ -389,8 +389,6 @@ export class GitLabProvider extends Utils {
                     pipeline.status === 'failed' ||
                     pipeline.status === 'canceled'
                 ) {
-                    console.log(`Pipeline finished with status: ${pipeline.status}`);
-                    console.log(`Pipeline URL: ${pipeline.web_url}`);
                     return pipeline.status;
                 }
 
