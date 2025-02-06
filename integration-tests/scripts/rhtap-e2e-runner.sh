@@ -14,7 +14,8 @@ export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-
 
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-export GITLAB_ORGANIZATION="rhtap-qe"
+export GITLAB_ORGANIZATION_PUBLIC="rhtap-qe"
+export GITLAB_ORGANIZATION_PRIVATE="rhtap-qe-private"
 
 #TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
 # Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` org in case of public quay.io and `rhtap` or in case of in-cluster quay.
