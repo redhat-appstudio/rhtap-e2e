@@ -417,13 +417,8 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  */
 export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string): Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-<<<<<<< HEAD
     let result = true;
     if (pipelineRun?.metadata?.name) {
-=======
-    var result: boolean = true;
-    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
->>>>>>> 3a6d1ff (update)
         const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
@@ -431,7 +426,6 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
         if (imageIndex !== -1) {
             console.log("The image path found is " + doc.spec.pipelineSpec.tasks[index].taskSpec.steps[imageIndex].image);
         }
-<<<<<<< HEAD
         else {
             const podName: string = pipelineRun.metadata.name + '-build-container-pod';
             // Read the yaml of the given pod
@@ -442,17 +436,4 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     }
     return result;
 
-=======
-        else
-        {
-            const podName: string = pipelineRun.metadata.name + '-build-container-pod';
-            // Read the yaml of the given pod
-            const podYaml = await kubeClient.getPodYaml(podName,developmentNamespace);
-            console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`);
-            result = false;
-        }  
-    }
-    return result;
-    
->>>>>>> 3a6d1ff (update)
 }
