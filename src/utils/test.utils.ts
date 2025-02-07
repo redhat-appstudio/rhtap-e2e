@@ -123,7 +123,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
 }
 
 export async function getBitbucketClient(kubeClient: Kubernetes) {
-    if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME ) {
+    if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
         const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
@@ -367,12 +367,13 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
  * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
+ * @param {string} eventType - The type of the event which triggered the pipeline.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if the ACS scan was successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string):Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
@@ -407,7 +408,7 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
     await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, pipelineRunNumber, 10000);
     const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
 
-    if(response?.id){
+    if (response?.id) {
         const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id, 540000);
         expect(pipelineResult).toBe("success");
     }
@@ -422,12 +423,13 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
  * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
+ * @param {string} eventType - The type of the event which triggered the pipeline.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if image verification is successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string): Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
     let result = true;
     if (pipelineRun?.metadata?.name) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
