@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -20,6 +20,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
+        const developmentEnvironmentName = 'development';
+        const stringOnRoute =  'Hello World!';
 
         let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
@@ -201,6 +203,13 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
+        }, 900000);
+
+        /**
+         * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
+         */
+        it('Check container component is successfully synced by gitops in development environment', async () => {
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
         /**
