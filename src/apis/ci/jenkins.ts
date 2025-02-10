@@ -1,5 +1,5 @@
 import axios, { Axios } from 'axios';
-import { Utils } from '../git-providers/utils';
+import { Utils } from '../scm-providers/utils';
 
 export class JenkinsCI extends Utils {
     // Jenkins server details

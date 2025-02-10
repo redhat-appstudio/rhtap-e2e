@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const generateTemplatesConfig = (ocpVersion, templateName, jenkinsEnabled, tektonEnabled, actionsEnabled, gitlabEnabled, githubEnabled, gitlabciEnabled) => {
+const generateTemplatesConfig = (ocpVersion, templateName, jenkinsEnabled, tektonEnabled, actionsEnabled, gitlabEnabled, githubEnabled, gitlabciEnabled, bitbucketEnabled) => {
     const config = {
         templates: [
             "dotnet-basic",
@@ -26,11 +26,17 @@ const generateTemplatesConfig = (ocpVersion, templateName, jenkinsEnabled, tekto
             gitlabci: gitlabciEnabled === 'true',
             host: "https://gitlab.com",
         },
+        bitbucket: {
+            tekton: tektonEnabled === 'true',
+            jenkins: jenkinsEnabled === 'true',
+            host: "https://api.bitbucket.org/2.0",
+        },
         pipeline: {
             ocp: ocpVersion,
             version: "1.4",
             github: githubEnabled === 'true',
-            gitlab: gitlabEnabled === 'true'
+            gitlab: gitlabEnabled === 'true',
+            bitbucket: bitbucketEnabled === 'true'
         }
     };
 
@@ -39,7 +45,7 @@ const generateTemplatesConfig = (ocpVersion, templateName, jenkinsEnabled, tekto
     fs.writeFileSync(filePath, jsonContent, 'utf-8');
 };
 
-const ocpVersion = process.env.OCP_VERSION
+const ocpVersion = process.env.OCP_VERSION;
 
 const templateName = process.env.SOFTWARE_TEMPLATES_FILE || 'softwareTemplates.json';
 const jenkinsEnabled = process.env.JENKINS_ENABLED || 'false';
@@ -48,6 +54,7 @@ const actionsEnabled = process.env.ACTIONS_ENABLED || 'false' ;  // Github Actio
 const gitlabEnabled = process.env.GITLAB_ENABLED || 'false';
 const githubEnabled = process.env.GITHUB_ENABLED || 'false';
 const gitlabciEnabled = process.env.GITLABCI_ENABLED || 'false';
+const bitbucketEnabled = process.env.BITBUCKET_ENABLED || 'false';
 
 
-generateTemplatesConfig(ocpVersion, templateName, jenkinsEnabled, tektonEnabled, actionsEnabled, gitlabEnabled, githubEnabled, gitlabciEnabled);
+generateTemplatesConfig(ocpVersion, templateName, jenkinsEnabled, tektonEnabled, actionsEnabled, gitlabEnabled, githubEnabled, gitlabciEnabled, bitbucketEnabled);

@@ -81,6 +81,7 @@ spec:
         export ACTIONS_ENABLED=$( [ "$(params.pipeline_config)" = "actions" ] && echo true || echo false )
         export GITLAB_ENABLED=$( [ "$(params.scm_config)" = "gitlab" ] && echo true || echo false )
         export GITHUB_ENABLED=$( [ "$(params.scm_config)" = "github" ] && echo true || echo false )
+        export BITBUCKET_ENABLED=$( [ "$(params.scm_config)" = "bitbucket" ] && echo true || echo false )
         export GITLABCI_ENABLED=$( [ "$(params.pipeline_config)" = "gitlabci" ] && echo true || echo false )
 
         if [ "$GIT_REPO" = "rhtap-e2e" ]; then

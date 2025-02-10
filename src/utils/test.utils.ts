@@ -1,5 +1,6 @@
-import { GitLabProvider } from "../../src/apis/git-providers/gitlab";
-import { GitHubProvider } from "../../src/apis/git-providers/github";
+import { GitLabProvider } from "../../src/apis/scm-providers/gitlab";
+import { GitHubProvider } from "../../src/apis/scm-providers/github";
+import { BitbucketProvider } from "../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
 import { JenkinsCI } from "../../src/apis/ci/jenkins";
@@ -25,6 +26,21 @@ export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeC
 
     //Check, if repo exists and delete
     await gitLabProvider.deleteProject(gitlabRepositoryID);
+
+    //Delete app of apps from argo
+    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
+}
+
+export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider, kubeClient: Kubernetes, rootNamespace: string, bitbucketWorkspace: string, repositoryName: string) {
+    //Check, if gitops repo exists and delete
+    if (await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`)) {
+        await bitbucketClient.deleteRepository(bitbucketWorkspace, `${repositoryName}-gitops`);
+    }
+
+    //Check, if repo exists and delete
+    if (await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, repositoryName)) {
+        await bitbucketClient.deleteRepository(bitbucketWorkspace, repositoryName);
+    }
 
     //Delete app of apps from argo
     await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
@@ -98,6 +114,16 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     }
 }
 
+export async function getBitbucketClient(kubeClient: Kubernetes) {
+    if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME ) {
+        return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
+    } else {
+        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
+        return new BitbucketProvider(bitbucketUserName, bitbucketAppPassword);
+    }
+}
+
 export async function getCosignPassword(kubeClient: Kubernetes) {
     if (process.env.COSIGN_SECRET_PASSWORD) {
         return process.env.COSIGN_SECRET_PASSWORD;
@@ -152,7 +178,7 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (gitLabOrganization === '') {
@@ -170,7 +196,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
 
 export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
-        throw new Error("The 'APPLICATION_TEST_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (githubOrganization === '') {
@@ -186,6 +212,31 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
     if (!namespaceExists) {
         throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
     }
+}
+
+export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+    if (componentRootNamespace === '') {
+        throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketWorkspace === '') {
+        throw new Error("The 'BITBUCKET_WORKSPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (bitbucketProject === '') {
+        throw new Error("The 'BITBUCKET_PROJECT' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    if (quayImageOrg === '') {
+        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    }
+
+    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace);
+
+    if (!namespaceExists) {
+        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+    }
+
 }
 
 /**
@@ -251,6 +302,44 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
             ciType: ciType
         }
     };
+    return taskCreatorOptions;
+}
+
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    *
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} quayImageName Registry image name for the component to be pushed.
+    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} bitbucketUsername Bitbucket username to create repo in Bitbucket.
+    * @param {string} bitbucketWorkspace Bitbucket workspace where repo to be created in Bitbucket.
+    * @param {string} bitbucketProject Bitbucket project where repo to be created in Bitbucket.
+    * @param {string} repositoryName Name of the Bitbucket repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createTaskCreatorOptionsBitbucket(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, bitbucketUsername: string, bitbucketWorkspace: string, bitbucketProject: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+    const taskCreatorOptions: ScaffolderScaffoldOptions = {
+        templateRef: `template:default/${softwareTemplateName}`,
+        values: {
+            branch: 'main',
+            bbHost: 'bitbucket.org',
+            hostType: 'Bitbucket',
+            imageName: imageName,
+            imageOrg: imageOrg,
+            imageRegistry: imageRegistry,
+            name: repositoryName,
+            namespace: componentRootNamespace,
+            owner: "user:guest",
+            repoName: repositoryName,
+            bbOwner: bitbucketUsername,
+            workspace: bitbucketWorkspace,
+            project: bitbucketProject,
+            ciType: ciType
+        }
+    };
+
     return taskCreatorOptions;
 }
 

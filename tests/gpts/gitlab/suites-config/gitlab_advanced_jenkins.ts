@@ -1,12 +1,12 @@
 import { beforeAll, expect, it, describe } from "@jest/globals";
 import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub";
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
-import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
+import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
-import { Utils } from "../../../../src/apis/git-providers/utils";
+import { Utils } from "../../../../src/apis/scm-providers/utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub

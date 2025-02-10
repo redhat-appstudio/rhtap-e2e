@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/git-providers/github";
+import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
 
