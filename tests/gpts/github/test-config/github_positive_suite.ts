@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
 
 
 /**
@@ -35,6 +35,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         let kubeClient: Kubernetes;
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -43,6 +44,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         */
         beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -191,7 +193,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
             }
         });
     });

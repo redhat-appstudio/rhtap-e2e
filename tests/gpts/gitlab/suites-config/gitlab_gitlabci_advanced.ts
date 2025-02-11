@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation, waitForGitLabCIPipelineToFinish } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation, waitForGitLabCIPipelineToFinish } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -40,6 +40,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         let gitopsPromotionMergeRequestNumber: number;
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
@@ -58,6 +59,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
 
         beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -217,7 +219,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
         });
     });

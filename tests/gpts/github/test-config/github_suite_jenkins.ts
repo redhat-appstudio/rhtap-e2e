@@ -4,7 +4,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
 import { Utils } from '../../../../src/apis/scm-providers/utils';
 
 /**
@@ -33,6 +33,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
@@ -47,6 +48,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -135,7 +137,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName);
             await jenkinsClient.waitForJobCreation(repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**
@@ -185,7 +187,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
                 await jenkinsClient.deleteJenkinsJob(repositoryName);
             }
         });
