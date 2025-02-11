@@ -18,8 +18,9 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
@@ -48,7 +49,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
         });
 
         /**

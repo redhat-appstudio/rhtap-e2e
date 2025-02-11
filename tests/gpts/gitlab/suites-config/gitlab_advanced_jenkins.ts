@@ -41,6 +41,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
@@ -62,7 +63,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitLabProvider = await getGitLabProvider(kubeClient);
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -174,7 +175,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         }, 120000);
 
         /**
-        * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+        * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName);
@@ -194,7 +195,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
 
 
         /**
-         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${softwareTemplateName} GitOps jenkins job to finish`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
@@ -224,7 +225,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
 
 
         /**
-         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Wait for ${softwareTemplateName} jenkins job to finish for promotion from development to stage`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
@@ -264,7 +265,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         }, 120000);
 
         /**
-        * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+        * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish promotion pipeline for production environment`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");

@@ -242,7 +242,7 @@ export class Kubernetes extends Utils {
     /**
      * Accepts the pipelinerun name and fetches pipelinerun yaml output.
      * Returns the yaml value in the variable 'doc'
-     * @param {string} namespace - The namespace default value is rhtap-app-development.
+     * @param {string} namespace - The namespace default value is rhtap-app-ci.
      * @param {string} name - The name of the pipelinerun
      * @throws This function does not throw directly, but may throw errors during API calls or retries.
      */
@@ -445,7 +445,7 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
+        return this.getSecretPartialName("rhtap-app-ci", "cosign-pub", "cosign.pub", false);
     }
 
     /**

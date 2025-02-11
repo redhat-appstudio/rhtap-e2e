@@ -34,8 +34,9 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         let RHTAPGitopsNamespace: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
@@ -52,7 +53,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitLabProvider = await getGitLabProvider(kubeClient);
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -146,7 +147,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         }, 120000);
 
         /**
-        * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+        * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName);
