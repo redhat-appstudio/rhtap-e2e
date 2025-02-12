@@ -14,15 +14,18 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket
  * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
-export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
+export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Bitbucket provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+<<<<<<< HEAD
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stringOnRoute =  'Hello World!';
+=======
+>>>>>>> 47d9ec9 (add tekton advanced tests)
 
         let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
@@ -161,7 +164,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
             const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
-            expect(commit).not.toBe(undefined);
+            expect(commit).toBe(true);
 
         }, 120000);
 

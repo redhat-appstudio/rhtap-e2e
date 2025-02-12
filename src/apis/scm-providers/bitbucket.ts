@@ -84,7 +84,7 @@ export class BitbucketProvider extends Utils {
         repoBranch: string,
         fileName: string,
         fileContent: string,
-    ):Promise<string | undefined> {
+    ):Promise<boolean> {
         try {
 
             const commitData = qs.stringify({
@@ -103,11 +103,12 @@ export class BitbucketProvider extends Utils {
                 }
             );
 
-            console.log('Commit successfully created:', response.data);
-            return response.data;
+            console.log(`Changes in file ${fileName} successfully committed for branch ${repoBranch}`);
+            return response.status === 201;
 
         } catch (error) {
             console.error('Error committing file:', error);
+            return false;
         }
     }
 
@@ -145,7 +146,7 @@ export class BitbucketProvider extends Utils {
      * @param fileName file name in bitbucket repo to add/update in PR
      * @param fileContent file content to be committed in file
      */
-    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string):Promise<string | undefined> {
+    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string):Promise<number> {
         const testBranch = `test-${generateRandomChars(4)}`;
 
         // create new branch
@@ -187,7 +188,8 @@ export class BitbucketProvider extends Utils {
             return prResponse.data.id;
 
         } catch(error){
-            console.error("Error creating PR:", error);
+            console.log(error);
+            throw new Error("Failed to create merge request. Check below error");
         }
     }
 
@@ -197,7 +199,7 @@ export class BitbucketProvider extends Utils {
      * @param repoSlug valid bitbucket repository where PR is open
      * @param pullRequestID valid ID of pull request to merge
      */
-    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: string) {
+    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: number) {
         const mergeData = {
             "type": "commit",
             "message": "PR merge by automated tests",
@@ -215,6 +217,30 @@ export class BitbucketProvider extends Utils {
         } catch (error) {
             console.log("Error merging PR", error);
         }
+    }
+
+    public async createPromotionPullrequest(workspace: string, componentName: string, fromEnvironment: string, toEnvironment: string):Promise<number> {
+        const pattern = /- image: (.*)/;
+        let extractedImage;
+
+        try {
+            const fromEnvironmentContent = await this.bitbucket.get(`/repositories/${workspace}/${componentName}-gitops/src/main/components/${componentName}/overlays/${fromEnvironment}/deployment-patch.yaml`);
+            const matchImage = fromEnvironmentContent.data.match(pattern);
+            if (matchImage && matchImage.length > 1) {
+                extractedImage = matchImage[1];
+                console.log("Extracted image:", extractedImage);
+            } else {
+                throw new Error("Image not found in the gitops repository path");
+            }
+
+            const toEnvironmentContent = await this.bitbucket.get(`/repositories/${workspace}/${componentName}-gitops/src/main/components/${componentName}/overlays/${toEnvironment}/deployment-patch.yaml`);
+            const newContent = toEnvironmentContent.data.replace(pattern, `- image: ${extractedImage}`);
+            return await this.createPullrequest(workspace, `${componentName}-gitops`, `components/${componentName}/overlays/${toEnvironment}/deployment-patch.yaml`, newContent);
+        } catch(error){
+            console.log(error);
+            throw new Error("Failed to create merge request. Check below error");
+        }
+
     }
 
 }
