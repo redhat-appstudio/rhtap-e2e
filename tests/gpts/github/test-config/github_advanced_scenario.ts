@@ -33,7 +33,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
-        const quayImageName = "rhtap-qe";
 
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -42,7 +41,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe"+ `${gptTemplate}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
@@ -69,8 +69,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
-        });
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, developmentNamespace, kubeClient);
+        })
 
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
@@ -85,7 +85,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {            
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, ImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
