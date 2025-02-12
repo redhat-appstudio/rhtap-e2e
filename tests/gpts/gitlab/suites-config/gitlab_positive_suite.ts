@@ -1,10 +1,10 @@
 import { beforeAll, expect, it, describe } from "@jest/globals";
 import { DeveloperHubClient } from "../../../../src/apis/backstage/developer-hub";
 import { TaskIdReponse } from "../../../../src/apis/backstage/types";
-import { GitLabProvider } from "../../../../src/apis/git-providers/gitlab";
+import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPGitopsNamespace, getRHTAPRootNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -28,6 +28,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         let pipelineAsCodeRoute: string;
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
         
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
@@ -41,6 +42,8 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     
         beforeAll(async ()=> {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+
             kubeClient = new Kubernetes();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -151,11 +154,29 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         }, 900000);
 
         /**
+         * Check if the pipelinerun yaml has the rh-syft image path mentioned
+         * if failed to figure out the image path ,return pod yaml for reference
+         */
+        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+        }, 900000);
+        
+        /**
+         * verify if the ACS Scan is successfully done from the logs of task steps
+         */
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
+        }, 900000);
+
+        /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
         });
     });

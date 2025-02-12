@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/git-providers/github";
+import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -28,6 +28,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
+        let RHTAPGitopsNamespace: string;
         let RHTAPRootNamespace: string;
 
         let developerHubTask: TaskIdReponse;
@@ -41,6 +42,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
@@ -170,7 +172,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
             }
         });
     });

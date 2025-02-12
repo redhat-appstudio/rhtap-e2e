@@ -17,11 +17,17 @@ interface softwareTemplatesConfig {
         gitlabci: boolean;
         host: string;
     };
+    bitbucket: {
+        tekton: boolean;
+        jenkins: boolean;
+        host: string;
+    };
     pipeline: {
         ocp: string;
         version: string;
         github: boolean;
         gitlab: boolean;
+        bitbucket: boolean;
     };
 }
 
@@ -41,15 +47,21 @@ const softwareTemplateParserValidator = z.object({
         gitlabci: z.boolean(),
         host: z.string(),
     }),
+    bitbucket: z.object({
+        tekton: z.boolean(),
+        jenkins: z.boolean(),
+        host: z.string(),
+    }),
     pipeline: z.object({
         ocp: z.string(),
         version: z.string(),
         github: z.boolean(),
         gitlab: z.boolean(),
+        bitbucket: z.boolean(),
     })
 }).refine(data => {
-    if (! data.pipeline.github && ! data.pipeline.gitlab) {
-        throw new Error("Both Git providers were deactivated. At least one of them can be activated");
+    if (!data.pipeline.github && !data.pipeline.gitlab && !data.pipeline.bitbucket) {
+        throw new Error("All SCM providers were deactivated. At least one of them can be activated");
     }
     // if pipeline.github is active, one of the tekton, jenkins or actions must be active
     if (data.pipeline.github && (!data.github.tekton && !data.github.jenkins && !data.github.actions)) {
@@ -58,6 +70,10 @@ const softwareTemplateParserValidator = z.object({
     // if pipeline.gitlab is active, one of the tekton, jenkins or gitlabci must be active
     if (data.pipeline.gitlab && (!data.gitlab.tekton && !data.gitlab.jenkins && !data.gitlab.gitlabci)) {
         throw new Error("Gitlab provider activated but none of the CI/CD options were activated. 'tekton', 'jenkins' or 'gitlabci' must be true");
+    }
+    // if pipeline.bitbucket is active, one of the tekton or jenkins must be active
+    if (data.pipeline.bitbucket && (!data.bitbucket.tekton && !data.bitbucket.jenkins )) {
+        throw new Error("Bitbucket provider activated but none of the CI/CD options were activated. 'tekton' or 'jenkins' must be true");
     }
 
     return data;

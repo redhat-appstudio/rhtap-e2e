@@ -9,12 +9,16 @@ export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 # Load secrets from files
 export GITLAB_TOKEN="$(cat /usr/local/rhtap-cli-install/gitlab_token)"
 export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
+export BITBUCKET_APP_PASSWORD="$(cat /usr/local/rhtap-cli-install/bitbucket-app-password)"
 export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
 export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
 
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export GITLAB_ORGANIZATION="rhtap-qe"
+export BITBUCKET_USERNAME="rhtap-test-admin"
+export BITBUCKET_WORKSPACE="rhtap-test"
+export BITBUCKET_PROJECT="RHTAP"
 
 #TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
 # Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` 
@@ -41,7 +45,7 @@ if [[ $(kubectl get secrets -n rhtap |grep rhtap-artifactory-integration) ]];the
 fi
 
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
-export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap -o jsonpath='{.spec.host}')"
+export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap-dh -o jsonpath='{.spec.host}')"
 
 post_actions() {
     local exit_code=$?

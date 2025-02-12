@@ -1,7 +1,7 @@
 import { CoreV1Api, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, V1ObjectMeta } from "@kubernetes/client-node";
 import { PipelineRunKind, TaskRunKind } from '@janus-idp/shared-react';
 import * as path from "node:path";
-import { Utils } from "../git-providers/utils";
+import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
 import { OpenshiftRoute } from "./types/oc.routes.cr";
@@ -9,7 +9,7 @@ import { OpenshiftRoute } from "./types/oc.routes.cr";
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE || 'rhtap';
+const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ??'rhtap-gitops';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -279,7 +279,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPRootNamespace, 'applications', name);
+                const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPGitopsNamespace, 'applications', name);
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
@@ -440,7 +440,7 @@ export class Kubernetes extends Utils {
             return "";
         }
     }
-    
+
     /**
     * Gets cosign public key.
     */
@@ -500,5 +500,24 @@ export class Kubernetes extends Utils {
     */
     public async getTUFUrl(namespace: string): Promise<string> {
         return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+    }
+
+     /**
+     * Returns the pod yaml file given podname and namespace
+     * 
+     * @param {string} PodName - The name of the pod
+     * @returns {Promise<boolean>} A Promise that resolves to true if the namespace exists, otherwise false.
+     */
+    public async getPodYaml(PodName: string, nameSpace: string): Promise<string | null> {
+        const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
+        try {
+            const response = await k8sCoreApi.readNamespacedPod(PodName, nameSpace);
+            const podYaml = dumpYaml(response.body);
+            return podYaml;
+        }
+        catch (error) {
+            console.error('Error fetching pod:', error);
+            return null;
+        }
     }
 }

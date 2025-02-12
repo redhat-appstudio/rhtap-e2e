@@ -3,9 +3,9 @@ import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
-import { GitHubProvider } from "../../../../src/apis/git-providers/github";
+import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -55,6 +55,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let extractedBuildImage: string;
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -63,6 +64,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         beforeAll(async()=> {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -218,12 +220,21 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 expect(finished).toBe(true);
             }
         }, 900000);
+
+        /**
+        * Check if the pipelinerun yaml has the rh-syft image path mentioned
+        * if failed to figure out the image path ,return pod yaml for reference
+        */
+        it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            expect(result).toBe(true);
+        }, 900000);
         
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -233,7 +244,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          */
         it('container component is successfully synced by gitops in development environment', async ()=> {
             console.log("syncing argocd application in development environment");
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${developmentEnvironmentName}`);
+            await syncArgoApplication(RHTAPGitopsNamespace, `${repositoryName}-${developmentEnvironmentName}`);
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
 
@@ -300,7 +311,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         it('container component is successfully synced by gitops in stage environment', async ()=> {
             console.log("syncing argocd application in stage environment");
-            await syncArgoApplication(RHTAPRootNamespace, `${repositoryName}-${stagingEnvironmentName}`);
+            await syncArgoApplication(RHTAPGitopsNamespace, `${repositoryName}-${stagingEnvironmentName}`);
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, stageNamespace);
 
@@ -383,7 +394,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
             }
         });
     });
