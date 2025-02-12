@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 
 /**
@@ -31,6 +31,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
 
         let gitlabRepositoryID: number;
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentNamespace = `${componentRootNamespace}-development`;
@@ -46,6 +47,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         beforeAll(async () => {
             kubeClient = new Kubernetes();
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
@@ -165,7 +167,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
         });
     });

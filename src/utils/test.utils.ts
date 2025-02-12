@@ -8,7 +8,7 @@ import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { syncArgoApplication } from "./argocd";
 import { TaskIdReponse } from "../../src/apis/backstage/types";
 
-export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, rootNamespace: string, githubOrganization: string, repositoryName: string) {
+export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, gitopsNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
     await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, `${repositoryName}-gitops`);
 
@@ -16,10 +16,10 @@ export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeCli
     await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, repositoryName);
 
     //Delete app of apps from argo
-    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
+    await kubeClient.deleteApplicationFromNamespace(gitopsNamespace, `${repositoryName}-app-of-apps`);
 }
 
-export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeClient: Kubernetes, rootNamespace: string, gitLabOrganization: string, gitlabRepositoryID: number, repositoryName: string) {
+export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeClient: Kubernetes, gitopsNamespace: string, gitLabOrganization: string, gitlabRepositoryID: number, repositoryName: string) {
     //Check, if gitops repo exists and delete
     const gitlabRepositoryIDGitOps = await gitLabProvider.checkIfRepositoryExists(gitLabOrganization, `${repositoryName}-gitops`);
     await gitLabProvider.deleteProject(gitlabRepositoryIDGitOps);
@@ -28,10 +28,10 @@ export async function cleanAfterTestGitLab(gitLabProvider: GitLabProvider, kubeC
     await gitLabProvider.deleteProject(gitlabRepositoryID);
 
     //Delete app of apps from argo
-    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
+    await kubeClient.deleteApplicationFromNamespace(gitopsNamespace, `${repositoryName}-app-of-apps`);
 }
 
-export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider, kubeClient: Kubernetes, rootNamespace: string, bitbucketWorkspace: string, repositoryName: string) {
+export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider, kubeClient: Kubernetes, gitopsNamespace: string, bitbucketWorkspace: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
     if (await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`)) {
         await bitbucketClient.deleteRepository(bitbucketWorkspace, `${repositoryName}-gitops`);
@@ -43,7 +43,7 @@ export async function cleanAfterTestBitbucket(bitbucketClient: BitbucketProvider
     }
 
     //Delete app of apps from argo
-    await kubeClient.deleteApplicationFromNamespace(rootNamespace, `${repositoryName}-app-of-apps`);
+    await kubeClient.deleteApplicationFromNamespace(gitopsNamespace, `${repositoryName}-app-of-apps`);
 }
 
 export async function waitForStringInPageContent(
@@ -79,11 +79,19 @@ export async function getRHTAPRootNamespace() {
     return process.env.RHTAP_ROOT_NAMESPACE ?? 'rhtap';
 }
 
+export async function getRHTAPGitopsNamespace() {
+    return process.env.RHTAP_GITOPS_NAMESPACE ?? 'rhtap-gitops';
+}
+
+export async function getRHTAPRHDHNamespace() {
+    return process.env.RHTAP_RHDH_NAMESPACE ?? 'rhtap-dh';
+}
+
 export async function getGitHubClient(kubeClient: Kubernetes) {
     if (process.env.GITHUB_TOKEN) {
         return new GitHubProvider(process.env.GITHUB_TOKEN);
     } else {
-        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "rhtap-github-integration", "token"));
+        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
     }
 }
 
@@ -91,7 +99,7 @@ export async function getDeveloperHubClient(kubeClient: Kubernetes) {
     if (process.env.RED_HAT_DEVELOPER_HUB_URL) {
         return new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
     } else {
-        return new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(await getRHTAPRootNamespace()));
+        return new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(await getRHTAPRHDHNamespace()));
     }
 }
 
@@ -99,9 +107,9 @@ export async function getJenkinsCI(kubeClient: Kubernetes) {
     if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN) {
         return new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
     } else {
-        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
-        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
-        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
+        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
+        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
+        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
         return new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
     }
 }
@@ -110,7 +118,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     if (process.env.GITLAB_TOKEN) {
         return new GitLabProvider(process.env.GITLAB_TOKEN);
     } else {
-        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
+        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
     }
 }
 
@@ -118,8 +126,8 @@ export async function getBitbucketClient(kubeClient: Kubernetes) {
     if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME ) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
-        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
-        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
+        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
         return new BitbucketProvider(bitbucketUserName, bitbucketAppPassword);
     }
 }
@@ -167,7 +175,7 @@ export async function waitForComponentCreation(backstageClient: DeveloperHubClie
 
 export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string) {
     console.log(`syncing argocd application in ${environmentName} environment`);
-    await syncArgoApplication(await getRHTAPRootNamespace(), `${repositoryName}-${environmentName}`);
+    await syncArgoApplication(await getRHTAPGitopsNamespace(), `${repositoryName}-${environmentName}`);
     const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName);
     const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000);
     if (!isReady) {

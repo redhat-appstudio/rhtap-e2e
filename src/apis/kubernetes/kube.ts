@@ -10,7 +10,7 @@ import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middl
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const RHTAPRootNamespace = process.env.RHTAP_ROOT_NAMESPACE ??'rhtap';
+const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ??'rhtap-gitops';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -278,7 +278,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPRootNamespace, plural: 'applications', name: name});
+                const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPGitopsNamespace, plural: 'applications', name: name});
                 const application = body as ApplicationSpec;
 
                 if (application.status && application.status.sync && application.status.sync.status &&
