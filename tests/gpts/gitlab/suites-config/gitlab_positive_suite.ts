@@ -35,8 +35,8 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
     
-        const imageName = "rhtap-qe";
-        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
+        const imageName = "rhtap-qe"+ `${softwareTemplateName}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
     
         beforeAll(async ()=> {

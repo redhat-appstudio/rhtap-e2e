@@ -34,10 +34,10 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const imageName = "rhtap-qe";
-        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
+        const imageName = "rhtap-qe"+ `${gptTemplate}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
-
+        
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
