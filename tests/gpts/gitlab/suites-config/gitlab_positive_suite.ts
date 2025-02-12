@@ -158,7 +158,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace, 'Push');
             expect(result).toBe(true);
         }, 900000);
         
@@ -166,7 +166,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace, 'Push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
