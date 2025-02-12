@@ -3,26 +3,25 @@ import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "../github/test-config/config.ts";
 
 /**
- * Tests Python template in Bitbucket with Tekton
+ * Tests Go template in Bitbucket with Tekton
  *
  * @group tekton
- * @group python
+ * @group go
  * @group bitbucket
  * @group basic
  */
 
-const pythonTemplateName = 'python';
+const golangTemplateName = 'go';
 const stringOnRoute =  'Hello World!';
 
-const runPythonBasicTests = () => {
+const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(pythonTemplateName) && configuration.pipeline.bitbucket && configuration.bitbucket.tekton) {
-
-        bitbucketSoftwareTemplateTests(pythonTemplateName, stringOnRoute);
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
+        bitbucketSoftwareTemplateTests(golangTemplateName, stringOnRoute);
     } else {
-        skipSuite(pythonTemplateName);
+        skipSuite(golangTemplateName);
     }
 };
 
-runPythonBasicTests();
+runGolangBasicTests();
