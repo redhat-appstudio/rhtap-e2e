@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, checkIfAcsScanIsPass, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, checkIfAcsScanIsPass, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, verifySyftImagePath, verifyPipelineRunByRepository } from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -135,7 +135,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             const repositoryExists = await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, gitopsRepoName);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
+            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, gitopsRepoName, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -161,14 +161,13 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         }, 120000);
 
         /**
-         * Creates an empty commit in the repository and expects a PipelineRun to start.
+         * Creates an commit in the repository and expects a PipelineRun to start.
          * This step is used to trigger a PipelineRun by creating a pull request.
          *
          * @throws {Error} Throws an error if the creation of the pull request fails.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
             const prID = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
-            // console.log("prID: ", typeof prID);
 
             // Set the pull request number if creation was successful
             if (prID !== undefined) {
@@ -182,23 +181,8 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, developmentNamespace, 'pull_request');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -212,23 +196,8 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, developmentNamespace, 'push');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -263,23 +232,8 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(gitopsRepoName, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, developmentNamespace, 'pull_request');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -303,23 +257,8 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, developmentNamespace, 'pull_request');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**

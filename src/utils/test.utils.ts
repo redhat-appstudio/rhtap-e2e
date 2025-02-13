@@ -449,3 +449,26 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     return result;
 
 }
+
+export async function verifyPipelineRunByRepository(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string, eventType: string) {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+    let result = true;
+    if (pipelineRun === undefined) {
+        throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+    }
+
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+        const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
+
+        for (const iterator of tskRuns) {
+            if (iterator.status && iterator.status.podName) {
+                await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
+            }
+        }
+        if (finished !== true) {
+            result = false;
+        }
+    }
+    return result;
+}

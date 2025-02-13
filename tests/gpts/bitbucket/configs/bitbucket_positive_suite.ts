@@ -147,7 +147,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
             const repositoryExists = await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
+            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, `${repositoryName}-gitops`, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
