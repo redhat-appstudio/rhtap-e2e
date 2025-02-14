@@ -37,6 +37,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
 
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
@@ -181,7 +182,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, developmentNamespace, 'pull_request');
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, ciNamespace, 'pull_request');
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -196,7 +197,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, developmentNamespace, 'push');
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, ciNamespace, 'push');
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -205,7 +206,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
             expect(result).toBe(true);
         }, 900000);
 
@@ -213,7 +214,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -232,7 +233,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, developmentNamespace, 'pull_request');
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, ciNamespace, 'pull_request');
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -247,7 +248,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
          */
         it('Check container component is successfully synced by gitops in staging environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
         /**
@@ -257,7 +258,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, developmentNamespace, 'pull_request');
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, gitopsRepoName, ciNamespace, 'pull_request');
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
