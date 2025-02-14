@@ -12,7 +12,7 @@
 OCP: 4.17
 ACS: new            
 Registry: quay
-TPA: new           
+TPA: new
 SCM: github         
-Pipeline: tekton
+Pipeline: jenkins
 AUTH: github
