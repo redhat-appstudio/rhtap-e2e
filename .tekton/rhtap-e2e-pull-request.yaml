@@ -131,6 +131,25 @@ spec:
         - name: kind
           value: task
         resolver: bundles
+    - name: static-code-analysis
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: $(params.git-url)
+          - name: revision
+            value: $(params.revision)
+          - name: pathInRepo
+            value: .tekton/eslint.yaml
+      params:
+        - name: git-url
+          value: $(params.git-url)
+        - name: git-revision
+          value: $(params.revision)
+        - name: config-file
+          value: eslint.config.mjs
+      runAfter:
+        - init
     - name: clone-repository
       params:
       - name: url
@@ -142,7 +161,7 @@ spec:
       - name: ociArtifactExpiresAfter
         value: $(params.image-expires-after)
       runAfter:
-      - init
+      - static-code-analysis
       taskRef:
         params:
         - name: name
