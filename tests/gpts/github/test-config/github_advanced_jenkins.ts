@@ -193,7 +193,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace,developmentEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
         /**
@@ -251,7 +251,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
          */
         it('container component is successfully synced by gitops in staging environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
 
@@ -296,7 +296,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in prod environment
          */
         it('container component is successfully synced by gitops in prod environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
         /**

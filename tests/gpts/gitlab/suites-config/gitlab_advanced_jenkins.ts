@@ -192,7 +192,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
@@ -222,7 +221,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
          */
@@ -235,14 +233,12 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
 
-
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
          */
         it('container component is successfully synced by gitops in staging environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
-
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment

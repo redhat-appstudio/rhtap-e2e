@@ -23,7 +23,6 @@ export class Kubernetes extends Utils {
      */
     constructor() {
         super();
-
         this.kubeConfig = new KubeConfig();
         this.kubeConfig.loadFromDefault();
     }
@@ -38,8 +37,7 @@ export class Kubernetes extends Utils {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             const response = await k8sCoreApi.readNamespace(name);
-
-            if (response.body && response.body.metadata && response.body.metadata.name === name) {
+            if (response?.body?.metadata?.name === name) {
                 return true;
             }
 
@@ -61,8 +59,7 @@ export class Kubernetes extends Utils {
         try {
             const { body: taskRunList } = await customObjectsApi.listClusterCustomObject('tekton.dev', 'v1', 'taskruns');
             const taskRunInterface = taskRunList as TaskRunList;
-            return taskRunInterface.items.filter(taskRun =>
-                taskRun.metadata && taskRun.metadata.name && taskRun.metadata.name.startsWith(pipelineRunName));
+            return taskRunInterface.items.filter(taskRun => taskRun?.metadata?.name?.startsWith(pipelineRunName));
 
         } catch (error) {
             console.error(error);
@@ -104,7 +101,7 @@ export class Kubernetes extends Utils {
             const { body: pod } = await k8sApi.readNamespacedPod(podName, namespace);
 
             // Check if pod.spec is defined
-            if (pod.spec && pod.spec.containers) {
+            if (pod.spec?.containers) {
                 // Iterate over each container in the pod
                 for (const container of pod.spec.containers) {
                     // Get logs from each container
@@ -212,7 +209,7 @@ export class Kubernetes extends Utils {
                 const { body } = await customObjectsApi.getNamespacedCustomObject('tekton.dev', 'v1', namespace, 'pipelineruns', name);
                 const pr = body as PipelineRunKind;
 
-                if (pr.status && pr.status.conditions) {
+                if (pr.status?.conditions) {
                     const pipelineHasFinishedSuccessfully = pr.status.conditions.some(
                         (condition) => condition.status === 'True' && condition.type === 'Succeeded'
                     );
@@ -282,8 +279,8 @@ export class Kubernetes extends Utils {
                 const { body } = await customObjectsApi.getNamespacedCustomObject('argoproj.io', 'v1alpha1', RHTAPGitopsNamespace, 'applications', name);
                 const application = body as ApplicationSpec;
 
-                if (application.status && application.status.sync && application.status.sync.status &&
-                    application.status.health && application.status.health.status) {
+                if (application.status?.sync?.status &&
+                    application.status.health?.status) {
 
                     if (application.status.sync.status === 'Synced' && application.status.health.status === 'Healthy') {
                         return true;
@@ -445,21 +442,21 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", false);
     }
 
     /**
     * Gets cosign private key.
     */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", false);
     }
 
     /**
     * Gets cosign password.
     */
     public async getCosignPassword(): Promise<string> {
-        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "password", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", false);
     }
 
     /**
@@ -519,5 +516,55 @@ export class Kubernetes extends Utils {
             console.error('Error fetching pod:', error);
             return null;
         }
+    }
+
+    /**
+    * Gets bombastic api URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationBombasticApiUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "bombastic_api_url");
+    }
+
+    /**
+    * Gets oidc issuer URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationOidcIssuerUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_issuer_url");
+    }
+
+    /**
+    * Gets oidc client ID.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationClientId(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_id");
+    }
+
+    /**
+    * Gets oidc client secret.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationClientSecret(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_secret");
+    }
+
+    /**
+    * Gets supported cyclone dx version.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationSupportedCycloneDXVersion(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
     }
 }

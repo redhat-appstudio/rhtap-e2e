@@ -9,7 +9,7 @@ export class GitLabProvider extends Utils {
     private readonly extractImagePatternFromGitopsManifest;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage="quay.io/jkopriva/rhtap-jenkins-agent:0.1";
+    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.1";
 
     constructor(gitlabToken: string) {
         super();
@@ -113,7 +113,7 @@ export class GitLabProvider extends Utils {
         }
     }
 
-    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean>  {
+    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
         const stringToFind = "agent any";
         const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
@@ -123,6 +123,30 @@ export class GitLabProvider extends Utils {
         const stringToFind = "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */";
         const replacementString = `GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
+    }
+
+    public async getImageToPromotion(repositoryID: number, branch: string, componentName: string, environment: string) {
+        let extractedImage;
+        try {
+            const environmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
+                `components/${componentName}/overlays/${environment}/deployment-patch.yaml`, branch);
+
+            const fromEnvironmentContentToString = environmentContent.toString();
+            const matches = fromEnvironmentContentToString.match(this.extractImagePatternFromGitopsManifest);
+
+            if (matches && matches.length > 1) {
+                extractedImage = matches[1];
+                console.log("Extracted image:", extractedImage);
+                return extractedImage;
+
+            } else {
+                throw new Error("Image not found in the gitops repository path");
+            }
+        } catch (error) {
+            console.log(error);
+            throw new Error("Cannot extract image. Check bellow error");
+
+        }
     }
 
     public async createMergeRequestWithPromotionImage(repositoryID: number, targetBranch: string,
@@ -139,19 +163,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`Branch "${targetBranch}" created successfully.`);
 
-            const fromEnvironmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
-                `components/${componentName}/overlays/${fromEnvironment}/deployment-patch.yaml`, targetBranch);
-
-            const fromEnvironmentContentToString = fromEnvironmentContent.toString();
-            const matches = fromEnvironmentContentToString.match(this.extractImagePatternFromGitopsManifest);
-
-            if (matches && matches.length > 1) {
-                extractedImage = matches[1];
-                console.log("Extracted image:", extractedImage);
-
-            } else {
-                throw new Error("Image not found in the gitops repository path");
-            }
+            extractedImage = (await this.getImageToPromotion(repositoryID, targetBranch, componentName, fromEnvironment)).toString();
 
             const targetEnvironmentContent = await this.gitlab.RepositoryFiles.showRaw(repositoryID,
                 `components/${componentName}/overlays/${toEnvironment}/deployment-patch.yaml`, targetBranch);
@@ -274,7 +286,7 @@ export class GitLabProvider extends Utils {
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
                 const detailedStatus = (await this.gitlab.MergeRequests.show(projectId, mergeRequestId)).detailed_merge_status;
-                if(detailedStatus.toString() == "mergeable"){
+                if (detailedStatus.toString() == "mergeable") {
                     return;
                 }
 
@@ -533,5 +545,45 @@ export class GitLabProvider extends Utils {
         }
     }
 
+    // Get all jobs for GitLab pipeline
+    public async getPipelineJobs(projectId: number, pipelineId: number) {
+        try {
+            const response = await this.gitlab.Jobs.all(projectId, { pipelineId });
+            console.log('Pipeline triggered successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+            throw error;
+        }
+    }
+
+    // Return buildah job for GitLab pipeline
+    public async getLogForBuildah(projectId: number, pipelineId: number) : Promise<string>{
+        return this.getLogForJobName(projectId, pipelineId, "buildah-rhtap");
+    }
+
+    // Return job with name for GitLab pipeline
+    public async getLogForJobName(projectId: number, pipelineId: number, jobName: string): Promise<string>{
+        try {
+            const jobList = await this.getPipelineJobs(projectId, pipelineId);
+            for (const job of jobList) {
+                if (job.name.includes(jobName)){
+                    return await this.gitlab.Jobs.showLog(projectId, job.id);
+                }
+            };
+        } catch (error) {
+            console.error('Error triggering pipeline:', error);
+            throw error;
+        }
+        return "";
+    }
+
+    //Parse SBOM version from buildah log
+    public async parseSbomVersionFromLog(log: string) : Promise<string>{
+        return log.substring(
+            log.indexOf("sha256-") + 7,
+            log.lastIndexOf(".sbom")
+        );
+    }
 
 }

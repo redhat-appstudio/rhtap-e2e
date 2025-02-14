@@ -4,7 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -323,6 +323,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
+        }, 900000);
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            const extractedBuildImage = await gitLabProvider.getImageToPromotion(gitlabGitopsRepositoryID, "main", repositoryName, productionEnvironmentName);
+            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
         }, 900000);
 
         /**
