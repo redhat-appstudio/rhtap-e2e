@@ -184,7 +184,7 @@ export class BitbucketProvider extends Utils {
                 prData,
             );
 
-            console.log('Pull request created successfully:', prResponse.data.id);
+            console.log(`Pull request ${prResponse.data.id} created in ${repoSlug} repository`);
             return prResponse.data.id;
 
         } catch(error){
@@ -213,7 +213,7 @@ export class BitbucketProvider extends Utils {
                 mergeData
             );
 
-            console.log(`Pull request "${pullRequestID}" merged successfully.`);
+            console.log(`Pull request "${pullRequestID}" merged successfully in ${repoSlug} repository`);
         } catch (error) {
             console.log("Error merging PR", error);
         }

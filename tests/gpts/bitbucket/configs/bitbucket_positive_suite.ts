@@ -21,11 +21,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
-<<<<<<< HEAD
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
-        const stringOnRoute =  'Hello World!';
-=======
->>>>>>> 47d9ec9 (add tekton advanced tests)
 
         let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';

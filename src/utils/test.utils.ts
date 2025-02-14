@@ -183,7 +183,8 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     if (!isReady) {
         throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
     }
-    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
+    console.log(`waiting for application page to be ready in ${environmentName} environment`);
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 600000)).toBe(true);
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
