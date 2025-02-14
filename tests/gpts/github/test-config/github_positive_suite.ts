@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
 
 
 /**
@@ -34,7 +34,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
 
-        let RHTAPRootNamespace: string;
         let RHTAPGitopsNamespace: string;
 
         /**
@@ -43,7 +42,6 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);

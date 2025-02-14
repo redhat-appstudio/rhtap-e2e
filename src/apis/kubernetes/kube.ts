@@ -502,7 +502,7 @@ export class Kubernetes extends Utils {
         return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
     }
 
-     /**
+    /**
      * Returns the pod yaml file given podname and namespace
      * 
      * @param {string} PodName - The name of the pod

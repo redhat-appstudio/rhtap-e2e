@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -38,7 +38,6 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         let kubeClient: Kubernetes;
         let pipelineAsCodeRoute: string;
 
-        let RHTAPRootNamespace: string;
         let RHTAPGitopsNamespace: string;
 
         /**
@@ -47,7 +46,6 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             bitbucketClient = await getBitbucketClient(kubeClient);
