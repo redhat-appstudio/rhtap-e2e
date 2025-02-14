@@ -27,6 +27,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         const productionEnvironmentName = 'prod';
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
@@ -62,7 +63,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitHubClient = await getGitHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -180,7 +181,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         }, 120000);
 
         /**
-         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -197,7 +198,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         }, 900000);
 
         /**
-         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
             await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
@@ -237,7 +238,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
 
 
         /**
-         * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Wait for ${gptTemplate} jenkins job to finish for promotion from development to stage`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -283,7 +284,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         }, 120000);
 
         /**
-        * Trigger and wait for Jenkins job to finish(it will also run deplyment pipeline)
+        * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish promotion pipeline for production environment`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
