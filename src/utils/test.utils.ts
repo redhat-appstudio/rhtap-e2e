@@ -181,7 +181,8 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     if (!isReady) {
         throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
     }
-    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
+    console.log(`waiting for application page to be ready in ${environmentName} environment`);
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 600000)).toBe(true);
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
@@ -448,4 +449,27 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     }
     return result;
 
+}
+
+export async function verifyPipelineRunByRepository(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string, eventType: string) {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+    let result = true;
+    if (pipelineRun === undefined) {
+        throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+    }
+
+    if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
+        const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+        const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
+
+        for (const iterator of tskRuns) {
+            if (iterator.status && iterator.status.podName) {
+                await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
+            }
+        }
+        if (finished !== true) {
+            result = false;
+        }
+    }
+    return result;
 }

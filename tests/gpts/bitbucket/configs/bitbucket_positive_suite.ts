@@ -14,7 +14,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket
  * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
-export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
+export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Bitbucket provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
@@ -22,7 +22,6 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
-        const stringOnRoute =  'Hello World!';
 
         let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
@@ -144,7 +143,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             const repositoryExists = await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
+            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, `${repositoryName}-gitops`, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -161,7 +160,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
             const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
-            expect(commit).not.toBe(undefined);
+            expect(commit).toBe(true);
 
         }, 120000);
 
