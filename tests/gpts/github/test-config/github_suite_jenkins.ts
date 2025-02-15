@@ -55,7 +55,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             jenkinsClient = await getJenkinsCI(kubeClient);
 
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog

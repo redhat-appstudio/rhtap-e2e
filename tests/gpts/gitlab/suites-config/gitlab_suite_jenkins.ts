@@ -54,7 +54,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             gitLabProvider = await getGitLabProvider(kubeClient);
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.

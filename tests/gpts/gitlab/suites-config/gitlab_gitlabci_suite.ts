@@ -49,7 +49,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.

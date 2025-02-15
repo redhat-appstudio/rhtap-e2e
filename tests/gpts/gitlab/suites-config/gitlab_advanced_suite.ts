@@ -66,7 +66,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
             await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.

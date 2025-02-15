@@ -48,7 +48,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, developmentNamespace, kubeClient);
-        })
+        });
 
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
