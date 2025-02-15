@@ -38,6 +38,12 @@ spec:
     - name: e2e-test
       image: $(params.rhtap-e2e-container)
       workingDir: /workspace
+      computeResources:
+        limits:
+          memory: 6Gi
+        requests:
+          cpu: 100m
+          memory: 3Gi
       volumeMounts:
         - name: rhtap-cli-volume
           mountPath: /usr/local/rhtap-cli-install
