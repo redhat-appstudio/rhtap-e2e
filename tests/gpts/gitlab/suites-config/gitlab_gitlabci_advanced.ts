@@ -46,7 +46,8 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
@@ -64,7 +65,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**

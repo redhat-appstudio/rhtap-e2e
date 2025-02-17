@@ -19,8 +19,9 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stringOnRoute =  'Hello World!';
 
         let bitbucketUsername: string;
@@ -55,7 +56,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -175,12 +176,12 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
                 const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
                     }
                 }
                 expect(finished).toBe(true);
@@ -192,7 +193,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
             expect(result).toBe(true);
         }, 900000);
 
@@ -200,7 +201,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);

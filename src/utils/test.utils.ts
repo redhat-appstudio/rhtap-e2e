@@ -184,7 +184,7 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
 }
 
-export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -197,12 +197,13 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
         throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (!await kubeClient.namespaceExists(developmentNamespace)) {
-        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+    if (!await kubeClient.namespaceExists(ciNamespace)) {
+        throw new Error(`The CI namespace was not created. Make sure ${ciNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
     }
 }
 
-export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, ImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+
+export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -215,14 +216,14 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
         throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace);
+    const namespaceExists = await kubeClient.namespaceExists(ciNamespace);
 
     if (!namespaceExists) {
-        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+        throw new Error(`The CI namespace was not created. Make sure ${ciNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
     }
 }
 
-export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, developmentNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -239,10 +240,10 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
         throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    const namespaceExists = await kubeClient.namespaceExists(developmentNamespace);
+    const namespaceExists = await kubeClient.namespaceExists(ciNamespace);
 
     if (!namespaceExists) {
-        throw new Error(`The development namespace was not created. Make sure you have created ${developmentNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
+        throw new Error(`The CI namespace was not created. Make sure ${ciNamespace} is created and all secrets are created. Example: 'https://github.com/jduimovich/rhdh/blob/main/default-rhtap-ns-configure'`);
     }
 
 }
@@ -366,17 +367,17 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * if the scan was successful.
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
- * @param {string} developmentNamespace - The Kubernetes namespace where the development resources (including the ACS scan pod) are deployed.
+ * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if the ACS scan was successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string):Promise<boolean> {
+export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string):Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
-        const podLogs: unknown = await kubeClient.readContainerLogs(podName, developmentNamespace, 'step-rox-image-scan');
+        const podLogs: unknown = await kubeClient.readContainerLogs(podName, ciNamespace, 'step-rox-image-scan');
         if (typeof podLogs !== "string") {
             throw new Error(`Failed to retrieve container logs: Expected a string but got ${typeof podLogs}`);
         }
@@ -421,17 +422,17 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  * If not found,return pod yaml for reference
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
- * @param {string} developmentNamespace - The Kubernetes namespace where the development resources (including the ACS scan pod) are deployed.
+ * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if image verification is successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string): Promise<boolean> {
+export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string): Promise<boolean> {
     const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
     let result = true;
     if (pipelineRun?.metadata?.name) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, developmentNamespace);
+        const doc: any = await kubeClient.pipelinerunfromName(pipelineRun.metadata.name, ciNamespace);
         const index = doc.spec.pipelineSpec.tasks.findIndex((item: { name: string; }) => item.name === "build-container");
         const regex = new RegExp("registry.redhat.io/rh-syft-tech-preview/syft-rhel9", 'i');
         const imageIndex: number = (doc.spec.pipelineSpec.tasks[index].taskSpec.steps.findIndex((item: { image: string; }) => regex.test(item.image)));
@@ -441,7 +442,7 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
         else {
             const podName: string = pipelineRun.metadata.name + '-build-container-pod';
             // Read the yaml of the given pod
-            const podYaml = await kubeClient.getPodYaml(podName, developmentNamespace);
+            const podYaml = await kubeClient.getPodYaml(podName, ciNamespace);
             console.log(`The image path not found.The build-container pod yaml is : \n${podYaml}`);
             result = false;
         }
