@@ -17,7 +17,7 @@ const stringOnRoute =  'Hello World!';
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
+    if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.bitbucket && configuration.bitbucket.tekton) {
         bitbucketSoftwareTemplateTests(golangTemplateName, stringOnRoute);
     } else {
         skipSuite(golangTemplateName);

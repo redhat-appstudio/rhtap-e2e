@@ -17,7 +17,7 @@ const stringOnRoute =  'Hello World!';
 const runSpringBootBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
+    if (configuration.templates.includes(springBootTemplateName) && configuration.pipeline.bitbucket && configuration.bitbucket.tekton) {
 
         bitbucketSoftwareTemplateTests(springBootTemplateName, stringOnRoute);
     } else {

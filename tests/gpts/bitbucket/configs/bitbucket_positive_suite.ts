@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, verifyPipelineRunByRepository, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -168,23 +168,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, ciNamespace, 'push');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**

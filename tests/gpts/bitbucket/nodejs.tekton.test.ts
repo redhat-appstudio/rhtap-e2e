@@ -17,7 +17,7 @@ const stringOnRoute =  'Hello from Node.js Starter Application!';
 const runNodeJSBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
+    if (configuration.templates.includes(nodejsTemplateName) && configuration.pipeline.bitbucket && configuration.bitbucket.tekton) {
         bitbucketSoftwareTemplateTests(nodejsTemplateName, stringOnRoute);
     } else {
         skipSuite(nodejsTemplateName);

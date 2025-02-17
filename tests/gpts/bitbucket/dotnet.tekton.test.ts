@@ -17,7 +17,7 @@ const stringOnRoute =  'Welcome';
 const runDotNetBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(dotNetTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
+    if (configuration.templates.includes(dotNetTemplateName) && configuration.pipeline.bitbucket && configuration.bitbucket.tekton) {
         bitbucketSoftwareTemplateTests(dotNetTemplateName, stringOnRoute);
 
     } else {
