@@ -27,7 +27,7 @@ export BITBUCKET_PROJECT="RHTAP"
 # Check the integrations present in rhtap namespace for fetching the Image Registry details
 # rhtap is the default org for in-cluster quay
 if [[ $(kubectl get secrets -n rhtap |grep rhtap-quay-integration) ]];then
-    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-quay-integration -n rhtap -o json |jq '.data.url | @base64d')|cut -d '"' -f2| sed -E 's|https://([^/]+).*|\1|')"
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-quay-integration -n rhtap -o json |jq '.data.url | @base64d')|cut -d '\n' -f1| sed -E 's|https://([^/]+).*|\1|')"
     export IMAGE_REGISTRY_ORG="rhtap"
     echo -e "[INFO] Identified quay registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
 fi
