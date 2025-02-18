@@ -225,15 +225,15 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
         }, 900000);
 
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
-        it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
