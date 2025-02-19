@@ -7,6 +7,8 @@ import { JenkinsCI } from "../../src/apis/ci/jenkins";
 import { ScaffolderScaffoldOptions } from "@backstage/plugin-scaffolder-react";
 import { syncArgoApplication } from "./argocd";
 import { TaskIdReponse } from "../../src/apis/backstage/types";
+import { TrustificationClient } from "../../src/apis/trustification/trustification";
+
 
 export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, gitopsNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
@@ -123,7 +125,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
 }
 
 export async function getBitbucketClient(kubeClient: Kubernetes) {
-    if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME ) {
+    if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
         const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
@@ -367,12 +369,13 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
  * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
+ * @param {string} eventType - The type of the event which triggered the pipeline.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if the ACS scan was successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string):Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
@@ -392,22 +395,27 @@ export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryNam
 }
 
 export async function setSecretsForGitLabCI(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, kubeClient: Kubernetes) {
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY ?? '');
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY ?? '');
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD ?? '');
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY ?? await kubeClient.getCosignPublicKey());
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY ?? await kubeClient.getCosignPrivateKey());
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD ?? await kubeClient.getCosignPassword());
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.QUAY_PASSWORD ?? '');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.QUAY_USERNAME ?? '');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()));
 }
 
 export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, pipelineRunNumber: number) {
     await gitLabProvider.waitForPipelinesToBeCreated(gitlabRepositoryID, pipelineRunNumber, 10000);
     const response = await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
 
-    if(response?.id){
+    if (response?.id) {
         const pipelineResult = await gitLabProvider.waitForPipelineToFinish(gitlabRepositoryID, response.id, 540000);
         expect(pipelineResult).toBe("success");
     }
@@ -422,12 +430,13 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  * 
  * @param {string} repositoryName - The name of the repository for which the pipeline run is triggered.
  * @param {string} ciNamespace - The Kubernetes namespace where the CI resources (including the ACS scan pod) are deployed.
+ * @param {string} eventType - The type of the event which triggered the pipeline.
  * @returns {Promise<boolean>} A Promise that resolves to `true` if image verification is successful, or `false` if not.
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string): Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
+export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
     let result = true;
     if (pipelineRun?.metadata?.name) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -447,5 +456,21 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
         }
     }
     return result;
+}
 
+export async function checkSBOMInTrustification(kubeClient: Kubernetes, componentId: string) {
+    const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
+    const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
+    const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
+    const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace());
+    
+    const trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl,oidcclientId, oidcclientSecret);
+
+    try {
+        await trust.initializeTpaToken();
+        const sbomData = await trust.waitForSbomSearchByName(componentId);
+        console.log('SBOM Data:', sbomData);
+    } catch (error) {
+        console.error('Error fetching SBOM data:', error);
+    }
 }

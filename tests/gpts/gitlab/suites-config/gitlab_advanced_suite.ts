@@ -4,7 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -167,24 +167,6 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         }, 900000);
 
         /**
-        * Check if the pipelinerun yaml has the rh-syft image path mentioned
-        * if failed to figure out the image path ,return pod yaml for reference
-        */
-        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
-            expect(result).toBe(true);
-        }, 900000);
-
-        /**
-            * verify if the ACS Scan is successfully done from the logs of task steps
-        */
-        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
-            expect(result).toBe(true);
-            console.log("Verified as ACS Scan is Successful");
-        }, 900000);
-
-        /**
             * Merges a merge request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
         */
         it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async () => {
@@ -207,6 +189,24 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 }
                 expect(finished).toBe(true);
             }
+        }, 900000);
+
+        /**
+        * Check if the pipelinerun yaml has the rh-syft image path mentioned
+        * if failed to figure out the image path ,return pod yaml for reference
+        */
+        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'Push');
+            expect(result).toBe(true);
+        }, 900000);
+
+        /**
+            * verify if the ACS Scan is successfully done from the logs of task steps
+        */
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'Push');
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
         }, 900000);
 
         /**
@@ -324,6 +324,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
+        }, 900000);
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            const extractedBuildImage = await gitLabProvider.getImageToPromotion(gitlabGitopsRepositoryID, "main", repositoryName, productionEnvironmentName);
+            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
         }, 900000);
 
         /**
