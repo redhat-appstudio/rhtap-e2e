@@ -3,7 +3,6 @@ import * as path from "node:path";
 import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
-import { OpenshiftRoute } from "./types/oc.routes.cr";
 import { Configuration, CoreV1Api, createConfiguration, CustomObjectsApi, dumpYaml, KubeConfig, RequestContext, ResponseContext, ServerConfiguration, V1ObjectMeta } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware';
 
@@ -77,11 +76,8 @@ export class Kubernetes extends Utils {
     public async getOpenshiftRoute(name: string, namespace: string): Promise<string> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const body = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
-            const route = body as OpenshiftRoute;
-
+            const route = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
             return route.spec.host;
-
         } catch (error) {
             console.error(error);
             throw new Error(`Failed to obtain openshift route ${name}: ${error}`);
@@ -445,10 +441,7 @@ export class Kubernetes extends Utils {
             });
 
             // Extract the host from the route object
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const routeSpec = (route.body as any).spec;
-            const host = routeSpec.host;
-
+            const host = route.spec.host;
             if (host) {
                 return `https://${host}`;
             } else {

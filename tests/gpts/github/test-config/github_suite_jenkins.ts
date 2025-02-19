@@ -4,7 +4,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation} from "../../../../src/utils/test.utils";
 import { Utils } from '../../../../src/apis/scm-providers/utils';
 
 /**
@@ -84,22 +84,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task named " + repositoryName + " created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -124,6 +109,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          */
         it(`Commit updated agent ${gptTemplate} and enable ACS scan`, async () => {
             expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryUserCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
@@ -138,8 +126,16 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         }, 120000);
 
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName);
-            await jenkinsClient.waitForJobCreation(repositoryName);
+            await jenkinsClient.createFolder(repositoryName);
+        }, 120000);
+
+        it(`Create credentials in Jenkins for ${gptTemplate}`, async () => {
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName);
+        }, 120000);
+
+        it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
+            await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName, repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
             await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
@@ -149,10 +145,10 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * https://stackoverflow.com/questions/56714213/jenkins-not-triggered-by-github-webhook#comment109322558_60625199 
          */
         it(`Trigger and wait for ${gptTemplate} jenkins job`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 600000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 1, 600000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -172,7 +168,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
             new Utils().sleep(5000);
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 600000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 2, 600000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -182,8 +178,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          */
         it('container component is successfully synced by gitops in development environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
+            console.log('Parent process id: ' + process.ppid + ' for repo ' + repositoryName);
         }, 900000);
-
 
         /**
         * Deletes created applications
@@ -191,7 +187,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
                 await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
-                await jenkinsClient.deleteJenkinsJob(repositoryName);
+                await jenkinsClient.deleteJenkinsJobInFolder(repositoryName, repositoryName);
             }
         });
     });

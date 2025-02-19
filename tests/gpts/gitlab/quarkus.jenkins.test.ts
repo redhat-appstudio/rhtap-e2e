@@ -17,7 +17,7 @@ const stringOnRoute = 'Congratulations, you have created a new Quarkus cloud app
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
-    if (configuration.templates.includes(quarkusTemplateName) && configuration.gitlab && configuration.gitlab.jenkins) {
+    if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.gitlab && configuration.gitlab.jenkins) {
         gitLabJenkinsAdvancedTests(quarkusTemplateName, stringOnRoute);
     } else {
         skipSuite(quarkusTemplateName);

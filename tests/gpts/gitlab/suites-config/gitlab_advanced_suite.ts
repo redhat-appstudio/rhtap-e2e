@@ -4,7 +4,7 @@ import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace} from "../../../../src/utils/test.utils";
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -84,20 +84,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
