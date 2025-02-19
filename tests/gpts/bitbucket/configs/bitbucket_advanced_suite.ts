@@ -168,14 +168,8 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * @throws {Error} Throws an error if the creation of the pull request fails.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
-            const prID = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
-
-            // Set the pull request number if creation was successful
-            if (prID !== undefined) {
-                pullRequestID = prID;
-            } else {
-                throw new Error("Failed to create a pull request");
-            }
+            pullRequestID = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
+            expect(pullRequestID).not.toBe(undefined);
         }, 120000);
 
         /**
