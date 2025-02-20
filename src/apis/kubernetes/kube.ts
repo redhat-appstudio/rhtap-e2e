@@ -4,7 +4,7 @@ import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
 import { OpenshiftRoute } from "./types/oc.routes.cr";
-import { Configuration, CoreV1Api, createConfiguration, CustomObjectsApi, dumpYaml, KubeConfig, loadYaml, RequestContext, ResponseContext, ServerConfiguration, V1ObjectMeta } from '@kubernetes/client-node';
+import { Configuration, CoreV1Api, createConfiguration, CustomObjectsApi, dumpYaml, KubeConfig, RequestContext, ResponseContext, ServerConfiguration, V1ObjectMeta } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware';
 
 /**
@@ -24,7 +24,6 @@ export class Kubernetes extends Utils {
      */
     constructor() {
         super();
-
         this.kubeConfig = new KubeConfig();
         this.kubeConfig.loadFromDefault();
     }
@@ -39,8 +38,7 @@ export class Kubernetes extends Utils {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             const response = await k8sCoreApi.readNamespace({ name: name});
-
-            if (response && response.metadata && response.metadata.name === name) {
+            if (response?.metadata?.name === name) {
                 return true;
             }
 
@@ -62,8 +60,7 @@ export class Kubernetes extends Utils {
         try {
             const taskRunList = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
             const taskRunInterface = taskRunList as TaskRunList;
-            return taskRunInterface.items.filter(taskRun =>
-                taskRun.metadata && taskRun.metadata.name && taskRun.metadata.name.startsWith(pipelineRunName));
+            return taskRunInterface.items.filter(taskRun => taskRun?.metadata?.name?.startsWith(pipelineRunName));
 
         } catch (error) {
             console.error(error);
@@ -105,7 +102,7 @@ export class Kubernetes extends Utils {
             const pod = await k8sApi.readNamespacedPod({name: podName, namespace: namespace});
 
             // Check if pod.spec is defined
-            if (pod.spec && pod.spec.containers) {
+            if (pod.spec?.containers) {
                 // Iterate over each container in the pod
                 for (const container of pod.spec.containers) {
                     // Get logs from each container
@@ -213,7 +210,7 @@ export class Kubernetes extends Utils {
                 const body = await customObjectsApi.getNamespacedCustomObject({group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name});
                 const pr = body as PipelineRunKind;
 
-                if (pr.status && pr.status.conditions) {
+                if (pr.status?.conditions) {
                     const pipelineHasFinishedSuccessfully = pr.status.conditions.some(
                         (condition) => condition.status === 'True' && condition.type === 'Succeeded'
                     );
@@ -243,7 +240,7 @@ export class Kubernetes extends Utils {
     /**
      * Accepts the pipelinerun name and fetches pipelinerun yaml output.
      * Returns the yaml value in the variable 'doc'
-     * @param {string} namespace - The namespace default value is rhtap-app-development.
+     * @param {string} namespace - The namespace default value is rhtap-app-ci.
      * @param {string} name - The name of the pipelinerun
      * @throws This function does not throw directly, but may throw errors during API calls or retries.
      */
@@ -281,8 +278,8 @@ export class Kubernetes extends Utils {
                 const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPGitopsNamespace, plural: 'applications', name: name});
                 const application = body as ApplicationSpec;
 
-                if (application.status && application.status.sync && application.status.sync.status &&
-                    application.status.health && application.status.health.status) {
+                if (application.status?.sync?.status &&
+                    application.status.health?.status) {
 
                     if (application.status.sync.status === 'Synced' && application.status.health.status === 'Healthy') {
                         return true;
@@ -468,21 +465,21 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-app-development", "cosign-pub", "cosign.pub", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", true);
     }
 
     /**
     * Gets cosign private key.
     */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "private", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", true);
     }
 
     /**
     * Gets cosign password.
     */
     public async getCosignPassword(): Promise<string> {
-        return this.getSecretPartialName("rhtap-tas", "fulcio-cert-trusted-artifact-signer", "password", false);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", true);
     }
 
     /**
@@ -525,7 +522,7 @@ export class Kubernetes extends Utils {
         return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
     }
 
-     /**
+    /**
      * Returns the pod yaml file given podname and namespace
      * 
      * @param {string} PodName - The name of the pod
@@ -534,13 +531,63 @@ export class Kubernetes extends Utils {
     public async getPodYaml(PodName: string, nameSpace: string): Promise<string | null> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespacedPod(PodName, nameSpace);
-            const podYaml = dumpYaml(response.body);
+            const response = await k8sCoreApi.readNamespacedPod({name: PodName, namespace: nameSpace})
+            const podYaml = dumpYaml(response);
             return podYaml;
         }
         catch (error) {
             console.error('Error fetching pod:', error);
             return null;
         }
+    }
+
+    /**
+    * Gets bombastic api URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationBombasticApiUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "bombastic_api_url");
+    }
+
+    /**
+    * Gets oidc issuer URL.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationOidcIssuerUrl(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_issuer_url");
+    }
+
+    /**
+    * Gets oidc client ID.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationClientId(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_id");
+    }
+
+    /**
+    * Gets oidc client secret.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationClientSecret(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_secret");
+    }
+
+    /**
+    * Gets supported cyclone dx version.
+    * 
+    * @param {string} namespace - The namespace where the route is located.
+    * @returns {Promise<string>}  - returns route URL.
+    */
+    public async getTTrustificationSupportedCycloneDXVersion(namespace: string): Promise<string> {
+        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
     }
 }

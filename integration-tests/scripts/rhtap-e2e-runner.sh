@@ -21,11 +21,29 @@ export BITBUCKET_WORKSPACE="rhtap-test"
 export BITBUCKET_PROJECT="RHTAP"
 
 #TODO: This is a temporary workaround as we are using only installations with quay installed in the cluster.
-# Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` org in case of public quay.io and `rhtap` or in case of in-cluster quay.
-export QUAY_IMAGE_ORG="rhtap"
+# Once we add back the scenario using public quay.io instance, we need to have a logic that uses `rhtap-qe` 
+#org in case of public quay.io and `rhtap` or in case of in-cluster quay.
 
+# Check the integrations present in rhtap namespace for fetching the Image Registry details
+# rhtap is the default org for in-cluster quay
+if [[ $(kubectl get secrets -n rhtap |grep rhtap-quay-integration) ]];then
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-quay-integration -n rhtap -o json |jq '.data.url | @base64d')| cut -d '\' -f1 |sed -E 's|"https://([^/]+).*|\1|')"
+    export IMAGE_REGISTRY_ORG="rhtap"
+    echo -e "[INFO] Identified quay registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
+fi
+# the org name (repositry name for artifactory) is hardcoded since it should be pre-existing.
+if [[ $(kubectl get secrets -n rhtap |grep rhtap-artifactory-integration) ]];then
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-artifactory-integration -n rhtap -o json |jq '.data.url | @base64d')| sed -E 's|https://([^/]+).*|\1|')"
+    export IMAGE_REGISTRY_ORG="rhtap"
+    echo -e "[INFO] Identified artifactory registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
+fi
+# the org name (repositry name for nexus) is hardcoded since it should be pre-existing.
+if [[ $(kubectl get secrets -n rhtap |grep rhtap-artifactory-integration) ]];then
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-nexus-integration -n rhtap -o json |jq '.data.url | @base64d')| sed -E 's|https://([^/]+).*|\1|')"
+    export IMAGE_REGISTRY_ORG="rhtap"
+    echo -e "[INFO] Identified nexus registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
+fi
 
-export IMAGE_REGISTRY="$(kubectl -n rhtap-quay get route rhtap-quay-quay -o 'jsonpath={.spec.host}')"
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
 export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap-dh -o jsonpath='{.spec.host}')"
 
