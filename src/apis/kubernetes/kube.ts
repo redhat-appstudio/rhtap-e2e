@@ -335,7 +335,7 @@ export class Kubernetes extends Utils {
                 throw new Error('Server is undefined');
             }
 
-            const baseServerConfig: ServerConfiguration<{}> = new ServerConfiguration<{}>(server, {});
+            const baseServerConfig: ServerConfiguration<Record<string, string>> = new ServerConfiguration<Record<string, string>>(server, {});
             const configuration: Configuration = createConfiguration({
                 middleware: [headerPatchMiddleware],
                 baseServer: baseServerConfig,
@@ -531,7 +531,7 @@ export class Kubernetes extends Utils {
     public async getPodYaml(PodName: string, nameSpace: string): Promise<string | null> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespacedPod({name: PodName, namespace: nameSpace})
+            const response = await k8sCoreApi.readNamespacedPod({name: PodName, namespace: nameSpace});
             const podYaml = dumpYaml(response);
             return podYaml;
         }
