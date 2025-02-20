@@ -28,8 +28,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const imageName = "rhtap-qe";
-        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;

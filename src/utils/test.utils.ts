@@ -226,7 +226,7 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
     }
 }
 
-export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, imageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -239,8 +239,8 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
         throw new Error("The 'BITBUCKET_PROJECT' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (quayImageOrg === '') {
-        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    if (imageOrg === '') {
+        throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     const namespaceExists = await kubeClient.namespaceExists(ciNamespace);
@@ -321,8 +321,8 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
     *
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-    * @param {string} quayImageName Registry image name for the component to be pushed.
-    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageName Registry image name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} bitbucketUsername Bitbucket username to create repo in Bitbucket.
     * @param {string} bitbucketWorkspace Bitbucket workspace where repo to be created in Bitbucket.

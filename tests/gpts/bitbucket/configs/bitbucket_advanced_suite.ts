@@ -32,7 +32,9 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
-        const imageName = "rhtap-qe";
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
+        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -43,9 +45,6 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
         const gitopsRepoName = `${repositoryName}-gitops`;
-
-        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
-        const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let bitbucketUsername: string;
         let developerHubTask: TaskIdReponse;
@@ -164,8 +163,6 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Creates an commit in the repository and expects a PipelineRun to start.
          * This step is used to trigger a PipelineRun by creating a pull request.
-         *
-         * @throws {Error} Throws an error if the creation of the pull request fails.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
             pullRequestID = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
