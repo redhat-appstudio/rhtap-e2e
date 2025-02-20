@@ -35,7 +35,7 @@
     "@backstage/plugin-scaffolder-common": "^1.5.5",
     "@backstage/plugin-scaffolder-react": "^1.11.0",
     "@gitbeaker/rest": "^41.0.0",
-    "@janus-idp/shared-react": "^2.4.0",
+    "@janus-idp/shared-react": "^2.14.1",
     "@kubernetes/client-node": "^0.22.3",
     "@octokit/rest": "^20.0.2",
     "@types/libsodium-wrappers": "^0.7.14",
