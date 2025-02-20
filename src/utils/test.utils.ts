@@ -186,7 +186,7 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
 }
 
-export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -195,8 +195,8 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
         throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (quayImageOrg === '') {
-        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    if (ImageOrg === '') {
+        throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (!await kubeClient.namespaceExists(ciNamespace)) {
@@ -204,7 +204,8 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
     }
 }
 
-export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+
+export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -213,8 +214,8 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
         throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (quayImageOrg === '') {
-        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    if (ImageOrg === '') {
+        throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     const namespaceExists = await kubeClient.namespaceExists(ciNamespace);
@@ -253,23 +254,23 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
     * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
     * 
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-    * @param {string} quayImageName Registry image name for the component to be pushed.
-    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageName Registry image name for the component to be pushed.
+    * @param {string} ImageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitLab repository.
     * @param {string} gitLabOrganization Owner of the GitLab repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, imageName: string, ImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
             branch: 'main',
             glHost: 'gitlab.com',
             hostType: 'GitLab',
-            imageName: quayImageName,
-            imageOrg: quayImageOrg,
+            imageName: imageName,
+            imageOrg: ImageOrg,
             imageRegistry: imageRegistry,
             name: repositoryName,
             namespace: componentRootNamespace,
@@ -286,23 +287,23 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
     * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
     * 
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-    * @param {string} quayImageName Registry image name for the component to be pushed.
-    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageName Registry image name for the component to be pushed.
+    * @param {string} ImageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitHub repository.
     * @param {string} gitLabOrganization Owner of the GitHub repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, quayImageName: string, quayImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, ImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
             branch: 'main',
             ghHost: 'github.com',
             hostType: 'GitHub',
-            imageName: quayImageName,
-            imageOrg: quayImageOrg,
+            imageName: imageName,
+            imageOrg: ImageOrg,
             imageRegistry: imageRegistry,
             name: repositoryName,
             namespace: componentRootNamespace,
