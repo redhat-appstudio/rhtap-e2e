@@ -25,8 +25,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let RHTAPGitopsNamespace: string;
@@ -49,7 +49,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -65,7 +65,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "githubactions");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "githubactions");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -108,10 +108,10 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                 "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.QUAY_USERNAME || '',
-                "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
-                "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
+                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
+                "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
+                "QUAY_IO_CREDS_USR": process.env.IMAGE_REGISTRY_USERNAME || '',
+                "QUAY_IO_CREDS_PSW": process.env.IMAGE_REGISTRY_PASSWORD || '',
                 "COSIGN_SECRET_PASSWORD": process.env.COSIGN_SECRET_PASSWORD || '',
                 "COSIGN_SECRET_KEY": process.env.COSIGN_SECRET_KEY || '',
                 "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || '',
