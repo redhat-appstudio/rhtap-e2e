@@ -183,7 +183,8 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     if (!isReady) {
         throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
     }
-    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 120000)).toBe(true);
+    console.log(`waiting for application page to be ready in ${environmentName} environment`);
+    expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 600000)).toBe(true);
 }
 
 export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
@@ -225,7 +226,7 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
     }
 }
 
-export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, quayImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesBitbucket(componentRootNamespace: string, bitbucketWorkspace: string, bitbucketProject: string, imageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -238,8 +239,8 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
         throw new Error("The 'BITBUCKET_PROJECT' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (quayImageOrg === '') {
-        throw new Error("The 'QUAY_IMAGE_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+    if (imageOrg === '') {
+        throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     const namespaceExists = await kubeClient.namespaceExists(ciNamespace);
@@ -320,8 +321,8 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
     *
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
-    * @param {string} quayImageName Registry image name for the component to be pushed.
-    * @param {string} quayImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageName Registry image name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} bitbucketUsername Bitbucket username to create repo in Bitbucket.
     * @param {string} bitbucketWorkspace Bitbucket workspace where repo to be created in Bitbucket.
@@ -474,4 +475,27 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, componen
     } catch (error) {
         console.error('Error fetching SBOM data:', error);
     }
+}
+
+export async function verifyPipelineRunByRepository(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string, eventType: string) {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+    let result = true;
+    if (pipelineRun === undefined) {
+        throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
+    }
+
+    if (pipelineRun?.metadata?.name) {
+        const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+        const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
+
+        for (const iterator of tskRuns) {
+            if (iterator?.status?.podName) {
+                await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
+            }
+        }
+        if (finished !== true) {
+            result = false;
+        }
+    }
+    return result;
 }
