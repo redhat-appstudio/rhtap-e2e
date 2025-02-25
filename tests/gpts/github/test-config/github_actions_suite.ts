@@ -108,7 +108,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                 "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USER || '',
+                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
                 "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
                 "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
                 "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
