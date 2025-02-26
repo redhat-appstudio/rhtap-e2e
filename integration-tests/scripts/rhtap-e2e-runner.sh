@@ -33,13 +33,13 @@ if [[ $(kubectl get secrets -n rhtap |grep rhtap-quay-integration) ]];then
 fi
 # the org name (repositry name for artifactory) is hardcoded since it should be pre-existing.
 if [[ $(kubectl get secrets -n rhtap |grep rhtap-artifactory-integration) ]];then
-    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-artifactory-integration -n rhtap -o json |jq '.data.url | @base64d')| sed -E 's|https://([^/]+).*|\1|')"
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-artifactory-integration -n rhtap -o go-template='{{ index .data ".dockerconfigjson" | base64decode }}'| jq -r '.auths|keys[0]'))"
     export IMAGE_REGISTRY_ORG="rhtap"
     echo -e "[INFO] Identified artifactory registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
 fi
 # the org name (repositry name for nexus) is hardcoded since it should be pre-existing.
-if [[ $(kubectl get secrets -n rhtap |grep rhtap-artifactory-integration) ]];then
-    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-nexus-integration -n rhtap -o json |jq '.data.url | @base64d')| sed -E 's|https://([^/]+).*|\1|')"
+if [[ $(kubectl get secrets -n rhtap |grep rhtap-nexus-integration) ]];then
+    export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-nexus-integration -n rhtap -o go-template='{{ index .data ".dockerconfigjson" | base64decode }}'| jq -r '.auths|keys[0]'))"
     export IMAGE_REGISTRY_ORG="rhtap"
     echo -e "[INFO] Identified nexus registry as ${IMAGE_REGISTRY} with org as ${IMAGE_REGISTRY_ORG}"
 fi
