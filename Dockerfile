@@ -85,3 +85,4 @@ COPY --from=builder /usr/local/bin/oras /usr/local/bin/oras
 COPY --from=builder /usr/local/bin/argocd /usr/local/bin/argocd
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
 COPY --from=builder /usr/local/bin/tkn /usr/local/bin/tkn
+COPY --from=builder /usr/local/bin/cosign /usr/local/bin/cosign
