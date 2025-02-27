@@ -458,21 +458,21 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", false);
     }
 
     /**
     * Gets cosign private key.
     */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", false);
     }
 
     /**
     * Gets cosign password.
     */
     public async getCosignPassword(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", false);
     }
 
     /**
