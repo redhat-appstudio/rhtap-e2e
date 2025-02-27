@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Octokit } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { AxiosError } from "axios";
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
@@ -523,7 +523,7 @@ export class GitHubProvider extends Utils {
         }
         for (const [envVarName, envVarValue] of Object.entries(envVars)) {
             console.log("Setting env var: " + envVarName);
-            this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse)
+            this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse);
         }
         console.groupEnd();
     }
@@ -536,7 +536,7 @@ export class GitHubProvider extends Utils {
         return encryptedBuffer.toString('base64');
     }
 
-    public async setSecret(owner: string, repo: string, secretName: string, secretValue: string, publicKeyResponse: any) {
+    public async setSecret(owner: string, repo: string, secretName: string, secretValue: string, publicKeyResponse: RestEndpointMethodTypes["actions"]["getRepoPublicKey"]["response"]) {
         try {
             const encryptedValue = await this.encryptSecret(publicKeyResponse.data.key, secretValue);
             await this.octokit.rest.actions.createOrUpdateRepoSecret(
