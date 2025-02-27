@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -97,9 +97,9 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
                 "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
                 "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
-                "COSIGN_SECRET_PASSWORD": process.env.COSIGN_SECRET_PASSWORD || '',
-                "COSIGN_SECRET_KEY": process.env.COSIGN_SECRET_KEY || '',
-                "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || '',
+                "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
+                "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
+                "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
                 "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
