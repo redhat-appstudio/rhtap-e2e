@@ -5,7 +5,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -94,20 +94,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits for the specified component task to be processed by Developer Hub and retrieves logs upon completion.
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            // Retrieve the processed task from Developer Hub
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("failed to create backstage tasks. creating logs...");
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 600000);
 
         /**
