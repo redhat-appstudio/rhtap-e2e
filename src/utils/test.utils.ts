@@ -397,9 +397,9 @@ export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryNam
 }
 
 export async function setSecretsForGitLabCI(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, kubeClient: Kubernetes) {
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY ?? await kubeClient.getCosignPublicKey());
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY ?? await kubeClient.getCosignPrivateKey());
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD ?? await kubeClient.getCosignPassword());
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '');
