@@ -474,6 +474,7 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, componen
         console.log('SBOM Data:', sbomData);
     } catch (error) {
         console.error('Error fetching SBOM data:', error);
+        throw error;
     }
 }
 

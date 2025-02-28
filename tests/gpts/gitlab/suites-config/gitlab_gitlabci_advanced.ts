@@ -217,11 +217,13 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         /*
         * Verifies if the SBOm is uploaded in RHTPA/Trustification
         */
-        it('check sbom uploaded in RHTPA', async () =>{
-            const latestPipeline=await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
-            const buildahLog: string = await gitLabProvider.getLogForBuildah(gitlabRepositoryID, latestPipeline.id);
-            const sbomVersion = await gitLabProvider.parseSbomVersionFromLog(buildahLog);
-            await checkSBOMInTrustification(kubeClient, sbomVersion);
+        it('check sbom uploaded in RHTPA', async () => {
+            // This code needs to be monified after https://issues.redhat.com/browse/RHTAP-4461 is resolved - it would be better to use sbom version to have more unique identifier, than using a repositoryName
+            // const latestPipeline=await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
+            // const buildahLog: string = await gitLabProvider.getLogForBuildah(gitlabRepositoryID, latestPipeline.id);
+            // const sbomVersion = await gitLabProvider.parseSbomVersionFromLog(buildahLog);
+            // await checkSBOMInTrustification(kubeClient, sbomVersion);
+            await checkSBOMInTrustification(kubeClient, repositoryName);
         }, 900000);
 
         /**
