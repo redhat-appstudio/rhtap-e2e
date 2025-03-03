@@ -460,7 +460,14 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     return result;
 }
 
-export async function checkSBOMInTrustification(kubeClient: Kubernetes, componentId: string) {
+/**
+ * Search SBOm in trustification by string, which could be SBOM name, SBOm version...
+ * 
+ * @param {Kubernetes} kubeClient - Kubernetes client.
+ * @param {string} searchString - String to search in trustification: for example SBOM, name, SBOm version...
+ * @throws {Error} If there is an error during search.
+ */
+export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchString: string) {
     const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
     const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
     const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
@@ -470,7 +477,7 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, componen
 
     try {
         await trust.initializeTpaToken();
-        const sbomData = await trust.waitForSbomSearchByName(componentId);
+        const sbomData = await trust.waitForSbomSearchByName(searchString);
         console.log('SBOM Data:', sbomData);
     } catch (error) {
         console.error('Error fetching SBOM data:', error);
