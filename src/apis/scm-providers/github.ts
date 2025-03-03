@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
-import { Octokit } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { AxiosError } from "axios";
-import _sodium from 'libsodium-wrappers';
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
+import sodium from 'sodium-native';
 
 export class GitHubProvider extends Utils {
     private readonly octokit: Octokit;
@@ -157,7 +157,7 @@ export class GitHubProvider extends Utils {
     }
 
     public async disableQuayCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
-        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')", `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`,  "Enable ACS scan in Jenkins");
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')", `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`, "Enable ACS scan in Jenkins");
     }
 
     /**
@@ -169,7 +169,7 @@ export class GitHubProvider extends Utils {
      * @throws Any error that occurs during the execution of the function.
      */
     public async enableACSJenkins(gitOrg: string, gitRepository: string): Promise<string | undefined> {
-        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export DISABLE_ACS=false", "export DISABLE_ACS=true",  "Enable ACS scan in Jenkins");
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export DISABLE_ACS=false", "export DISABLE_ACS=true", "Enable ACS scan in Jenkins");
     }
 
     /**
@@ -181,7 +181,7 @@ export class GitHubProvider extends Utils {
     * @throws Any error that occurs during the execution of the function.
     */
     public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
-        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh',  "http://tuf.rhtap-tas.svc", tufURL,  "Update TUF mirror in environment file");//NOSONAR
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.rhtap-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
     }
 
     /**
@@ -523,26 +523,36 @@ export class GitHubProvider extends Utils {
         }
         for (const [envVarName, envVarValue] of Object.entries(envVars)) {
             console.log("Setting env var: " + envVarName);
-            await sodium.ready;
-            const binkey = sodium.from_base64(publicKeyResponse.data.key, sodium.base64_variants.ORIGINAL);
-            const binsec = sodium.from_string(envVarValue);
-            const encBytes = sodium.crypto_box_seal(binsec, binkey);
-            const output = sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
-            try {
-                await this.octokit.actions.createOrUpdateRepoSecret({
-                    owner,
-                    repo,
-                    secret_name: envVarName,
-                    encrypted_value: output,
-                    key_id: publicKeyResponse.data.key_id
-                });
-            } catch (error) {
-                console.error(`Error creating secret ${envVarName}: ${error}`);
-                console.groupEnd();
-                throw error;
-            }
+            this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse);
         }
         console.groupEnd();
     }
 
+    public async encryptSecret(publicKey: string, secretValue: string) {
+        const keyBuffer = Buffer.from(publicKey, 'base64');
+        const secretBuffer = Buffer.from(secretValue, 'utf8');
+        const encryptedBuffer = Buffer.alloc(secretBuffer.length + sodium.crypto_box_SEALBYTES);
+        sodium.crypto_box_seal(encryptedBuffer, secretBuffer, keyBuffer);
+        return encryptedBuffer.toString('base64');
+    }
+
+    public async setSecret(owner: string, repo: string, secretName: string, secretValue: string, publicKeyResponse: RestEndpointMethodTypes["actions"]["getRepoPublicKey"]["response"]) {
+        try {
+            const encryptedValue = await this.encryptSecret(publicKeyResponse.data.key, secretValue);
+            await this.octokit.rest.actions.createOrUpdateRepoSecret(
+                {
+                    owner,
+                    repo,
+                    secret_name: secretName,
+                    encrypted_value: encryptedValue,
+                    key_id: publicKeyResponse.data.key_id,
+                }
+            );
+
+            console.log(`Secret "${secretName}" has been set successfully.`);
+        } catch (error) {
+            console.error('Error setting secret:', error);
+            throw error;
+        }
+    }
 }
