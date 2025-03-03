@@ -29,6 +29,7 @@
   },
   "pipeline": {
     "version": "1.4",
+    "ocp":"4.17",
     "github": true,
     "gitlab": false,
     "bitbucket": false

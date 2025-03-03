@@ -31,46 +31,45 @@ export class JenkinsCI extends Utils {
     }
 
     // createJenkinsJob creates a new Jenkins job
-    public async createJenkinsJob(gitProvider: string, organization: string, jobName: string) {
-        const url = `${this.jenkinsUrl}/createItem?name=${jobName}`;
+    public async createJenkinsJobURL(gitProvider: string, organization: string, jobName: string, url: string) {
         const jobConfigXml = `
-        <flow-definition plugin="workflow-job@2.40">
-            <actions/>
-            <description></description>
-            <keepDependencies>false</keepDependencies>
-            <properties>
-                <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-                    <triggers>
-                        <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.1">
-                        <spec/>
-                        </com.cloudbees.jenkins.GitHubPushTrigger>
-                    </triggers>
-                </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-            </properties>
-            <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.89">
-                <scm class="hudson.plugins.git.GitSCM" plugin="git@4.4.5">
-                    <configVersion>2</configVersion>
-                    <userRemoteConfigs>
-                        <hudson.plugins.git.UserRemoteConfig>
-                            <url>https://${gitProvider}/${organization}/${jobName}</url>
-                            <credentialsId>GITOPS_CREDENTIALS</credentialsId>
-                        </hudson.plugins.git.UserRemoteConfig>
-                    </userRemoteConfigs>
-                    <branches>
-                        <hudson.plugins.git.BranchSpec>
-                            <name>*/main</name>
-                        </hudson.plugins.git.BranchSpec>
-                    </branches>
-                    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-                    <submoduleCfg class="list"/>
-                    <extensions/>
-                </scm>
-                <scriptPath>Jenkinsfile</scriptPath>
-                <lightweight>true</lightweight>
-            </definition>
-            <disabled>false</disabled>
-        </flow-definition>
-        `;
+            <flow-definition plugin="workflow-job@2.40">
+                <actions/>
+                <description></description>
+                <keepDependencies>false</keepDependencies>
+                <properties>
+                    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+                        <triggers>
+                            <com.cloudbees.jenkins.GitHubPushTrigger plugin="github@1.37.1">
+                            <spec/>
+                            </com.cloudbees.jenkins.GitHubPushTrigger>
+                        </triggers>
+                    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+                </properties>
+                <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.89">
+                    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.4.5">
+                        <configVersion>2</configVersion>
+                        <userRemoteConfigs>
+                            <hudson.plugins.git.UserRemoteConfig>
+                                <url>https://${gitProvider}/${organization}/${jobName}</url>
+                                <credentialsId>GITOPS_CREDENTIALS</credentialsId>
+                            </hudson.plugins.git.UserRemoteConfig>
+                        </userRemoteConfigs>
+                        <branches>
+                            <hudson.plugins.git.BranchSpec>
+                                <name>*/main</name>
+                            </hudson.plugins.git.BranchSpec>
+                        </branches>
+                        <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+                        <submoduleCfg class="list"/>
+                        <extensions/>
+                    </scm>
+                    <scriptPath>Jenkinsfile</scriptPath>
+                    <lightweight>true</lightweight>
+                </definition>
+                <disabled>false</disabled>
+            </flow-definition>
+            `;
 
         try {
             const response = await this.axiosInstance.post(url, jobConfigXml);
@@ -84,9 +83,93 @@ export class JenkinsCI extends Utils {
         }
     }
 
+    // createJenkinsJob creates a new Jenkins job
+    public async createJenkinsJob(gitProvider: string, organization: string, jobName: string) {
+        const url = `${this.jenkinsUrl}/createItem?name=${jobName}`;
+        await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
+    }
+
+    // createJenkinsJob creates a new Jenkins job
+    public async createJenkinsJobInFolder(gitProvider: string, organization: string, jobName: string, jobFolder: string) {
+        const url = `${this.jenkinsUrl}/job/${jobFolder}/createItem?name=${jobName}`;
+        await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
+    }
+
+    // Create credentials in Jenkins instance
+    public async createCredentialsInFolder(scope: string, id: string, secret: string, folderName: string) {
+        if (await this.checkCredentialsExistInFolder(id, folderName) === false) {
+            const url = `${this.jenkinsUrl}/job/${folderName}/credentials/store/folder/domain/_/createCredentials`;
+            const credsConfigXml = `
+            <org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl plugin="plain-credentials">
+                <id>${id}</id>
+                <scope>${scope}</scope>
+                <description></description>
+                <secret>${secret}</secret>
+            </org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl>
+            `;
+
+            try {
+                const response = await this.axiosInstance.post(url, credsConfigXml);
+                if (response.status === 200) {
+                    console.log(`Credentials '${id}' created successfully.`);
+                } else {
+                    console.error(`Failed to create credentials. Status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error creating credentials:', error);
+            }
+        }
+    }
+
+    // Create credentials in Jenkins instance
+    public async createCredentialsUsernamePasswordInFolder(scope: string, id: string, username: string, password: string, folderName: string) {
+        if (await this.checkCredentialsExistInFolder(id, folderName) === false) {
+            const url = `${this.jenkinsUrl}/job/${folderName}/credentials/store/folder/domain/_/createCredentials`;
+            const credsConfigXml = `
+                <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl plugin="plain-credentials">
+                    <id>${id}</id>
+                    <scope>${scope}</scope>
+                    <description></description>
+                    <username>${username}</username>
+                    <password>${password}</password>
+                </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+                `;
+
+            try {
+                const response = await this.axiosInstance.post(url, credsConfigXml);
+                if (response.status === 200) {
+                    console.log(`Credentials '${id}' created successfully.`);
+                } else {
+                    console.error(`Failed to create credentials. Status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error creating credentials:', error);
+            }
+        }
+    }
+
+    public async checkCredentialsExistInFolder(credentialId: string, folderName: string): Promise<boolean> {
+        const url = `${this.jenkinsUrl}/job/${folderName}/credentials/store/system/domain/_/credential/${credentialId}/api/xml`;
+        try {
+            const response = await this.axiosInstance.post(url);
+            if (response.status === 200) {
+                console.log(`Credential '${credentialId}' does exist.`);
+                return true;
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                console.log(`Credential '${credentialId}' does NOT exist.`);
+                return false;
+            }
+            console.error('Error checking credentials:', error);
+            throw error;
+        }
+        return false;
+    }
+
     // jobExists checks if a job exists
-    public async jobExists(jobName: string): Promise<boolean> {
-        const url = `${this.jenkinsUrl}/job/${jobName}/api/json`;
+    public async jobExistsInFolder(jobName: string, folderName: string): Promise<boolean> {
+        const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/api/json`;
         try {
             const response = await this.axiosInstance.post(url);
             if (response.status === 200) {
@@ -112,10 +195,10 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForJobCreation waits until a job is created
-    public async waitForJobCreation(jobName: string) {
+    public async waitForJobCreationInFolder(jobName: string, folderName: string) {
         console.log(`Waiting for job '${jobName}' to be created...`);
         while (true) {
-            if (await this.jobExists(jobName)) {
+            if (await this.jobExistsInFolder(jobName, folderName)) {
                 console.log(`Job '${jobName}' is now available.`);
                 break;
             }
@@ -124,8 +207,8 @@ export class JenkinsCI extends Utils {
     }
 
     // buildJenkinsJob triggers a build for a Jenkins job
-    public async buildJenkinsJob(jobName: string): Promise<string | null> {
-        const url = `${this.jenkinsUrl}/job/${jobName}/build`;
+    public async buildJenkinsJobInFolder(jobName: string, folderName: string): Promise<string | null> {
+        const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/build`;
         try {
             const response = await this.axiosInstance.post(url);
             if (response.status === 201) {
@@ -161,8 +244,8 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForBuildToFinish waits for a build to finish and get its result
-    public async waitForBuildToFinish(jobName: string, buildNumber: number, timeoutMs: number) {
-        const url = `${this.jenkinsUrl}/job/${jobName}/${buildNumber}/api/json`;
+    public async waitForJobToFinishInFolder(jobName: string, buildNumber: number, timeoutMs: number, folderName: string) {
+        const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/${buildNumber}/api/json`;
 
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
@@ -205,8 +288,33 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    public async deleteJenkinsJob(jobName: string) {
-        const url = `${this.jenkinsUrl}/job/${jobName}/doDelete`;
+    public async getJobConsoleLogForBuild(jobName: string, folderName: string, buildNumber: number): Promise<string> {
+        const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/${buildNumber}/consoleFull`;
+
+        try {
+            const response = await this.axiosInstance.post(url);
+            return response.data;
+        } catch (error) {
+            console.error('Error getting latest build number:', error);
+            return "";
+        }
+    }
+
+    //Parse SBOM version from build log
+    public async parseSbomVersionFromConsoleLog(log: string): Promise<string> {
+        const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
+        if (filter != undefined){
+            return filter.substring(
+                filter.indexOf("sha256-") + 7,
+                filter.lastIndexOf(".sbom")
+            );
+        } else {
+            return "";
+        }
+    }
+
+    public async deleteJenkinsJobInFolder(jobName: string, folderName: string) {
+        const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/doDelete`;
 
         try {
             const response = await this.axiosInstance.post(url);
@@ -220,7 +328,34 @@ export class JenkinsCI extends Utils {
             console.error('Error deleting job:', error);
         }
     }
-    public async getJenkinsURL(){
+
+    public async createFolder(folderName: string) {
+        const url = `${this.jenkinsUrl}/createItem?name=${folderName}`;
+
+        const folderXml = `
+      <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.15">
+          <description></description>
+      </com.cloudbees.hudson.plugins.folder.Folder>
+    `;
+
+        try {
+
+            // Send POST request to create the folder
+            const response = await this.axiosInstance.post(url, folderXml);
+
+            if (response.status === 200) {
+                console.log(`Folder '${folderName}' created successfully.`);
+            } else {
+                console.log(`Failed to create folder '${folderName}', status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error creating Jenkins folder:', error);
+            throw error;
+        }
+    }
+
+
+    public async getJenkinsURL() {
         return this.jenkinsUrl;
     }
 }

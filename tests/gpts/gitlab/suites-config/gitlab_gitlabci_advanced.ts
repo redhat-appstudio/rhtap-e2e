@@ -55,7 +55,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe";
-        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
