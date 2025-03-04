@@ -179,6 +179,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         * Merge the gitops Pull Request with the new image value for stage environment. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
+            await gitLabProvider.waitForMergeableMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber, 30000);
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
@@ -204,6 +205,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         * Merge the gitops Pull Request with the new image value for prod. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in prod environment`, async () => {
+            await gitLabProvider.waitForMergeableMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber, 30000);
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
