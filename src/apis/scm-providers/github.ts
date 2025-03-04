@@ -555,4 +555,24 @@ export class GitHubProvider extends Utils {
             throw error;
         }
     }
+
+    public async setGitHubVariables(owner: string, repo: string, envVars: Record<string, string>) {
+        console.group(`Adding variables to github ${owner}/${repo}`);
+        for (const [envVarName, envVarValue] of Object.entries(envVars)){
+            console.log("Setting env var: " + envVarName);
+            try {
+                await this.octokit.actions.createRepoVariable({
+                    owner,
+                    repo,
+                    name: envVarName,
+                    value: envVarValue
+                });
+            } catch (error) {
+                console.error(`Error creating variable ${envVarName}: ${error}`);
+                console.groupEnd();
+                throw error;
+            }
+        }
+        console.groupEnd();
+    }
 }
