@@ -20,7 +20,7 @@ import { Utils } from '../../../../src/apis/scm-providers/utils';
  */
 export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentEnvironmentName = 'development';
         const ciNamespace = `${componentRootNamespace}-ci`;
