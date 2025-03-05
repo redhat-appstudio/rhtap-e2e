@@ -5,7 +5,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -35,10 +35,10 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
-
+        
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitHubClient: GitHubProvider;
@@ -63,7 +63,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitHubClient = await getGitHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -79,7 +79,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, ImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -90,22 +90,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task named " + repositoryName + " created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -133,6 +118,12 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryUserCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryUserCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName)).not.toBe(undefined);
+            expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName + "-gitops", await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
@@ -147,15 +138,24 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, 'Jenkinsfile')).toBe(true);
         }, 120000);
 
+        it(`creates ${gptTemplate} jenkins folder`, async () => {
+            await jenkinsClient.createFolder(repositoryName);
+        }, 120000);
+
+        it(`Create credentials in Jenkins for ${gptTemplate} job folder`, async () => {
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName);
+            await setSecretsForJenkinsInFolderForTPA(jenkinsClient, kubeClient, repositoryName);
+        }, 120000);
+
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName);
-            await jenkinsClient.waitForJobCreation(repositoryName);
+            await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName, repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
             await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${gptTemplate} GitOps jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("github.com", githubOrganization, repositoryName + "-gitops");
-            await jenkinsClient.waitForJobCreation(repositoryName + "-gitops");
+            await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName + "-gitops", repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName + "-gitops", repositoryName);
             await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
@@ -163,10 +163,10 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Trigger and wait for Jenkins job to finish
          */
         it(`Build and wait for ${gptTemplate} jenkins job`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 1, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -185,7 +185,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 2, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -194,17 +194,17 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
          */
         it('container component is successfully synced by gitops in development environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,developmentNamespace,developmentEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName + "-gitops", repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 10000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 1, 600000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName + "-gitops", 1, 600000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -242,7 +242,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          */
         it(`Wait for ${gptTemplate} jenkins job to finish for promotion from development to stage`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(`${repositoryName}-gitops`, 2, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(`${repositoryName}-gitops`, 2, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -252,7 +252,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
          */
         it('container component is successfully synced by gitops in staging environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
 
@@ -288,7 +288,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish promotion pipeline for production environment`, async () => {
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 3, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName + "-gitops", 3, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 900000);
@@ -297,7 +297,16 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in prod environment
          */
         it('container component is successfully synced by gitops in prod environment', async () => {
-            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient,prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+            await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000);
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
+            const sbomVersion = await jenkinsClient.parseSbomVersionFromConsoleLog(buildLog);
+            await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 
         /**
@@ -306,8 +315,8 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
                 await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
-                await jenkinsClient.deleteJenkinsJob(repositoryName);
-                await jenkinsClient.deleteJenkinsJob(repositoryName + "-gitops");
+                await jenkinsClient.deleteJenkinsJobInFolder(repositoryName, repositoryName);
+                await jenkinsClient.deleteJenkinsJobInFolder(repositoryName + "-gitops", repositoryName);
             }
         });
     });
