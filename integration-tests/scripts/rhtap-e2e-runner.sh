@@ -18,7 +18,6 @@ export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export BITBUCKET_USERNAME="rhtap-test-admin"
 export BITBUCKET_WORKSPACE="rhtap-test"
 export BITBUCKET_PROJECT="RHTAP"
-export IMAGE_REGISTRY_ORG="rhtap" # Default registry organization
 
 # OCI container registry settings
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
@@ -38,7 +37,19 @@ log() {
 secret_exists() {
     local namespace="$1"
     local secret_name="$2"
-    kubectl get secrets -n "$namespace" | grep -q "$secret_name"
+    log "DEBUG" "Checking if secret $secret_name exists in namespace $namespace"
+    
+    # Show all secrets in the namespace for debugging
+    kubectl get secrets -n "$namespace" | tee /tmp/secrets-list.txt
+    
+    # Test if the specific secret exists and show result
+    if kubectl get secrets -n "$namespace" | grep "$secret_name"; then
+        log "DEBUG" "Secret $secret_name found in namespace $namespace"
+        return 0
+    else
+        log "DEBUG" "Secret $secret_name NOT found in namespace $namespace"
+        return 1
+    fi
 }
 
 # Extract value from a Kubernetes secret
@@ -87,9 +98,12 @@ configure_image_registry() {
     
     # Check for Quay integration
     if secret_exists "rhtap" "rhtap-quay-integration"; then
-        export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-quay-integration -n rhtap -o json | jq '.data.url | @base64d') | cut -d '\' -f1 | sed -E 's|"https://([^/]+).*|\1|')"
+        log "INFO" "======Quay integration found in rhtap namespace==============="
+        #TODO: need to handle quay.io as image registry
+        export IMAGE_REGISTRY="$(kubectl get secret rhtap-quay-integration -n rhtap -o go-template='{{index .data "url" | base64decode}}' | sed 's|^https://||')"
         export IMAGE_REGISTRY_USERNAME=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "username")
         export IMAGE_REGISTRY_PASSWORD=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "password")
+
         log "INFO" "Using Quay registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
         return 0
     fi
