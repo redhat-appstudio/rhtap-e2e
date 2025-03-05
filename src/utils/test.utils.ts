@@ -397,9 +397,9 @@ export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryNam
 }
 
 export async function setSecretsForGitLabCI(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, kubeClient: Kubernetes) {
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY ?? await kubeClient.getCosignPublicKey());
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY ?? await kubeClient.getCosignPrivateKey());
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD ?? await kubeClient.getCosignPassword());
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '');
@@ -460,7 +460,14 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
     return result;
 }
 
-export async function checkSBOMInTrustification(kubeClient: Kubernetes, componentId: string) {
+/**
+ * Search SBOm in trustification by string, which could be SBOM name, SBOm version...
+ * 
+ * @param {Kubernetes} kubeClient - Kubernetes client.
+ * @param {string} searchString - String to search in trustification: for example SBOM, name, SBOm version...
+ * @throws {Error} If there is an error during search.
+ */
+export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchString: string) {
     const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
     const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
     const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
@@ -470,10 +477,11 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, componen
 
     try {
         await trust.initializeTpaToken();
-        const sbomData = await trust.waitForSbomSearchByName(componentId);
+        const sbomData = await trust.waitForSbomSearchByName(searchString);
         console.log('SBOM Data:', sbomData);
     } catch (error) {
         console.error('Error fetching SBOM data:', error);
+        throw error;
     }
 }
 
@@ -509,9 +517,9 @@ export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kub
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITHUB_TOKEN ?? '', folderName);
         await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername",process.env.GITHUB_TOKEN ?? '', folderName);
     }
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY ?? '', folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY ?? '', folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD ?? '', folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "IMAGE_REGISTRY_USER", process.env.IMAGE_REGISTRY_USERNAME ?? '', folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '', folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()), folderName);
