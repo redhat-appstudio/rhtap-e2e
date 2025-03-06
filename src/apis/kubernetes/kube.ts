@@ -268,6 +268,7 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
+        let errorFromWait;
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
@@ -285,14 +286,16 @@ export class Kubernetes extends Utils {
                     totalTimeMs += retryInterval;
                     continue;
                 }
-            } catch (_) {
+            } catch (error) {
                 console.info('Error fetching argo application : retrying');
+                errorFromWait = error;
             }
 
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
 
+        console.error(errorFromWait);
         throw new Error(`Timeout reached waiting for application '${name}' to be healthy. Check argocd console for application health.`);
     }
 
