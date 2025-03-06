@@ -26,7 +26,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const quayImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let RHTAPGitopsNamespace: string;
@@ -93,10 +93,10 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                 "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.QUAY_USERNAME || '',
-                "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
-                "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
+                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
+                "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
+                // "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
+                // "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
                 "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
                 "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
                 "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
@@ -142,7 +142,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             }
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("success");
-        }, 240000);
+        }, 600000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
