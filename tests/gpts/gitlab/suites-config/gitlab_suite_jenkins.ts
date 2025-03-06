@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 
 /**
@@ -22,7 +22,7 @@ import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
  */
 export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
@@ -72,20 +72,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task named " + repositoryName + " created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -119,26 +106,35 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
             await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
             await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
             await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
             await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
         }, 120000);
 
-        it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName);
-            await jenkinsClient.waitForJobCreation(repositoryName);
+        it(`creates ${softwareTemplateName} jenkins job and folder and wait for creation`, async () => {
+            await jenkinsClient.createFolder(repositoryName);
+            await jenkinsClient.createJenkinsJobInFolder("gitlab.com", gitLabOrganization, repositoryName, repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
+        }, 120000);
+
+        it(`Create credentials in Jenkins for ${softwareTemplateName}`, async () => {
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, true);
         }, 120000);
 
         /**
          * Trigger and wait for Jenkins job to finish
          */
         it(`Trigger and wait for ${softwareTemplateName} jenkins job`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 1, 540000, repositoryName);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
         }, 600000);
-
 
         /**
         * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
@@ -151,10 +147,12 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 2, 540000, repositoryName);
+            expect(jobStatus).not.toBe(undefined);
+            expect(jobStatus).toBe("SUCCESS");
         }, 600000);
 
         /**

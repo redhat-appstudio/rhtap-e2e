@@ -18,7 +18,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  */
 export const gitLabProviderGitLabCITests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -110,19 +110,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         * Setup env cvariables for gitlab runner in repository settings.
         */
         it(`Setup creds for ${softwareTemplateName} pipeline in repository`, async () => {
-
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_PUBLIC_KEY", process.env.COSIGN_PUBLIC_KEY || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", process.env.COSIGN_SECRET_KEY || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", process.env.COSIGN_SECRET_PASSWORD || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.IMAGE_REGISTRY_USERNAME || '');
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
-            await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
-
             await setSecretsForGitLabCI(gitLabProvider, gitlabRepositoryID, kubeClient);
-
         }, 600000);
 
 

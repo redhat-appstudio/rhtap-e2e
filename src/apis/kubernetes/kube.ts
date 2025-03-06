@@ -3,7 +3,6 @@ import * as path from "node:path";
 import { Utils } from "../scm-providers/utils";
 import { ApplicationSpec } from "./types/argo.cr.application";
 import { PipelineRunList, TaskRunList } from "./types/pac.cr.pipelinerun";
-import { OpenshiftRoute } from "./types/oc.routes.cr";
 import { Configuration, CoreV1Api, createConfiguration, CustomObjectsApi, dumpYaml, KubeConfig, RequestContext, ResponseContext, ServerConfiguration, V1ObjectMeta } from '@kubernetes/client-node';
 import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middleware';
 
@@ -77,11 +76,8 @@ export class Kubernetes extends Utils {
     public async getOpenshiftRoute(name: string, namespace: string): Promise<string> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const body = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
-            const route = body as OpenshiftRoute;
-
+            const route = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
             return route.spec.host;
-
         } catch (error) {
             console.error(error);
             throw new Error(`Failed to obtain openshift route ${name}: ${error}`);
@@ -272,6 +268,7 @@ export class Kubernetes extends Utils {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const retryInterval = 10 * 1000;
         let totalTimeMs = 0;
+        let errorFromWait;
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
@@ -289,14 +286,16 @@ export class Kubernetes extends Utils {
                     totalTimeMs += retryInterval;
                     continue;
                 }
-            } catch (_) {
+            } catch (error) {
                 console.info('Error fetching argo application : retrying');
+                errorFromWait = error;
             }
 
             await this.sleep(Math.min(retryInterval, timeoutMs - totalTimeMs)); // Adjust retry interval based on remaining timeout
             totalTimeMs += retryInterval;
         }
 
+        console.error(errorFromWait);
         throw new Error(`Timeout reached waiting for application '${name}' to be healthy. Check argocd console for application health.`);
     }
 
@@ -445,10 +444,7 @@ export class Kubernetes extends Utils {
             });
 
             // Extract the host from the route object
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const routeSpec = (route.body as any).spec;
-            const host = routeSpec.host;
-
+            const host = route.spec.host;
             if (host) {
                 return `https://${host}`;
             } else {
@@ -465,21 +461,21 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", false);
     }
 
     /**
     * Gets cosign private key.
     */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", false);
     }
 
     /**
     * Gets cosign password.
     */
     public async getCosignPassword(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", true);
+        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", false);
     }
 
     /**

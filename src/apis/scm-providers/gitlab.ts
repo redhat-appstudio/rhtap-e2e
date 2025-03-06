@@ -125,6 +125,24 @@ export class GitLabProvider extends Utils {
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for Gitlab', stringToFind, replacementString);
     }
 
+    public async createRegistryUserCommit(repositoryID: number, branchName: string): Promise<boolean> {
+        const stringToFind = "/* IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER') */";
+        const replacementString = `IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER')`;
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for IMAGE_REGISTRY_USER', stringToFind, replacementString);
+    }
+
+    public async createRegistryPasswordCommit(repositoryID: number, branchName: string): Promise<boolean> {
+        const stringToFind = "/* IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD') */";
+        const replacementString = `IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD')`;
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update creds for IMAGE_REGISTRY_PASSWORD', stringToFind, replacementString);
+    }
+
+    public async disableQuayCommit(repositoryID: number, branchName: string): Promise<boolean> {
+        const stringToFind = "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')";
+        const replacementString = `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`;
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Disable Quay creds for Gitlab', stringToFind, replacementString);
+    }
+
     public async getImageToPromotion(repositoryID: number, branch: string, componentName: string, environment: string) {
         let extractedImage;
         try {

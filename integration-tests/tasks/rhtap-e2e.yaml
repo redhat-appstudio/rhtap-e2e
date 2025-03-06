@@ -14,7 +14,7 @@ spec:
       default: "quay.io/konflux-test-storage/rhtap-team/rhtap-e2e"
     - name: rhtap-e2e-container
       type: string
-      default: "quay.io/rhtap/rhtap-e2e:latest"
+      default: "quay.io/redhat-user-workloads/rhtap-shared-team-tenant/rhtap-e2e/rhtap-e2e:latest"
     - name: job-spec
       type: string
       description: "The job specification containing details of the test execution."
@@ -85,10 +85,10 @@ spec:
         export JENKINS_ENABLED=$( [ "$(params.pipeline_config)" = "jenkins" ] && echo true || echo false )
         export TEKTON_ENABLED=$( [ "$(params.pipeline_config)" = "tekton" ] && echo true || echo false )
         export ACTIONS_ENABLED=$( [ "$(params.pipeline_config)" = "actions" ] && echo true || echo false )
+        export GITLABCI_ENABLED=$( [ "$(params.pipeline_config)" = "gitlabci" ] && echo true || echo false )
         export GITLAB_ENABLED=$( [ "$(params.scm_config)" = "gitlab" ] && echo true || echo false )
         export GITHUB_ENABLED=$( [ "$(params.scm_config)" = "github" ] && echo true || echo false )
         export BITBUCKET_ENABLED=$( [ "$(params.scm_config)" = "bitbucket" ] && echo true || echo false )
-        export GITLABCI_ENABLED=$( [ "$(params.pipeline_config)" = "gitlabci" ] && echo true || echo false )
 
         if [ "$GIT_REPO" = "rhtap-e2e" ]; then
           GIT_REVISION="${GIT_REVISION:-$(echo "$JOB_SPEC" | jq -r '.git.commit_sha')}"
