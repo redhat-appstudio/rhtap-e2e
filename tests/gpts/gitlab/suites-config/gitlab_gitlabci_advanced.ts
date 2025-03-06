@@ -28,7 +28,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  */
 export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;

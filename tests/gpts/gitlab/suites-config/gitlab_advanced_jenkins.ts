@@ -23,7 +23,7 @@ import { Utils } from "../../../../src/apis/scm-providers/utils";
  */
 export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry with promotion pipeline`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;

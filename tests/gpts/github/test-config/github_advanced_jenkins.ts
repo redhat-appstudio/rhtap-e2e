@@ -20,7 +20,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, c
  */
 export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';

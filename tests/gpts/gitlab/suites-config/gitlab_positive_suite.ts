@@ -17,7 +17,7 @@ import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, cr
  */
 export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;

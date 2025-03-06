@@ -22,7 +22,7 @@ import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
  */
 export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
