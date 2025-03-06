@@ -125,7 +125,9 @@ configure_image_registry() {
     
     # Check for Nexus integration
     if secret_exists "rhtap" "rhtap-nexus-integration"; then
-        export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-nexus-integration -n rhtap -o json | jq '.data.url | @base64d') | sed -E 's|https://([^/]+).*|\1|')"
+        export IMAGE_REGISTRY="${IMAGE_REGISTRY:-$(cat /usr/local/rhtap-cli-install/nexus-registry-url)}"
+        export IMAGE_REGISTRY_USERNAME="${IMAGE_REGISTRY_USERNAME:-$(cat /usr/local/rhtap-cli-install/nexus-username)}"
+        export IMAGE_REGISTRY_PASSWORD="${IMAGE_REGISTRY_PASSWORD:-$(cat /usr/local/rhtap-cli-install/nexus-password)}"
         log "INFO" "Using Nexus registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
         return 0
     fi
@@ -230,7 +232,7 @@ generate_templates() {
 # Run the test suite
 run_tests() {
     log "INFO" "Installing dependencies and running tests"
-    yarn && yarn test
+    yarn && yarn test tests/gpts/github/quarkus.tekton.test.ts
 }
 
 #===========================================
