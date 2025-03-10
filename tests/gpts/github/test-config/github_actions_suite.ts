@@ -103,9 +103,34 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
-            // //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
+            //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
+            // Replace these two lines:
             // expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             // expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            
+            // With this single call that handles both changes:
+            const rekorHost = await kubeClient.getRekorServerUrl(RHTAPRootNamespace);
+            const tufMirror = await kubeClient.getTUFUrl(RHTAPRootNamespace);
+            
+            // Make both changes in a single commit
+            expect(await gitHubClient.commitMultipleFilesInGitHub(
+                githubOrganization,
+                repositoryName,
+                [
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
+                        replacementString: tufMirror
+                    },
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
+                        replacementString: rekorHost
+                    }
+                ],
+                "Update Sigstore configuration (Rekor host and TUF mirror)"
+            )).not.toBe(undefined);
+            
 
         }, 600000);
 
