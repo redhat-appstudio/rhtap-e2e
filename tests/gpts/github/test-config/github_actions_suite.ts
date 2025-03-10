@@ -10,9 +10,11 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, c
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
  * 3. Check if Red Hat Developer Hub created GitHub repositories with workflow files
- * 4. Wait for GitHub Actions Job to finish
- * 5. Check if the application is deployed in development namespace and pod is synched
+ * 4. Creates secrets for GitHub Actions Workflow.
+ * 5. Wait for GitHub Actions Job to finish
+ * 6. Check if the application is deployed in development namespace and pod is synced
  */
+
 export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
@@ -87,6 +89,26 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
         }, 600000);
 
+        /**
+         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of
+         * my application. Also verifies if the repository contains a workflow file.
+         */
+        it(`verifies if component ${gptTemplate} was created in GitHub and contains a workflow file`, async () => {
+            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
+        }, 120000);
+
+        /**
+         * Verification to check if Red Hat Developer Hub created the gitops repository with wrkflow file
+         */
+        it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a workflow file`, async () => {
+            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
+        }, 120000);
+
+        /**
+         * Creates secrets for GitHub Actions Workflow
+         */
         it (`creates env variables in repo`, async () => {
             await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
                 "IMAGE_REGISTRY": imageRegistry,
@@ -103,48 +125,37 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
-            //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-            const rekorHost = await kubeClient.getRekorServerUrl(RHTAPRootNamespace);
-            const tufMirror = await kubeClient.getTUFUrl(RHTAPRootNamespace);
-            
-            // Make both changes in a single commit
+
+            // Make all changes in a single commit
             expect(await gitHubClient.commitMultipleFilesInGitHub(
                 githubOrganization,
                 repositoryName,
                 [
                     {
-                        path: 'rhtap/env.sh',
-                        stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
-                        replacementString: tufMirror
+                        path: '.github/workflows/build-and-update-gitops.yml',
+                        stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
+                        replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
                     },
                     {
-                        path: 'rhtap/env.sh',
-                        stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
-                        replacementString: rekorHost
+                        path: '.github/workflows/build-and-update-gitops.yml',
+                        stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
+                        replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
+                    },
+                    {
+                        path: '.github/workflows/build-and-update-gitops.yml',
+                        stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
+                        replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
+                    },
+                    {
+                        path: '.github/workflows/build-and-update-gitops.yml',
+                        stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
+                        replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
                     }
                 ],
-                "Update Sigstore configuration (Rekor host and TUF mirror)"
+                "Update Workflow file for Rekor host and TUF mirror secrets"
             )).not.toBe(undefined);
-            
 
         }, 600000);
-
-        /**
-         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
-         * my application. Also verifies if the repository contains a workflow file.
-         */
-        it(`verifies if component ${gptTemplate} was created in GitHub and contains a workflow file`, async () => {
-            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true);
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
-        }, 120000);
-
-        /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with wrkflow file
-         */
-        it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a workflow file`, async () => {
-            expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
-        }, 120000);
 
         /**
          * Trigger and wait for Actions job to finish
