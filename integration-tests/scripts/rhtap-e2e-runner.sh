@@ -14,9 +14,6 @@ export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 
 # Default namespace and organization settings
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
-export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-export GITLAB_ORGANIZATION_PUBLIC="rhtap-qe"
-export GITLAB_ORGANIZATION_PRIVATE="rhtap-qe-private"
 export BITBUCKET_USERNAME="rhtap-test-admin"
 export BITBUCKET_WORKSPACE="rhtap-test"
 export BITBUCKET_PROJECT="RHTAP"
@@ -67,16 +64,25 @@ get_secret_value() {
 #===========================================
 
 # Load credentials from secret files
-load_credentials() {
+load_oci_storage_credentials() {
     log "INFO" "Loading credentials from secret files"
 
-    export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
     export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
     export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
 }
 
+configure_github_variables() {
+    log "INFO" "Configuring GitHub credentials from cluster secrets"
+
+    if ! secret_exists "rhtap" "rhtap-github-integration"; then
+        log "WARN" "No GitHub integration secret found in the rhtap namespace"
+        return 0
+    fi
+    export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
+    export GITHUB_TOKEN="$(get_secret_value "rhtap" "rhtap-github-integration" "token")"
+}   
 # Extract GitLab organization from Kubernetes secret
-configure_gitlab_credentials() {
+configure_gitlab_variables() {
     log "INFO" "Configuring GitLab credentials from cluster secrets"
     
     if ! secret_exists "rhtap" "rhtap-gitlab-integration"; then
@@ -136,30 +142,30 @@ configure_developer_hub() {
 }
 
 # Generate cosign keys for GitLabCI
-generate_cosign_keys() {
-    log "INFO" "Setting up cosign configuration"
+# generate_cosign_keys() {
+#     log "INFO" "Setting up cosign configuration"
     
-    # Delete existing cosign key files if they exist
-    if [ -f cosign.key ]; then
-        rm cosign.key
-    fi
-    if [ -f cosign.pub ]; then
-        rm cosign.pub
-    fi
+#     # Delete existing cosign key files if they exist
+#     if [ -f cosign.key ]; then
+#         rm cosign.key
+#     fi
+#     if [ -f cosign.pub ]; then
+#         rm cosign.pub
+#     fi
     
-    # Generate a secure random password without newlines
-    PASSWORD=$(openssl rand -hex 32)
+#     # Generate a secure random password without newlines
+#     PASSWORD=$(openssl rand -hex 32)
     
-    # Generate key pair using cosign
-    COSIGN_PASSWORD="$PASSWORD" cosign generate-key-pair
+#     # Generate key pair using cosign
+#     COSIGN_PASSWORD="$PASSWORD" cosign generate-key-pair
     
-    # Export required environment variables
-    export COSIGN_SECRET_PASSWORD="$(base64 -w0 <<< "$PASSWORD")"
-    export COSIGN_SECRET_KEY="$(base64 -w0 < cosign.key)"
-    export COSIGN_PUBLIC_KEY="$(base64 -w0 < cosign.pub)"
+#     # Export required environment variables
+#     export COSIGN_SECRET_PASSWORD="$(base64 -w0 <<< "$PASSWORD")"
+#     export COSIGN_SECRET_KEY="$(base64 -w0 < cosign.key)"
+#     export COSIGN_PUBLIC_KEY="$(base64 -w0 < cosign.pub)"
     
-    log "INFO" "Cosign keys generated successfully"
-}
+#     log "INFO" "Cosign keys generated successfully"
+# }
 
 # Clean up and push artifacts to OCI container
 post_actions() {
@@ -238,11 +244,12 @@ main() {
     trap post_actions EXIT
     
     # Load credentials and configure environment
-    load_credentials
-    configure_gitlab_credentials
+    load_oci_storage_credentials
+    configure_github_variables
+    configure_gitlab_variables
     configure_image_registry
     configure_developer_hub
-    generate_cosign_keys
+    # generate_cosign_keys
     
     # Generate templates and run tests
     generate_templates
