@@ -38,7 +38,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         const developmentEnvironmentName = 'development';
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
+        const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PUBLIC || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe-"+ `${softwareTemplateName}`;

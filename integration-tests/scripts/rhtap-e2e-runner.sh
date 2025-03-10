@@ -15,6 +15,8 @@ export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 # Default namespace and organization settings
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
 export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
+export GITLAB_ORGANIZATION_PUBLIC="rhtap-qe"
+export GITLAB_ORGANIZATION_PRIVATE="rhtap-qe-private"
 export BITBUCKET_USERNAME="rhtap-test-admin"
 export BITBUCKET_WORKSPACE="rhtap-test"
 export BITBUCKET_PROJECT="RHTAP"

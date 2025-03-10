@@ -193,7 +193,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
     }
 
     if (gitLabOrganization === '') {
-        throw new Error("The 'GITLAB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
+        throw new Error("The 'GITLAB_ORGANIZATION_PUBLIC' or 'GITLAB_ORGANIZATION_PRIVATE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
     if (ImageOrg === '') {

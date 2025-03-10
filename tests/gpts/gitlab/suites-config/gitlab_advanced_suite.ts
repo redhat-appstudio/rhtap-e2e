@@ -24,7 +24,7 @@ import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, g
     * 14. Merge the Pull Request to main.
     * 15. Wait for the new image to be deployed to the production environment.
  */
-export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string) => {
+export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string, gitLabOrganization: string) => {
     describe(`Advanced Red Hat Trusted Application Pipeline ${softwareTemplateName} tests GitLab provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
@@ -51,7 +51,6 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe-"+ `${softwareTemplateName}`;
