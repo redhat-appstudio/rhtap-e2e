@@ -4,7 +4,9 @@ import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab,  checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { Tekton } from '../../../../src/utils/tekton';
+import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/constants/tekton';
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -31,6 +33,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
         let kubeClient: Kubernetes;
+        let tektonClient: Tekton;
 
         let gitlabRepositoryID: number;
         let gitlabGitopsRepositoryID: number;
@@ -53,13 +56,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
 
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
-        const imageName = "rhtap-qe-"+ `${softwareTemplateName}`;
+        const imageName = "rhtap-qe-" + `${softwareTemplateName}`;
         const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
+            tektonClient = new Tekton();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
@@ -134,23 +138,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             mergeRequestNumber = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomChars(6), mergeRequestTitleName);
             expect(mergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Merge_Request', onPullTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -159,23 +148,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async () => {
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber);
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Push', onPushTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -221,23 +195,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -271,23 +230,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
