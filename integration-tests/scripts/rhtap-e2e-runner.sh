@@ -161,6 +161,17 @@ generate_cosign_keys() {
     log "INFO" "Cosign keys generated successfully"
 }
 
+configure_bitbucket_credentials() {
+    log "INFO" "Configuring Bitbucket credentials from cluster secrets"
+    if ! secret_exists "rhtap" "rhtap-bitbucket-integration"; then
+        log "WARN" "No Bitbucket integration secret found in the rhtap namespace"
+        return 0
+    fi
+    export BITBUCKET_USERNAME="$(get_secret_value "rhtap" "rhtap-bitbucket-integration" "username")"
+    export BITBUCKET_APP_PASSWORD="$(get_secret_value "rhtap" "rhtap-bitbucket-integration" "password")"
+    log "INFO" "Bitbucket credentials configured successfully"
+}
+
 # Clean up and push artifacts to OCI container
 post_actions() {
     local exit_code=$?
@@ -240,6 +251,7 @@ main() {
     # Load credentials and configure environment
     load_credentials
     configure_gitlab_credentials
+    configure_bitbucket_credentials
     configure_image_registry
     configure_developer_hub
     generate_cosign_keys
