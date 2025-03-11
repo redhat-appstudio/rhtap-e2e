@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -284,6 +284,13 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          */
         it('check container component is successfully synced by gitops in prod environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
+        }, 900000);
+
+        /*
+         * Verifies if the SBOm is uploaded in RHTPA/Trustification
+         */
+        it('check sbom uploaded in RHTPA', async () => {
+            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
         }, 900000);
 
         /**
