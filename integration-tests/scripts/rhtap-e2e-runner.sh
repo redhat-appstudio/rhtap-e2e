@@ -105,7 +105,10 @@ configure_image_registry() {
         export IMAGE_REGISTRY="$(kubectl get secret rhtap-quay-integration -n rhtap -o go-template='{{index .data "url" | base64decode}}' | sed 's|^https://||')"
         export IMAGE_REGISTRY_USERNAME=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "username")
         export IMAGE_REGISTRY_PASSWORD=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "password")
-
+        # if IMAGE_REGISTRY is quay.io, then set IMAGE_REGISTRY_ORG to quay organization
+        if [[ $IMAGE_REGISTRY == "quay.io" ]]; then
+            export IMAGE_REGISTRY_ORG="rhtap_qe"
+        fi
         log "INFO" "Using Quay registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
         return 0
     fi
