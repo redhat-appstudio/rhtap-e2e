@@ -148,11 +148,17 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
                     "TRUSTIFICATION_OIDC_CLIENT_SECRET": await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()),
                     "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
                 });
-                //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-                expect(await gitHubClient.updateRekorHost(githubOrganization, repoName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
-                expect(await gitHubClient.updateTUFMirror(githubOrganization, repoName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
             }
 
+            expect(await gitHubClient.enableRekorHostSecretCommit(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
+            expect(await gitHubClient.enableTUFMirrorSecretCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setRekorHostCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setTUFMirrorCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
+
+            expect(await gitHubClient.enableRekorHostSecretCommit(githubOrganization, `${repositoryName}-gitops`, '.github/workflows/gitops-promotion.yml')).not.toBe(undefined);
+            expect(await gitHubClient.enableTUFMirrorSecretCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setRekorHostCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setTUFMirrorCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
         }, 600000);
 
         /**
@@ -290,7 +296,7 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Verifies if the SBOm is uploaded in RHTPA/Trustification
          */
         it('check sbom uploaded in RHTPA', async () => {
-            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
+            await checkSBOMInTrustification(kubeClient, repositoryName);
         }, 900000);
 
         /**

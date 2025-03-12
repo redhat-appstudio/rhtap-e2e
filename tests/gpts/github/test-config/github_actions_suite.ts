@@ -174,9 +174,11 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
-            //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
-            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+
+            expect(await gitHubClient.enableRekorHostSecretCommit(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
+            expect(await gitHubClient.enableTUFMirrorSecretCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setRekorHostCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
+            expect(await gitHubClient.setTUFMirrorCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
 
         }, 600000);
 
