@@ -36,7 +36,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const imageName = "rhtap-qe-"+ `${gptTemplate}`;
-        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
         
         let backstageClient: DeveloperHubClient;
@@ -63,7 +63,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitHubClient = await getGitHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -79,7 +79,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, ImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
