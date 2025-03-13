@@ -14,5 +14,5 @@ ACS: new
 Registry: artifactory
 TPA: new           
 SCM: github         
-Pipeline: tekton
+Pipeline: actions
 AUTH: github
