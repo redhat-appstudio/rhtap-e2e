@@ -371,8 +371,10 @@ export class GitHubProvider extends Utils {
 
     // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
     public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
-        console.log(`Waiting for the latest job in workflow '${workflow_id}' to finish...`);
-
+        console.log(`Waiting for the latest job in workflow '${workflow_id}' in repository '${owner}/${repo}' to finish...`);
+        // workaround for the issue with the GitHub API not returning the latest job status immediately
+        await this.sleep(10000);
+        
         const startTime = Date.now();
 
         while (true) {
@@ -401,7 +403,7 @@ export class GitHubProvider extends Utils {
 
                 // Check if the run is still in progress
                 if (latestRun.status === 'completed') {
-                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
+                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' in repository '${owner}/${repo}' has finished. Status: ${latestRun.conclusion}`);
                     return latestRun.conclusion; // Return only the status of the job
                 }
             } catch (error) {
@@ -428,10 +430,10 @@ export class GitHubProvider extends Utils {
             const workflow = workflows.workflows.find(wf => wf.name === workflowName || wf.path === workflowName);
 
             if (workflow) {
-                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id}`);
+                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id} in repository '${owner}/${repo}'`);
                 return workflow.id;
             } else {
-                console.log(`Workflow '${workflowName}' not found`);
+                console.log(`Workflow '${workflowName}' not found in repository '${owner}/${repo}'`);
                 return 0;
             }
         } catch (error) {
@@ -552,6 +554,185 @@ export class GitHubProvider extends Utils {
             console.log(`Secret "${secretName}" has been set successfully.`);
         } catch (error) {
             console.error('Error setting secret:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Commits multiple file changes to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the files will be committed.
+     * @param {Array<{path: string, stringToFind?: string, replacementString: string}>} fileChanges - Array of file changes to commit
+     * @param {string} commitMessage - The commit message
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+     */
+    public async commitMultipleFilesInGitHub(
+        gitOrg: string, 
+        gitRepository: string, 
+        fileChanges: {
+            path: string,
+            stringToFind?: string | RegExp,
+            replacementString: string
+        }[], 
+        commitMessage: string
+    ): Promise<string | undefined> {
+        try {
+            // Use a Map to track files by path
+            const fileContentsMap = new Map<string, {
+                content: string,
+                sha: string
+            }>();
+    
+            // Group changes by file path
+            const changesByPath = new Map<string, {
+                stringToFind?: string | RegExp,
+                replacementString: string
+            }[]>();
+            
+            // Organize changes by path
+            for (const change of fileChanges) {
+                if (!changesByPath.has(change.path)) {
+                    changesByPath.set(change.path, []);
+                }
+                const changes = changesByPath.get(change.path);
+                if (changes) {
+                    changes.push({
+                        stringToFind: change.stringToFind,
+                        replacementString: change.replacementString
+                    });
+                }
+            }
+            
+            // Process each unique file path
+            for (const [path, pathChanges] of changesByPath.entries()) {
+                try {
+                    // Get current file content
+                    const response = await this.octokit.repos.getContent({
+                        owner: gitOrg,
+                        repo: gitRepository,
+                        path,
+                        ref: 'main'
+                    });
+    
+                    let currentContent = Buffer.from(response.data.content, "base64").toString();
+                    console.log(`File before all changes: ${path}\n${currentContent}`);
+                    
+                    // Apply all changes sequentially to this file
+                    for (const change of pathChanges) {
+                        if (change.stringToFind) {
+                            // Create a regular expression for global replacement if stringToFind is a string
+                            const searchPattern = typeof change.stringToFind === 'string' 
+                                ? new RegExp(change.stringToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g') 
+                                : change.stringToFind;
+                            
+                            // Update the content with this change
+                            currentContent = currentContent.replace(searchPattern, change.replacementString);
+                        } else {
+                            // Replace entire file content
+                            currentContent = change.replacementString;
+                            break; // No need to process more changes if we're replacing the whole file
+                        }
+                    }
+                    
+                    console.log(`File after all changes: ${path}\n${currentContent}`);
+                    
+                    // Store the final content for this file
+                    fileContentsMap.set(path, {
+                        content: Buffer.from(currentContent).toString("base64"),
+                        sha: response.data.sha
+                    });
+                    
+                } catch (error) {
+                    console.error(`Error processing file ${path}:`, error);
+                    throw error;
+                }
+            }
+    
+            // Convert the map to the array format needed for the commit
+            const fileUpdates = Array.from(fileContentsMap.entries()).map(
+                ([path, {content, sha}]) => ({path, content, sha})
+            );
+            
+            // If we have file changes, create a commit
+            if (fileUpdates.length > 0) {
+                // Rest of the function remains the same...
+                const { data: refData } = await this.octokit.git.getRef({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    ref: 'heads/main'
+                });
+                
+                const { data: commitData } = await this.octokit.git.getCommit({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    commit_sha: refData.object.sha
+                });
+                
+                // Create a tree with all file changes
+                const { data: treeData } = await this.octokit.git.createTree({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    base_tree: commitData.tree.sha,
+                    tree: fileUpdates.map(file => ({
+                        path: file.path,
+                        mode: '100644',
+                        type: 'blob',
+                        content: Buffer.from(file.content, 'base64').toString('utf8')
+                    }))
+                });
+                
+                // Create a commit with the new tree
+                const { data: newCommitData } = await this.octokit.git.createCommit({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    message: commitMessage,
+                    tree: treeData.sha,
+                    parents: [commitData.sha]
+                });
+                
+                // Update the reference
+                await this.octokit.git.updateRef({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    ref: 'heads/main',
+                    sha: newCommitData.sha
+                });
+                
+                console.log(`Multiple files updated successfully in ${gitOrg}/${gitRepository}!`);
+                return "true";
+            } else {
+                console.log("No files were changed");
+                return undefined;
+            }
+        } catch (error) {
+            console.error("An error occurred while updating multiple files", error);
+            return undefined;
+        }
+    }
+    /**
+     * Gets the content of a file from a GitHub repository
+     * @param owner Repository owner
+     * @param repo Repository name
+     * @param path Path to the file
+     * @returns The content of the file as a string
+     */
+    async getFileContent(owner: string, repo: string, path: string): Promise<string> {
+        try {
+            const response = await this.octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path
+            });
+            
+            // GitHub returns file content as base64 encoded
+            if ('content' in response.data && !Array.isArray(response.data)) {
+                const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
+                return content;
+            }
+            throw new Error('Could not get file content');
+        } catch (error) {
+            console.error(`Error getting file content: ${error}`);
             throw error;
         }
     }
