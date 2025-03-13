@@ -172,20 +172,28 @@ export class GitHubProvider extends Utils {
         return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export DISABLE_ACS=false", "export DISABLE_ACS=true", "Enable ACS scan in Jenkins");
     }
 
-    public async enableRekorHostSecretCommit(gitOrg: string, gitRepository: string, workflowFile: string) {
-        return await this.commitInGitHub(gitOrg, gitRepository, workflowFile, "# REKOR_HOST: ${{ secrets.REKOR_HOST }}", "REKOR_HOST: ${{ secrets.REKOR_HOST }}", "Enable Rekor Host Secret in workflow");
+    /**
+    * Enables ACS scan for testing to the main branch of a specified Git repository.
+    * 
+    * @param {string} gitOrg - The name of the GitHub organization.
+    * @param {string} gitRepository - The name of the repository where the file will be committed.
+    * @returns {Promise<string | undefined>} A Promise resolving to the "true" if commit was successful, otherwise undefined.
+    * @throws Any error that occurs during the execution of the function.
+    */
+    public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.rhtap-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
     }
 
-    public async setRekorHostCommit(gitOrg: string, gitRepository: string, workflowFile: string) {
-        return await this.commitInGitHub(gitOrg, gitRepository, workflowFile, "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */", "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,", "Set Rekor Host Secret in workflow");
-    }
-
-    public async enableTUFMirrorSecretCommit(gitOrg: string, gitRepository: string, workflowFile: string) {
-        return await this.commitInGitHub(gitOrg, gitRepository, workflowFile, "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}", "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}", "Enable TUF Mirror Secret in workflow");
-    }
-
-    public async setTUFMirrorCommit(gitOrg: string, gitRepository: string, workflowFile: string) {
-        return await this.commitInGitHub(gitOrg, gitRepository, workflowFile, "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */", "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,", "Set TUF Mirror Secret in workflow");
+    /**
+     * Enables ACS scan for testing to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the file will be committed.
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+     * @throws Any error that occurs during the execution of the function.
+     */
+    public async updateRekorHost(gitOrg: string, gitRepository: string, rekorHost: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.rhtap-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
     }
 
     public async commitInGitHub(gitOrg: string, gitRepository: string, path: string, stringToFind: string, replacementString: string, commitMessage: string): Promise<string | undefined> {

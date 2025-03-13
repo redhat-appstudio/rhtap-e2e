@@ -127,8 +127,18 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Creates secrets for GitHub Actions Workflow
          */
         it (`creates env variables in repo`, async () => {
-            for ( const repoName of [`${repositoryName}-gitops`, repositoryName]) {
-                await gitHubClient.setGitHubSecrets(githubOrganization, repoName, {
+            const repoDict = [
+                {
+                    repoName: repositoryName,
+                    workflowPath: '.github/workflows/build-and-update-gitops.yml'
+                },
+                {
+                    repoName: `${repositoryName}-gitops`,
+                    workflowPath: '.github/workflows/gitops-promotion.yml'
+                }
+            ];
+            for (const repoData of repoDict) {
+                await gitHubClient.setGitHubSecrets(githubOrganization, repoData.repoName, {
                     "IMAGE_REGISTRY": imageRegistry,
                     "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                     "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
@@ -148,17 +158,35 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
                     "TRUSTIFICATION_OIDC_CLIENT_SECRET": await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()),
                     "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
                 });
+                expect(await gitHubClient.commitMultipleFilesInGitHub(
+                    githubOrganization,
+                    repoData.repoName,
+                    [
+                        {
+                            path: repoData.workflowPath,
+                            stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
+                            replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
+                        },
+                        {
+                            path: repoData.workflowPath,
+                            stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
+                            replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
+                        },
+                        {
+                            path: repoData.workflowPath,
+                            stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
+                            replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
+                        },
+                        {
+                            path: repoData.workflowPath,
+                            stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
+                            replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
+                        }
+                    ],
+                    "Update Workflow file for Rekor host and TUF mirror secrets"
+                )).not.toBe(undefined);
             }
 
-            expect(await gitHubClient.enableRekorHostSecretCommit(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
-            expect(await gitHubClient.enableTUFMirrorSecretCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
-            expect(await gitHubClient.setRekorHostCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
-            expect(await gitHubClient.setTUFMirrorCommit(githubOrganization, repositoryName, ".github/workflows/build-and-update-gitops.yml")).not.toBe(undefined);
-
-            expect(await gitHubClient.enableRekorHostSecretCommit(githubOrganization, `${repositoryName}-gitops`, '.github/workflows/gitops-promotion.yml')).not.toBe(undefined);
-            expect(await gitHubClient.enableTUFMirrorSecretCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
-            expect(await gitHubClient.setRekorHostCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
-            expect(await gitHubClient.setTUFMirrorCommit(githubOrganization, `${repositoryName}-gitops`, ".github/workflows/gitops-promotion.yml")).not.toBe(undefined);
         }, 600000);
 
         /**
