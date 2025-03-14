@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 
 /**
@@ -17,16 +17,16 @@ import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptions
  */
 export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
@@ -34,7 +34,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
 
-        let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         /**
          * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -42,12 +42,12 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -74,7 +74,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, ImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -85,22 +85,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -155,12 +140,12 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
             }
 
             if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
+                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
                 const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
 
                 for (const iterator of tskRuns) {
                     if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
+                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
                     }
                 }
                 expect(finished).toBe(true);
@@ -172,7 +157,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -180,7 +165,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -191,7 +176,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
             }
         });
     });

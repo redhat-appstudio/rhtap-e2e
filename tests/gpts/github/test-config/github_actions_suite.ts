@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -15,19 +15,21 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, c
  */
 export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const quayImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
+        let RHTAPGitopsNamespace: string;
         let RHTAPRootNamespace: string;
 
         let developerHubTask: TaskIdReponse;
@@ -41,12 +43,13 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -73,22 +76,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-
-                    throw new Error("failed to create backstage tasks. Please check Developer Hub tasks logs...");
-
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task named " + repositoryName + " created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -105,19 +93,39 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
                 "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.QUAY_USERNAME || '',
-                "IMAGE_REGISTRY_PASSWORD": process.env.QUAY_PASSWORD || '',
-                "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
-                "COSIGN_SECRET_PASSWORD": process.env.COSIGN_SECRET_PASSWORD || '',
-                "COSIGN_SECRET_KEY": process.env.COSIGN_SECRET_KEY || '',
-                "COSIGN_PUBLIC_KEY": process.env.COSIGN_PUBLIC_KEY || '',
+                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
+                "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
+                // "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
+                // "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
+                "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
+                "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
+                "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
                 "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
             //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
-            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            const rekorHost = await kubeClient.getRekorServerUrl(RHTAPRootNamespace);
+            const tufMirror = await kubeClient.getTUFUrl(RHTAPRootNamespace);
+            
+            // Make both changes in a single commit
+            expect(await gitHubClient.commitMultipleFilesInGitHub(
+                githubOrganization,
+                repositoryName,
+                [
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
+                        replacementString: tufMirror
+                    },
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
+                        replacementString: rekorHost
+                    }
+                ],
+                "Update Sigstore configuration (Rekor host and TUF mirror)"
+            )).not.toBe(undefined);
+            
 
         }, 600000);
 
@@ -170,7 +178,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPRootNamespace, githubOrganization, repositoryName);
+                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
             }
         });
     });

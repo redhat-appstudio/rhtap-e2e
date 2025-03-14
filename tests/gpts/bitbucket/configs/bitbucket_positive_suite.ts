@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getRHTAPRootNamespace, checkIfAcsScanIsPass, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, verifyPipelineRunByRepository, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -14,22 +14,22 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket
  * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
-export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
+export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Bitbucket provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
-        const stringOnRoute =  'Hello World!';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
         let bitbucketUsername: string;
         const bitbucketWorkspace = process.env.BITBUCKET_WORKSPACE || '';
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const imageName = "rhtap-qe";
-        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
@@ -38,7 +38,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         let kubeClient: Kubernetes;
         let pipelineAsCodeRoute: string;
 
-        let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         /**
          * Initializes Bitbucket and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -46,16 +46,16 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
-            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -143,7 +143,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
             const repositoryExists = await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, `${repositoryName}-gitops`);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
+            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, `${repositoryName}-gitops`, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -160,7 +160,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
             const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
-            expect(commit).not.toBe(undefined);
+            expect(commit).toBe(true);
 
         }, 120000);
 
@@ -168,23 +168,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, ciNamespace, 'push');
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -192,7 +177,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, developmentNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -200,7 +185,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, developmentNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -217,7 +202,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string) => {
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestBitbucket(bitbucketClient, kubeClient, RHTAPRootNamespace, bitbucketWorkspace, repositoryName);
+                await cleanAfterTestBitbucket(bitbucketClient, kubeClient, RHTAPGitopsNamespace, bitbucketWorkspace, repositoryName);
             }
         });
     });

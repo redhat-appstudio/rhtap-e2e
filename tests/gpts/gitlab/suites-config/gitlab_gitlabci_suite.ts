@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setSecretsForGitLabCI, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -18,7 +18,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  */
 export const gitLabProviderGitLabCITests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -28,32 +28,35 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         let gitlabRepositoryID: number;
 
         let RHTAPRootNamespace: string;
+        let RHTAPGitopsNamespace: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
-        const developmentNamespace = `${componentRootNamespace}-development`;
+        const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
+        const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
+        const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PUBLIC || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe";
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
             RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, developmentNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "gitlabci");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "gitlabci");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -142,7 +145,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPRootNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
             }
         });
     });
