@@ -11,8 +11,8 @@
 
 OCP: 4.17
 ACS: new            
-Registry: nexus
+Registry: artifactory
 TPA: new           
 SCM: github         
-Pipeline: tekton
+Pipeline: actions
 AUTH: github

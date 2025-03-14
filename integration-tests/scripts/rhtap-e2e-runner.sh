@@ -97,6 +97,36 @@ configure_gitlab_variables() {
     log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION})"
 }
 
+# Extract Artifactory registry credentials
+extract_artifactory_credentials() {
+    local namespace="rhtap"
+    local secret_name="rhtap-artifactory-integration"
+    local dockerconfig
+    
+    log "DEBUG" "Extracting Artifactory integration credentials"
+    
+    # Get the dockerconfig JSON from the secret
+    dockerconfig=$(get_secret_value "$namespace" "$secret_name" ".dockerconfigjson")
+    
+    if [ -z "$dockerconfig" ]; then
+        log "ERROR" "Failed to extract dockerconfig from Artifactory secret"
+        return 1
+    fi
+    
+    # Parse the JSON only once and extract all needed values
+    export IMAGE_REGISTRY=$(echo "$dockerconfig" | jq -r '.auths | to_entries[0].key')
+    
+    # Extract auth token and decode it
+    local auth=$(echo "$dockerconfig" | jq -r '.auths | to_entries[0].value.auth')
+    local auth_decoded=$(echo "$auth" | base64 -d)
+    
+    # Split the auth string into username and password
+    export IMAGE_REGISTRY_USERNAME=$(echo "$auth_decoded" | cut -d: -f1)
+    export IMAGE_REGISTRY_PASSWORD=$(echo "$auth_decoded" | cut -d: -f2-)
+    
+    log "INFO" "Successfully extracted Artifactory credentials for ${IMAGE_REGISTRY}"
+}
+
 # Configure image registry based on available integration
 configure_image_registry() {
     log "INFO" "Setting up image registry configuration"
@@ -106,8 +136,8 @@ configure_image_registry() {
     
     # Check for Quay integration
     if secret_exists "rhtap" "rhtap-quay-integration"; then
-        log "INFO" "======Quay integration found in rhtap namespace==============="
-        #TODO: need to handle quay.io as image registry
+        log "INFO" "Quay integration found in rhtap namespace"
+
         export IMAGE_REGISTRY="$(kubectl get secret rhtap-quay-integration -n rhtap -o go-template='{{index .data "url" | base64decode}}' | sed 's|^https://||')"
         export IMAGE_REGISTRY_USERNAME=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "username")
         export IMAGE_REGISTRY_PASSWORD=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "password")
@@ -119,9 +149,8 @@ configure_image_registry() {
         return 0
     fi
     
-    # Check for Artifactory integration
     if secret_exists "rhtap" "rhtap-artifactory-integration"; then
-        export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-artifactory-integration -n rhtap -o json | jq '.data.url | @base64d') | sed -E 's|https://([^/]+).*|\1|')"
+        extract_artifactory_credentials
         log "INFO" "Using Artifactory registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
         return 0
     fi
