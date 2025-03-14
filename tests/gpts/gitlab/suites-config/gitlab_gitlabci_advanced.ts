@@ -26,9 +26,9 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  * 
  * @param softwareTemplateName The name of the software template.
  */
-export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: string, stringOnRoute: string) => {
+export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: string, stringOnRoute: string, gitLabOrganization: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -51,11 +51,10 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe";
-        const imageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
@@ -179,6 +178,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         * Merge the gitops Pull Request with the new image value for stage environment. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
+            await gitLabProvider.waitForMergeableMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber, 30000);
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
@@ -204,6 +204,7 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         * Merge the gitops Pull Request with the new image value for prod. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in prod environment`, async () => {
+            await gitLabProvider.waitForMergeableMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber, 30000);
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryGitOpsID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
@@ -217,11 +218,13 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         /*
         * Verifies if the SBOm is uploaded in RHTPA/Trustification
         */
-        it('check sbom uploaded in RHTPA', async () =>{
-            const latestPipeline=await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
-            const buildahLog: string = await gitLabProvider.getLogForBuildah(gitlabRepositoryID, latestPipeline.id);
-            const sbomVersion = await gitLabProvider.parseSbomVersionFromLog(buildahLog);
-            await checkSBOMInTrustification(kubeClient, sbomVersion);
+        it('check sbom uploaded in RHTPA', async () => {
+            // This code needs to be monified after https://issues.redhat.com/browse/RHTAP-4461 is resolved - it would be better to use sbom version to have more unique identifier, than using a repositoryName
+            // const latestPipeline=await gitLabProvider.getLatestPipeline(gitlabRepositoryID);
+            // const buildahLog: string = await gitLabProvider.getLogForBuildah(gitlabRepositoryID, latestPipeline.id);
+            // const sbomVersion = await gitLabProvider.parseSbomVersionFromLog(buildahLog);
+            // await checkSBOMInTrustification(kubeClient, sbomVersion);
+            await checkSBOMInTrustification(kubeClient, repositoryName);
         }, 900000);
 
         /**

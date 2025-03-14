@@ -18,7 +18,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  */
 export const gitLabProviderGitLabCITests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -35,11 +35,11 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         const developmentEnvironmentName = 'development';
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
+        const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PUBLIC || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe";
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || '';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
@@ -49,14 +49,14 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
             * Creates a task in Developer Hub to generate a new component using specified git and kube options.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "gitlabci");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "gitlabci");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

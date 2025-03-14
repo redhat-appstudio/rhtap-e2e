@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.5-1736404036 as builder
+FROM registry.access.redhat.com/ubi9/ubi:9.5-1739751568 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
@@ -26,6 +26,9 @@ ARG ARGOCD_VERSION=v2.11.4
 
 # renovate: datasource=github-releases depName=tektoncd/cli
 ARG TEKTON_VERSION=v0.37.0
+
+# renovate: datasource=github-releases depName=sigstore/cosign
+ARG COSIGN_VERSION=v2.4.3
    
 RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" -o /tmp/helm.tar.gz && \
     tar -xzf /tmp/helm.tar.gz && \
@@ -62,7 +65,11 @@ RUN curl --proto "=https" --tlsv1.2 -sSf -L "https://github.com/tektoncd/cli/rel
     mv tkn /usr/local/bin && \
     tkn version
 
-FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1736729788
+ADD https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64 /usr/local/bin/cosign
+RUN chmod +x /usr/local/bin/cosign && \
+    cosign version
+
+FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1739801907
 
 USER root
 
@@ -78,3 +85,4 @@ COPY --from=builder /usr/local/bin/oras /usr/local/bin/oras
 COPY --from=builder /usr/local/bin/argocd /usr/local/bin/argocd
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
 COPY --from=builder /usr/local/bin/tkn /usr/local/bin/tkn
+COPY --from=builder /usr/local/bin/cosign /usr/local/bin/cosign
