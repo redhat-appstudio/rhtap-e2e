@@ -4,7 +4,9 @@ import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
 import { syncArgoApplication } from "../../../../src/utils/argocd";
-import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, getRHTAPGitopsNamespace } from "../../../../src/utils/test.utils";
+import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, getDeveloperHubClient, getGitLabProvider, createTaskCreatorOptionsGitlab, verifySyftImagePath, checkSBOMInTrustification, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { Tekton } from '../../../../src/utils/tekton';
+import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/constants/tekton';
 
 /**
     * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines GitLab Provider:
@@ -24,12 +26,14 @@ import { cleanAfterTestGitLab, checkEnvVariablesGitLab, checkIfAcsScanIsPass, ge
     * 14. Merge the Pull Request to main.
     * 15. Wait for the new image to be deployed to the production environment.
  */
-export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string) => {
+export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string, gitLabOrganization: string) => {
     describe(`Advanced Red Hat Trusted Application Pipeline ${softwareTemplateName} tests GitLab provider with public/private image registry`, () => {
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
         let kubeClient: Kubernetes;
+        let tektonClient: Tekton;
 
         let gitlabRepositoryID: number;
         let gitlabGitopsRepositoryID: number;
@@ -43,7 +47,6 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
-        const quayImageName = "rhtap-qe";
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
@@ -51,22 +54,23 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-" + `${softwareTemplateName}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
+            tektonClient = new Tekton();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -74,7 +78,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
 
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);
@@ -84,20 +88,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -147,41 +138,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             mergeRequestNumber = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomChars(6), mergeRequestTitleName);
             expect(mergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
-        }, 900000);
-
-        /**
-        * Check if the pipelinerun yaml has the rh-syft image path mentioned
-        * if failed to figure out the image path ,return pod yaml for reference
-        */
-        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
-            expect(result).toBe(true);
-        }, 900000);
-
-        /**
-            * verify if the ACS Scan is successfully done from the logs of task steps
-        */
-        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
-            expect(result).toBe(true);
-            console.log("Verified as ACS Scan is Successful");
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Merge_Request', onPullTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -190,23 +148,26 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async () => {
             await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber);
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push');
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Push', onPushTasks);
+            expect(pipelineRunResult).toBe(true);
+        }, 900000);
 
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
+        /**
+        * Check if the pipelinerun yaml has the rh-syft image path mentioned
+        * if failed to figure out the image path ,return pod yaml for reference
+        */
+        it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'Push');
+            expect(result).toBe(true);
+        }, 900000);
 
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+        /**
+            * verify if the ACS Scan is successfully done from the logs of task steps
+        */
+        it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'Push');
+            expect(result).toBe(true);
+            console.log("Verified as ACS Scan is Successful");
         }, 900000);
 
         /**
@@ -234,23 +195,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -284,23 +230,8 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'Merge_Request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -324,6 +255,14 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
+        }, 900000);
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            const extractedBuildImage = await gitLabProvider.getImageToPromotion(gitlabGitopsRepositoryID, "main", repositoryName, productionEnvironmentName);
+            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
         }, 900000);
 
         /**

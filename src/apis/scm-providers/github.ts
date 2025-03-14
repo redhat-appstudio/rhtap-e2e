@@ -1,15 +1,15 @@
 /* eslint-disable camelcase */
-import { Octokit } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { AxiosError } from "axios";
-import sodium from 'libsodium-wrappers';
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
+import sodium from 'sodium-native';
 
 export class GitHubProvider extends Utils {
     private readonly octokit: Octokit;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage="quay.io/jkopriva/rhtap-jenkins-agent:0.1";
+    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.1";
 
     constructor(githubToken: string) {
         super();
@@ -143,38 +143,21 @@ export class GitHubProvider extends Utils {
      * @throws Any error that occurs during the execution of the function.
      */
     public async createAgentCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
-        try {
-            const responseContent = await this.octokit.repos.getContent({
-                owner: gitOrg, repo: gitRepository,
-                path: 'Jenkinsfile',
-                ref: `main`,
-            });
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "agent any",
+            "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
+            , "Update agent in Jenkinsfile");
+    }
 
-            // Decode the base64 content
-            const content = Buffer.from(responseContent.data.content, "base64").toString();
+    public async createRegistryUserCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "/* IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER') */", `IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER')`, "Update Jenkinsfile to use IMAGE_REGISTRY_USER");
+    }
 
-            // Step 2: Modify the content
-            const updatedContent = content.replace(
-                /agent\s+any/,
-                "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
-            );
+    public async createRegistryPasswordCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "/* IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD') */", `IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD')`, "Update Jenkinsfile to use IMAGE_REGISTRY_PASSWORD");
+    }
 
-            // Step 3: Create a commit with the new content
-            await this.octokit.repos.createOrUpdateFileContents({
-                owner: gitOrg, repo: gitRepository,
-                path: 'Jenkinsfile',
-                message: "Update Jenkinsfile to use Kubernetes agent",
-                content: Buffer.from(updatedContent).toString("base64"),
-                sha: responseContent.data.sha, // The current commit SHA of the file
-                ref: `heads/main`,
-            });
-
-            console.log("Jenkinsfile updated successfully!");
-            return "true";
-
-        } catch (error) {
-            console.error("An error occurred while updating the Jenkinsfile:", error);
-        }
+    public async disableQuayCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')", `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`, "Enable ACS scan in Jenkins");
     }
 
     /**
@@ -186,38 +169,7 @@ export class GitHubProvider extends Utils {
      * @throws Any error that occurs during the execution of the function.
      */
     public async enableACSJenkins(gitOrg: string, gitRepository: string): Promise<string | undefined> {
-        try {
-            const responseContent = await this.octokit.repos.getContent({
-                owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
-                ref: `main`,
-            });
-
-            //   // Decode the base64 content
-            const content = Buffer.from(responseContent.data.content, "base64").toString();
-
-            // Step 2: Modify the content
-            const updatedContent = content.replace(
-                "export DISABLE_ACS=false",
-                "export DISABLE_ACS=true"
-            );
-
-            // Step 3: Create a commit with the new content
-            await this.octokit.repos.createOrUpdateFileContents({
-                owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
-                message: "Enable ACS scan in Jenkins",
-                content: Buffer.from(updatedContent).toString("base64"),
-                sha: responseContent.data.sha, // The current commit SHA of the file
-                ref: `main`,
-            });
-
-            console.log("env.sh updated successfully!");
-            return "true";
-
-        } catch (error) {
-            console.error("An error occurred while updating the Jenkinsfile:", error);
-        }
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export DISABLE_ACS=false", "export DISABLE_ACS=true", "Enable ACS scan in Jenkins");
     }
 
     /**
@@ -229,38 +181,7 @@ export class GitHubProvider extends Utils {
     * @throws Any error that occurs during the execution of the function.
     */
     public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
-        try {
-            const responseContent = await this.octokit.repos.getContent({
-                owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
-                ref: `main`,
-            });
-
-            //   // Decode the base64 content
-            const content = Buffer.from(responseContent.data.content, "base64").toString();
-
-            // Step 2: Modify the content
-            const updatedContent = content.replace(
-                "http://tuf.rhtap-tas.svc", // NOSONAR
-                tufURL
-            );
-
-            // Step 3: Create a commit with the new content
-            await this.octokit.repos.createOrUpdateFileContents({
-                owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
-                message: "Update TUF mirror in environment file",
-                content: Buffer.from(updatedContent).toString("base64"),
-                sha: responseContent.data.sha, // The current commit SHA of the file
-                ref: `main`,
-            });
-
-            console.log("env.sh updated successfully!");
-            return "true";
-
-        } catch (error) {
-            console.error("An error occurred while updating the enviroment file:", error);
-        }
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.rhtap-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
     }
 
     /**
@@ -272,10 +193,14 @@ export class GitHubProvider extends Utils {
      * @throws Any error that occurs during the execution of the function.
      */
     public async updateRekorHost(gitOrg: string, gitRepository: string, rekorHost: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.rhtap-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
+    }
+
+    public async commitInGitHub(gitOrg: string, gitRepository: string, path: string, stringToFind: string, replacementString: string, commitMessage: string): Promise<string | undefined> {
         try {
             const responseContent = await this.octokit.repos.getContent({
                 owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
+                path: path,
                 ref: `main`,
             });
 
@@ -284,15 +209,15 @@ export class GitHubProvider extends Utils {
 
             // Step 2: Modify the content
             const updatedContent = content.replace(
-                "http://rekor-server.rhtap-tas.svc",// NOSONAR
-                rekorHost
+                stringToFind,
+                replacementString
             );
 
             // Step 3: Create a commit with the new content
             await this.octokit.repos.createOrUpdateFileContents({
                 owner: gitOrg, repo: gitRepository,
-                path: 'rhtap/env.sh',
-                message: "Update rekor URL in environment file",
+                path: path,
+                message: commitMessage,
                 content: Buffer.from(updatedContent).toString("base64"),
                 sha: responseContent.data.sha, // The current commit SHA of the file
                 ref: `main`,
@@ -446,8 +371,10 @@ export class GitHubProvider extends Utils {
 
     // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
     public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
-        console.log(`Waiting for the latest job in workflow '${workflow_id}' to finish...`);
-
+        console.log(`Waiting for the latest job in workflow '${workflow_id}' in repository '${owner}/${repo}' to finish...`);
+        // workaround for the issue with the GitHub API not returning the latest job status immediately
+        await this.sleep(10000);
+        
         const startTime = Date.now();
 
         while (true) {
@@ -476,9 +403,9 @@ export class GitHubProvider extends Utils {
 
                 // Check if the run is still in progress
                 if (latestRun.status === 'completed') {
-                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' has finished. Status: ${latestRun.conclusion}`);
+                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' in repository '${owner}/${repo}' has finished. Status: ${latestRun.conclusion}`);
                     return latestRun.conclusion; // Return only the status of the job
-                } 
+                }
             } catch (error) {
                 console.error('Error fetching workflow run details:', error);
                 throw error;
@@ -503,10 +430,10 @@ export class GitHubProvider extends Utils {
             const workflow = workflows.workflows.find(wf => wf.name === workflowName || wf.path === workflowName);
 
             if (workflow) {
-                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id}`);
+                console.log(`Found workflow '${workflowName}' with ID: ${workflow.id} in repository '${owner}/${repo}'`);
                 return workflow.id;
             } else {
-                console.log(`Workflow '${workflowName}' not found`);
+                console.log(`Workflow '${workflowName}' not found in repository '${owner}/${repo}'`);
                 return 0;
             }
         } catch (error) {
@@ -519,7 +446,7 @@ export class GitHubProvider extends Utils {
      * This function reruns latest job of given workflow.
      * 
      */
-    public async rerunWorkflow(owner:string, repo: string, workflowId: number) {
+    public async rerunWorkflow(owner: string, repo: string, workflowId: number) {
         try {
             const { data: workflowRuns } = await this.octokit.rest.actions.listWorkflowRuns({
                 owner,
@@ -532,12 +459,12 @@ export class GitHubProvider extends Utils {
                 repo,
                 run_id: workflowRuns.workflow_runs[0].id
             });
-        }catch (error) {
+        } catch (error) {
             console.error(`Error rerunning workflow id=${workflowId}: `, error);
             throw error;
         }
     }
-    
+
     /**
      * Function to create a GitHub webhook for push events(for Jenkins for example)
      * @param {string} owner - The name of the GitHub organization.
@@ -591,33 +518,222 @@ export class GitHubProvider extends Utils {
                 owner,
                 repo
             });
-        }catch (error) {
+        } catch (error) {
             console.error("Error getting repo public key to setup secrets:", error);
             console.groupEnd();
             throw error;
         }
-        for (const [envVarName,envVarValue] of Object.entries(envVars)){
+        for (const [envVarName, envVarValue] of Object.entries(envVars)) {
             console.log("Setting env var: " + envVarName);
-            await sodium.ready;
-            const binkey = sodium.from_base64(publicKeyResponse.data.key, sodium.base64_variants.ORIGINAL);
-            const binsec = sodium.from_string(envVarValue);
-            const encBytes = sodium.crypto_box_seal(binsec, binkey);
-            const output = sodium.to_base64(encBytes, sodium.base64_variants.ORIGINAL);
-            try {
-                await this.octokit.actions.createOrUpdateRepoSecret({
-                    owner,
-                    repo,
-                    secret_name: envVarName,
-                    encrypted_value: output,
-                    key_id: publicKeyResponse.data.key_id
-                });
-            }catch (error) {
-                console.error(`Error creating secret ${envVarName}: ${error}`);
-                console.groupEnd();
-                throw error;
-            }
+            this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse);
         }
         console.groupEnd();
     }
 
+    public async encryptSecret(publicKey: string, secretValue: string) {
+        const keyBuffer = Buffer.from(publicKey, 'base64');
+        const secretBuffer = Buffer.from(secretValue, 'utf8');
+        const encryptedBuffer = Buffer.alloc(secretBuffer.length + sodium.crypto_box_SEALBYTES);
+        sodium.crypto_box_seal(encryptedBuffer, secretBuffer, keyBuffer);
+        return encryptedBuffer.toString('base64');
+    }
+
+    public async setSecret(owner: string, repo: string, secretName: string, secretValue: string, publicKeyResponse: RestEndpointMethodTypes["actions"]["getRepoPublicKey"]["response"]) {
+        try {
+            const encryptedValue = await this.encryptSecret(publicKeyResponse.data.key, secretValue);
+            await this.octokit.rest.actions.createOrUpdateRepoSecret(
+                {
+                    owner,
+                    repo,
+                    secret_name: secretName,
+                    encrypted_value: encryptedValue,
+                    key_id: publicKeyResponse.data.key_id,
+                }
+            );
+
+            console.log(`Secret "${secretName}" has been set successfully.`);
+        } catch (error) {
+            console.error('Error setting secret:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Commits multiple file changes to the main branch of a specified Git repository.
+     * 
+     * @param {string} gitOrg - The name of the GitHub organization.
+     * @param {string} gitRepository - The name of the repository where the files will be committed.
+     * @param {Array<{path: string, stringToFind?: string, replacementString: string}>} fileChanges - Array of file changes to commit
+     * @param {string} commitMessage - The commit message
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+     */
+    public async commitMultipleFilesInGitHub(
+        gitOrg: string, 
+        gitRepository: string, 
+        fileChanges: {
+            path: string,
+            stringToFind?: string | RegExp,
+            replacementString: string
+        }[], 
+        commitMessage: string
+    ): Promise<string | undefined> {
+        try {
+            // Use a Map to track files by path
+            const fileContentsMap = new Map<string, {
+                content: string,
+                sha: string
+            }>();
+    
+            // Group changes by file path
+            const changesByPath = new Map<string, {
+                stringToFind?: string | RegExp,
+                replacementString: string
+            }[]>();
+            
+            // Organize changes by path
+            for (const change of fileChanges) {
+                if (!changesByPath.has(change.path)) {
+                    changesByPath.set(change.path, []);
+                }
+                const changes = changesByPath.get(change.path);
+                if (changes) {
+                    changes.push({
+                        stringToFind: change.stringToFind,
+                        replacementString: change.replacementString
+                    });
+                }
+            }
+            
+            // Process each unique file path
+            for (const [path, pathChanges] of changesByPath.entries()) {
+                try {
+                    // Get current file content
+                    const response = await this.octokit.repos.getContent({
+                        owner: gitOrg,
+                        repo: gitRepository,
+                        path,
+                        ref: 'main'
+                    });
+    
+                    let currentContent = Buffer.from(response.data.content, "base64").toString();
+                    console.log(`File before all changes: ${path}\n${currentContent}`);
+                    
+                    // Apply all changes sequentially to this file
+                    for (const change of pathChanges) {
+                        if (change.stringToFind) {
+                            // Create a regular expression for global replacement if stringToFind is a string
+                            const searchPattern = typeof change.stringToFind === 'string' 
+                                ? new RegExp(change.stringToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g') 
+                                : change.stringToFind;
+                            
+                            // Update the content with this change
+                            currentContent = currentContent.replace(searchPattern, change.replacementString);
+                        } else {
+                            // Replace entire file content
+                            currentContent = change.replacementString;
+                            break; // No need to process more changes if we're replacing the whole file
+                        }
+                    }
+                    
+                    console.log(`File after all changes: ${path}\n${currentContent}`);
+                    
+                    // Store the final content for this file
+                    fileContentsMap.set(path, {
+                        content: Buffer.from(currentContent).toString("base64"),
+                        sha: response.data.sha
+                    });
+                    
+                } catch (error) {
+                    console.error(`Error processing file ${path}:`, error);
+                    throw error;
+                }
+            }
+    
+            // Convert the map to the array format needed for the commit
+            const fileUpdates = Array.from(fileContentsMap.entries()).map(
+                ([path, {content, sha}]) => ({path, content, sha})
+            );
+            
+            // If we have file changes, create a commit
+            if (fileUpdates.length > 0) {
+                // Rest of the function remains the same...
+                const { data: refData } = await this.octokit.git.getRef({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    ref: 'heads/main'
+                });
+                
+                const { data: commitData } = await this.octokit.git.getCommit({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    commit_sha: refData.object.sha
+                });
+                
+                // Create a tree with all file changes
+                const { data: treeData } = await this.octokit.git.createTree({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    base_tree: commitData.tree.sha,
+                    tree: fileUpdates.map(file => ({
+                        path: file.path,
+                        mode: '100644',
+                        type: 'blob',
+                        content: Buffer.from(file.content, 'base64').toString('utf8')
+                    }))
+                });
+                
+                // Create a commit with the new tree
+                const { data: newCommitData } = await this.octokit.git.createCommit({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    message: commitMessage,
+                    tree: treeData.sha,
+                    parents: [commitData.sha]
+                });
+                
+                // Update the reference
+                await this.octokit.git.updateRef({
+                    owner: gitOrg,
+                    repo: gitRepository,
+                    ref: 'heads/main',
+                    sha: newCommitData.sha
+                });
+                
+                console.log(`Multiple files updated successfully in ${gitOrg}/${gitRepository}!`);
+                return "true";
+            } else {
+                console.log("No files were changed");
+                return undefined;
+            }
+        } catch (error) {
+            console.error("An error occurred while updating multiple files", error);
+            return undefined;
+        }
+    }
+    /**
+     * Gets the content of a file from a GitHub repository
+     * @param owner Repository owner
+     * @param repo Repository name
+     * @param path Path to the file
+     * @returns The content of the file as a string
+     */
+    async getFileContent(owner: string, repo: string, path: string): Promise<string> {
+        try {
+            const response = await this.octokit.rest.repos.getContent({
+                owner,
+                repo,
+                path
+            });
+            
+            // GitHub returns file content as base64 encoded
+            if ('content' in response.data && !Array.isArray(response.data)) {
+                const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
+                return content;
+            }
+            throw new Error('Could not get file content');
+        } catch (error) {
+            console.error(`Error getting file content: ${error}`);
+            throw error;
+        }
+    }
 }

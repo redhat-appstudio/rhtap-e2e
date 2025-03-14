@@ -1,5 +1,6 @@
 module.exports = {
     testEnvironment: './jest-environment-fail-fast.js',
+    transformIgnorePatterns: ["node_modules/(?!@kubernetes/client-node)/"],
     maxWorkers: 6,
     bail: false,
     testRunner: 'jest-circus/runner',

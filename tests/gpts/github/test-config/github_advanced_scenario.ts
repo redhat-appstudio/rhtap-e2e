@@ -5,7 +5,9 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { Tekton } from '../../../../src/utils/tekton';
+import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/constants/tekton';
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -27,13 +29,12 @@ import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, cleanAfterTestGitHub, cr
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
 
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
-        const quayImageName = "rhtap-qe";
 
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
@@ -43,13 +44,15 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-" + `${gptTemplate}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
         let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
+        let tektonClient: Tekton;
 
         let pullRequestNumber: number;
         let gitopsPromotionPRNumber: number;
@@ -65,10 +68,11 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
+            tektonClient = new Tekton();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -84,7 +88,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, quayImageName, quayImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, ImageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -94,20 +98,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits for the specified component task to be processed by Developer Hub and retrieves logs upon completion.
          */
         it(`wait ${gptTemplate} component to be finished`, async () => {
-            // Retrieve the processed task from Developer Hub
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("failed to create backstage tasks. creating logs...");
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `github-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`failed to write files to console: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 600000);
 
         /**
@@ -171,23 +162,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'pull_request', onPullTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -201,23 +177,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -225,7 +186,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -233,7 +194,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -279,23 +240,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging.
          */
         it('verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging', async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'pull_request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -346,23 +292,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from staging to production.
          */
         it('verifies successful completion of PipelineRun to ensure environment promotion from stage to prod', async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(`${repositoryName}-gitops`, 'pull_request');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'pull_request', onPullGitopsTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -386,6 +317,14 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             if (!isReady) {
                 throw new Error("Component seems was not synced by ArgoCD in 10 minutes");
             }
+        }, 900000);
+
+
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
         }, 900000);
 
         /**

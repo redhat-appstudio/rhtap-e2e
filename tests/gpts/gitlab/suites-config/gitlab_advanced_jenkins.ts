@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, waitForComponentCreation} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Utils } from "../../../../src/apis/scm-providers/utils";
 
@@ -21,9 +21,9 @@ import { Utils } from "../../../../src/apis/scm-providers/utils";
  * 
  * @param softwareTemplateName The name of the software template.
  */
-export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringOnRoute: string) => {
+export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringOnRoute: string, gitLabOrganization: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry with promotion pipeline`, () => {
-
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
@@ -47,7 +47,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe";
@@ -81,20 +80,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task named " + repositoryName + " created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -136,6 +122,15 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
             await gitLabProvider.enableACSJenkins(gitlabGitOpsRepositoryID, 'main');
 
+            await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.createRegistryUserCommit(gitlabGitOpsRepositoryID, 'main');
+
+            await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.createRegistryPasswordCommit(gitlabGitOpsRepositoryID, 'main');
+
+            await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
+            await gitLabProvider.disableQuayCommit(gitlabGitOpsRepositoryID, 'main');
+
             await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
             await gitLabProvider.updateRekorHost(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
 
@@ -143,15 +138,24 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.updateTufMirror(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
         }, 120000);
 
+        it(`creates ${softwareTemplateName} jenkins folder`, async () => {
+            await jenkinsClient.createFolder(repositoryName);
+        }, 120000);
+
+        it(`Create credentials in Jenkins for ${softwareTemplateName}`, async () => {
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, true);
+            await setSecretsForJenkinsInFolderForTPA(jenkinsClient, kubeClient, repositoryName);
+        }, 120000);
+
         it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName);
-            await jenkinsClient.waitForJobCreation(repositoryName);
+            await jenkinsClient.createJenkinsJobInFolder("gitlab.com", gitLabOrganization, repositoryName, repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
             await gitLabProvider.createProjectWebHook(gitlabRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${softwareTemplateName} GitOps jenkins job and wait for creation`, async () => {
-            await jenkinsClient.createJenkinsJob("gitlab.com", gitLabOrganization, repositoryName + "-gitops");
-            await jenkinsClient.waitForJobCreation(repositoryName + "-gitops");
+            await jenkinsClient.createJenkinsJobInFolder("gitlab.com", gitLabOrganization, repositoryName + "-gitops", repositoryName);
+            await jenkinsClient.waitForJobCreationInFolder(repositoryName + "-gitops", repositoryName);
             await gitLabProvider.createProjectWebHook(gitlabGitOpsRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
@@ -159,10 +163,10 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          * Trigger and wait for Jenkins job to finish
          */
         it(`Trigger and wait for ${softwareTemplateName} jenkins job`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 1, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 1, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
@@ -178,10 +182,10 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName);
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName, repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName, 2, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 2, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
@@ -193,15 +197,14 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, developmentNamespace, developmentEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${softwareTemplateName} GitOps jenkins job to finish`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName + "-gitops", repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 1, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName + "-gitops", 1, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
@@ -223,19 +226,17 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
-
         /**
          * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Wait for ${softwareTemplateName} jenkins job to finish for promotion from development to stage`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName + "-gitops", repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(`${repositoryName}-gitops`, 2, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(`${repositoryName}-gitops`, 2, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
-
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in staging environment
@@ -243,7 +244,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         it('container component is successfully synced by gitops in staging environment', async () => {
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, stageNamespace, stagingEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
-
 
         /**
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
@@ -268,10 +268,10 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
         */
         it(`Trigger job and wait for ${softwareTemplateName} jenkins job to finish promotion pipeline for production environment`, async () => {
-            await jenkinsClient.buildJenkinsJob(repositoryName + "-gitops");
+            await jenkinsClient.buildJenkinsJobInFolder(repositoryName + "-gitops", repositoryName);
             console.log('Waiting for the build to start...');
             await new Promise(resolve => setTimeout(resolve, 5000));
-            const jobStatus = await jenkinsClient.waitForBuildToFinish(repositoryName + "-gitops", 3, 540000);
+            const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName + "-gitops", 3, 540000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("SUCCESS");
         }, 600000);
@@ -283,12 +283,22 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await checkComponentSyncedInArgoAndRouteIsWorking(kubeClient, backstageClient, prodNamespace, productionEnvironmentName, repositoryName, stringOnRoute);
         }, 900000);
 
+        /*
+        * Verifies if the SBOm is uploaded in RHTPA/Trustification
+        */
+        it('check sbom uploaded in RHTPA', async () => {
+            const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
+            const sbomVersion = await jenkinsClient.parseSbomVersionFromConsoleLog(buildLog);
+            await checkSBOMInTrustification(kubeClient, sbomVersion);
+        }, 900000);
+
         /**
         * Deletes created applications
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
                 await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName);
+                await cleanAfterTestGitLab(gitLabProvider, kubeClient, RHTAPGitopsNamespace, gitLabOrganization, gitlabRepositoryID, repositoryName + "-gitops");
             }
         });
     });

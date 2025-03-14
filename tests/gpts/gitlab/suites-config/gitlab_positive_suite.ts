@@ -4,7 +4,9 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPGitopsNamespace, verifySyftImagePath } from "../../../../src/utils/test.utils";
+import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { Tekton } from '../../../../src/utils/tekton';
+import { onPushTasks } from '../../../../src/constants/tekton';
 
 /**
  * 1. Creates a component in Red Hat Developer Hub.
@@ -17,12 +19,13 @@ import { checkEnvVariablesGitLab, checkIfAcsScanIsPass, cleanAfterTestGitLab, cr
  */
 export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(2);
+        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
         let kubeClient: Kubernetes;
+        let tektonClient: Tekton;
 
         let gitlabRepositoryID: number;
         let pipelineAsCodeRoute: string;
@@ -32,24 +35,25 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
+        const gitLabOrganization = process.env.GITLAB_ORGANIZATION_PUBLIC || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
-        const quayImageName = "rhtap-qe";
-        const quayImageOrg = process.env.QUAY_IMAGE_ORG || '';
+        const imageName = "rhtap-qe-" + `${softwareTemplateName}`;
+        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
 
             kubeClient = new Kubernetes();
+            tektonClient = new Tekton();
             gitLabProvider = await getGitLabProvider(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, quayImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -57,7 +61,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, quayImageName, quayImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -68,20 +72,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * If the task is not completed within the timeout, it writes logs to the specified directory.
         */
         it(`waits for ${softwareTemplateName} component creation to finish`, async () => {
-            const taskCreated = await backstageClient.getTaskProcessed(developerHubTask.id, 120000);
-
-            if (taskCreated.status !== 'completed') {
-                console.log("Failed to create backstage task. Creating logs...");
-
-                try {
-                    const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
-                } catch (error) {
-                    throw new Error(`Failed to write logs to artifact directory: ${error}`);
-                }
-            } else {
-                console.log("Task created successfully in backstage");
-            }
+            await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
@@ -131,24 +122,8 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
         */
         it(`Wait component ${softwareTemplateName} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, 'Push');
-
-            if (pipelineRun === undefined) {
-                throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-            }
-
-            if (pipelineRun && pipelineRun.metadata && pipelineRun.metadata.name) {
-                const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, ciNamespace, 900000);
-                const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-                for (const iterator of tskRuns) {
-                    if (iterator.status && iterator.status.podName) {
-                        await kubeClient.readNamespacedPodLog(iterator.status.podName, ciNamespace);
-                    }
-                }
-                expect(finished).toBe(true);
-            }
-
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Push', onPushTasks);
+            expect(pipelineRunResult).toBe(true);
         }, 900000);
 
         /**
@@ -156,7 +131,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace);
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'Push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -164,7 +139,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace);
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'Push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
