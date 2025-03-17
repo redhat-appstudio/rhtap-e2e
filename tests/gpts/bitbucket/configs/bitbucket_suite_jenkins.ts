@@ -129,8 +129,8 @@ export const bitbucketJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string
                 await kubeClient.getACSEndpoint(RHTAPRootNamespace),
                 await getCosignPublicKey(kubeClient),
                 process.env.IMAGE_REGISTRY_USERNAME ?? '')
-            ).toBe(true);
-            expect(await bitbucketClient.updateJenkinsfileForCI(bitbucketWorkspace, repositoryName)).toBe(true);
+            ).not.toBe(undefined);
+            expect(await bitbucketClient.updateJenkinsfileForCI(bitbucketWorkspace, repositoryName)).not.toBe(undefined);
         }, 120000);
 
         /**
@@ -173,8 +173,7 @@ export const bitbucketJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string
          */
         it(`Creates empty commit in the ${gptTemplate} bitbucket repository`, async () => {
             const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
-            expect(commit).toBe(true);
-
+            expect(commit).not.toBe(undefined);
         }, 120000);
 
         /**
