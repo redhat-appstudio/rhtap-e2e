@@ -4,7 +4,9 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, verifyPipelineRunByRepository, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace } from "../../../../src/utils/test.utils";
+import { Tekton } from '../../../../src/utils/tekton';
+import { onPushTasks } from '../../../../src/constants/tekton';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -36,6 +38,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         let backstageClient: DeveloperHubClient;
         let bitbucketClient: BitbucketProvider;
         let kubeClient: Kubernetes;
+        let tektonClient: Tekton;
         let pipelineAsCodeRoute: string;
 
         let RHTAPGitopsNamespace: string;
@@ -48,6 +51,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
+            tektonClient = new Tekton();
             bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
             bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
@@ -168,7 +172,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRunResult = await verifyPipelineRunByRepository(kubeClient, repositoryName, ciNamespace, 'push');
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 

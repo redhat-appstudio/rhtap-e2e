@@ -59,7 +59,7 @@ export class Kubernetes extends Utils {
         try {
             const taskRunList = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
             const taskRunInterface = taskRunList as TaskRunList;
-            return taskRunInterface.items.filter(taskRun => taskRun?.metadata?.name?.startsWith(pipelineRunName));
+            return taskRunInterface.items.filter(taskRun => taskRun?.metadata?.ownerReferences?.[0].name === pipelineRunName);
 
         } catch (error) {
             console.error(error);

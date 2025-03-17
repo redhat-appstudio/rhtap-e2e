@@ -469,11 +469,11 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
  */
 export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchString: string) {
     const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
-    const oidcIssuesUrl =await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()); 
+    const oidcIssuesUrl = await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace());
     const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
     const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace());
-    
-    const trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl,oidcclientId, oidcclientSecret);
+
+    const trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl, oidcclientId, oidcclientSecret);
 
     try {
         await trust.initializeTpaToken();
@@ -485,37 +485,14 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchSt
     }
 }
 
-export async function verifyPipelineRunByRepository(kubeClient: Kubernetes, repositoryName: string, developmentNamespace: string, eventType: string) {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
-    let result = true;
-    if (pipelineRun === undefined) {
-        throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verrfy PAC controller logs.");
-    }
-
-    if (pipelineRun?.metadata?.name) {
-        const finished = await kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, developmentNamespace, 900000);
-        const tskRuns = await kubeClient.getTaskRunsFromPipelineRun(pipelineRun.metadata.name);
-
-        for (const iterator of tskRuns) {
-            if (iterator?.status?.podName) {
-                await kubeClient.readNamespacedPodLog(iterator.status.podName, developmentNamespace);
-            }
-        }
-        if (finished !== true) {
-            result = false;
-        }
-    }
-    return result;
-}
-
 export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string, isGitLab = false) {
-    if (isGitLab){
+    if (isGitLab) {
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_USERNAME", 'fakeUsername', folderName);
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITLAB_TOKEN ?? '', folderName);
-        await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername",process.env.GITLAB_TOKEN ?? '', folderName);
+        await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername", process.env.GITLAB_TOKEN ?? '', folderName);
     } else {
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITHUB_TOKEN ?? '', folderName);
-        await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername",process.env.GITHUB_TOKEN ?? '', folderName);
+        await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername", process.env.GITHUB_TOKEN ?? '', folderName);
     }
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient), folderName);
