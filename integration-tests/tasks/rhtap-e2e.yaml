@@ -59,7 +59,6 @@ spec:
         set -o errexit
         set -o nounset
         set -o pipefail
-        set -x
 
         # Log into OpenShift
         $(params.ocp-login-command)
