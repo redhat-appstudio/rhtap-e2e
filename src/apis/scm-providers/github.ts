@@ -736,4 +736,42 @@ export class GitHubProvider extends Utils {
             throw error;
         }
     }
+
+    /**
+     * Commits multiple changes to workflow file required to enable RekorHost and TufMirror Secrets.
+     *
+     * @param {string} githubOrganization - The name of the GitHub organization.
+     * @param {string} repositoryName - The name of the repository where the files will be committed.
+     * @param {string} workflowPath - The workflow file name
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+    */
+    async updateWorkflowFileToEnableSecrets(githubOrganization: string, repositoryName: string, workflowPath: string) {
+        return await this.commitMultipleFilesInGitHub(
+            githubOrganization,
+            repositoryName,
+            [
+                {
+                    path: workflowPath,
+                    stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
+                    replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
+                    replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
+                    replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
+                    replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
+                }
+            ],
+            "Update Workflow file for Rekor host and TUF mirror secrets"
+        );
+    }
 }
