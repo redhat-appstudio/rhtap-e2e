@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -138,53 +138,8 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
                 }
             ];
             for (const repoData of repoDict) {
-                await gitHubClient.setGitHubSecrets(githubOrganization, repoData.repoName, {
-                    "IMAGE_REGISTRY": imageRegistry,
-                    "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
-                    "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
-                    "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                    "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
-                    "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
-                    "QUAY_IO_CREDS_USR": process.env.IMAGE_REGISTRY_USERNAME || '',
-                    "QUAY_IO_CREDS_PSW": process.env.IMAGE_REGISTRY_PASSWORD || '',
-                    "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
-                    "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
-                    "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
-                    "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
-                    "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || '',
-                    "TRUSTIFICATION_BOMBASTIC_API_URL": await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()),
-                    "TRUSTIFICATION_OIDC_ISSUER_URL":  await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()),
-                    "TRUSTIFICATION_OIDC_CLIENT_ID": await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()),
-                    "TRUSTIFICATION_OIDC_CLIENT_SECRET": await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()),
-                    "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
-                });
-                expect(await gitHubClient.commitMultipleFilesInGitHub(
-                    githubOrganization,
-                    repoData.repoName,
-                    [
-                        {
-                            path: repoData.workflowPath,
-                            stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
-                            replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
-                        },
-                        {
-                            path: repoData.workflowPath,
-                            stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
-                            replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
-                        },
-                        {
-                            path: repoData.workflowPath,
-                            stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
-                            replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
-                        },
-                        {
-                            path: repoData.workflowPath,
-                            stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
-                            replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
-                        }
-                    ],
-                    "Update Workflow file for Rekor host and TUF mirror secrets"
-                )).not.toBe(undefined);
+                await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repoData.repoName, imageRegistry, RHTAPRootNamespace);
+                expect(await gitHubClient.updateWorkflowFileToEnableSecrets(githubOrganization, repoData.repoName, repoData.workflowPath)).not.toBe(undefined);
             }
 
         }, 600000);
@@ -203,9 +158,8 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
             } catch (error) {
                 console.error('Error waiting for job completion:', error);
             }
-            expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("success");
-        }, 240000);
+        }, 300000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
@@ -249,7 +203,6 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
             } catch (error) {
                 console.error('Error waiting for job completion:', error);
             }
-            expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("success");
         }, 240000);
 
@@ -302,7 +255,6 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
             } catch (error) {
                 console.error('Error waiting for job completion:', error);
             }
-            expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("success");
         }, 240000);
 

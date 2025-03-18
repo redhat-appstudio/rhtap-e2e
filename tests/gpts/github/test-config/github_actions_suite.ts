@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -110,51 +110,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Creates secrets for GitHub Actions Workflow
          */
         it (`creates env variables in repo`, async () => {
-            await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
-                "IMAGE_REGISTRY": imageRegistry,
-                "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
-                "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
-                "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
-                "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
-                // "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                // "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
-                "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
-                "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
-                "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
-                "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
-                "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
-            });
-
-            // Make all changes in a single commit
-            expect(await gitHubClient.commitMultipleFilesInGitHub(
-                githubOrganization,
-                repositoryName,
-                [
-                    {
-                        path: '.github/workflows/build-and-update-gitops.yml',
-                        stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
-                        replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
-                    },
-                    {
-                        path: '.github/workflows/build-and-update-gitops.yml',
-                        stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
-                        replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
-                    },
-                    {
-                        path: '.github/workflows/build-and-update-gitops.yml',
-                        stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
-                        replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
-                    },
-                    {
-                        path: '.github/workflows/build-and-update-gitops.yml',
-                        stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
-                        replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
-                    }
-                ],
-                "Update Workflow file for Rekor host and TUF mirror secrets"
-            )).not.toBe(undefined);
-
+            await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repositoryName, imageRegistry, RHTAPRootNamespace);
+            expect(await gitHubClient.updateWorkflowFileToEnableSecrets(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
         }, 600000);
 
         /**
@@ -171,9 +128,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             } catch (error) {
                 console.error('Error waiting for job completion:', error);
             }
-            expect(jobStatus).not.toBe(undefined);
             expect(jobStatus).toBe("success");
-        }, 240000);
+        }, 300000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
