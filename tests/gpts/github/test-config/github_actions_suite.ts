@@ -118,17 +118,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Actions job to finish
          */
         it(`Trigger and wait for ${gptTemplate} GitHub Actions job`, async () => {
-            let jobStatus;
-            try {
-                // Wait for the latest job and get only the status
-                const workflowId = await gitHubClient.getWorkflowId(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
-                expect(workflowId).not.toBe(0);
-                jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, repositoryName, workflowId?.toString());
-                console.log('Job Status:', jobStatus);
-            } catch (error) {
-                console.error('Error waiting for job completion:', error);
-            }
-            expect(jobStatus).toBe("success");
+            expect(await gitHubClient.getLatestWorkflowRunStatus(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy")).toBe("success");
         }, 300000);
 
         /**
