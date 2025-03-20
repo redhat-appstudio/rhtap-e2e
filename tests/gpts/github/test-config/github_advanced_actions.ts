@@ -4,7 +4,7 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, parseSbomVersionFromLogs, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -148,17 +148,7 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Trigger and wait for Actions job to finish
          */
         it(`trigger and wait for ${gptTemplate} GitHub Actions job`, async () => {
-            let jobStatus;
-            try {
-                // Wait for the latest job and get only the status
-                const workflowId = await gitHubClient.getWorkflowId(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
-                expect(workflowId).not.toBe(0);
-                jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, repositoryName, workflowId?.toString());
-                console.log('Job Status:', jobStatus);
-            } catch (error) {
-                console.error('Error waiting for job completion:', error);
-            }
-            expect(jobStatus).toBe("success");
+            expect(await gitHubClient.getLatestWorkflowRunStatus(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy")).toBe("success");
         }, 300000);
 
         /**
@@ -193,17 +183,7 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Trigger and wait for Actions job to finish
          */
         it(`trigger and wait for ${gptTemplate} GitHub Actions Promotion-Pipeline job`, async () => {
-            let jobStatus;
-            try {
-                // Wait for the latest job and get only the status
-                const workflowId = await gitHubClient.getWorkflowId(githubOrganization, `${repositoryName}-gitops`, "TSSC-Promotion-Pipeline");
-                expect(workflowId).not.toBe(0);
-                jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, `${repositoryName}-gitops`, workflowId?.toString());
-                console.log('Job Status:', jobStatus);
-            } catch (error) {
-                console.error('Error waiting for job completion:', error);
-            }
-            expect(jobStatus).toBe("success");
+            expect(await gitHubClient.getLatestWorkflowRunStatus(githubOrganization, `${repositoryName}-gitops`, "TSSC-Promotion-Pipeline")).toBe("success");
         }, 240000);
 
         /**
@@ -225,14 +205,6 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName);
-
-            if (getImage !== undefined) {
-                extractedBuildImage = getImage;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
-
             const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR;
@@ -245,17 +217,7 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Trigger and wait for Actions job to finish
          */
         it(`trigger and wait for ${gptTemplate} GitHub Actions Promotion-Pipeline job`, async () => {
-            let jobStatus;
-            try {
-                // Wait for the latest job and get only the status
-                const workflowId = await gitHubClient.getWorkflowId(githubOrganization, `${repositoryName}-gitops`, "TSSC-Promotion-Pipeline");
-                expect(workflowId).not.toBe(0);
-                jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, `${repositoryName}-gitops`, workflowId?.toString());
-                console.log('Job Status:', jobStatus);
-            } catch (error) {
-                console.error('Error waiting for job completion:', error);
-            }
-            expect(jobStatus).toBe("success");
+            expect(await gitHubClient.getLatestWorkflowRunStatus(githubOrganization, `${repositoryName}-gitops`, "TSSC-Promotion-Pipeline")).toBe("success");
         }, 240000);
 
         /**
@@ -276,7 +238,9 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Verifies if the SBOm is uploaded in RHTPA/Trustification
          */
         it('check sbom uploaded in RHTPA', async () => {
-            await checkSBOMInTrustification(kubeClient, repositoryName);
+            const jobLogs = await gitHubClient.getJobLogsFromWorkflowName(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
+            const sbomVersion = await parseSbomVersionFromLogs(jobLogs);
+            await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 
         /**

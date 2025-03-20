@@ -300,19 +300,6 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    //Parse SBOM version from build log
-    public async parseSbomVersionFromConsoleLog(log: string): Promise<string> {
-        const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
-        if (filter != undefined){
-            return filter.substring(
-                filter.indexOf("sha256-") + 7,
-                filter.lastIndexOf(".sbom")
-            );
-        } else {
-            return "";
-        }
-    }
-
     public async deleteJenkinsJobInFolder(jobName: string, folderName: string) {
         const url = `${this.jenkinsUrl}/job/${folderName}/job/${jobName}/doDelete`;
 

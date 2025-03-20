@@ -531,3 +531,16 @@ export async function setGitHubActionSecrets(gitHubClient: GitHubProvider, kubeC
         "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
     });
 }
+
+//Parse SBOM version from build log
+export async function parseSbomVersionFromLogs(log: string): Promise<string> {
+    const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
+    if (filter != undefined){
+        return filter.substring(
+            filter.indexOf("sha256-") + 7,
+            filter.lastIndexOf(".sbom")
+        );
+    } else {
+        return "";
+    }
+}
