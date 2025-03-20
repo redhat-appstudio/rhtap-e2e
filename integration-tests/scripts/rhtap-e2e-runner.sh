@@ -14,7 +14,6 @@ export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 
 # Default namespace and organization settings
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
-export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
 export BITBUCKET_USERNAME="rhtap-test-admin"
 export BITBUCKET_WORKSPACE="rhtap-test"
 export BITBUCKET_PROJECT="RHTAP"
@@ -65,16 +64,25 @@ get_secret_value() {
 #===========================================
 
 # Load credentials from secret files
-load_credentials() {
+load_oci_storage_credentials() {
     log "INFO" "Loading credentials from secret files"
 
-    export GITHUB_TOKEN="$(cat /usr/local/rhtap-cli-install/github_token)"
     export OCI_STORAGE_TOKEN="$(jq -r '."quay-token"' /usr/local/konflux-test-infra/oci-storage)"
     export OCI_STORAGE_USERNAME="$(jq -r '."quay-username"' /usr/local/konflux-test-infra/oci-storage)"
 }
 
+configure_github_variables() {
+    log "INFO" "Configuring GitHub credentials from cluster secrets"
+
+    if ! secret_exists "rhtap" "rhtap-github-integration"; then
+        log "WARN" "No GitHub integration secret found in the rhtap namespace"
+        return 0
+    fi
+    export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
+    export GITHUB_TOKEN="$(get_secret_value "rhtap" "rhtap-github-integration" "token")"
+}   
 # Extract GitLab organization from Kubernetes secret
-configure_gitlab_credentials() {
+configure_gitlab_variables() {
     log "INFO" "Configuring GitLab credentials from cluster secrets"
     
     if ! secret_exists "rhtap" "rhtap-gitlab-integration"; then
@@ -89,40 +97,80 @@ configure_gitlab_credentials() {
     log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION})"
 }
 
+# Extract registry credentials from docker config JSON in a Kubernetes secret
+extract_registry_credentials() {
+    local namespace="$1"
+    local secret_name="$2"
+    local cred_type="$3"
+    
+    case "$cred_type" in
+        "endpoint")
+            oc get secrets -n "$namespace" "$secret_name" -o json \
+                | jq -r '.data.".dockerconfigjson" | @base64d' \
+                | jq -r '.auths | to_entries[0].key' || echo ""
+            ;;
+        "username")
+            oc get secrets -n "$namespace" "$secret_name" -o json \
+                | jq -r '.data.".dockerconfigjson" | @base64d' \
+                | jq -r '.auths | to_entries[0].value.auth | @base64d' \
+                | cut -d: -f1 || echo ""
+            ;;
+        "password")
+            oc get secrets -n "$namespace" "$secret_name" -o json \
+                | jq -r '.data.".dockerconfigjson" | @base64d' \
+                | jq -r '.auths | to_entries[0].value.auth | @base64d' \
+                | cut -d: -f2- || echo ""
+            ;;
+        *)
+            log "ERROR" "Unknown credential type: $cred_type"
+            return 1
+            ;;
+    esac
+}
+
 # Configure image registry based on available integration
 configure_image_registry() {
     log "INFO" "Setting up image registry configuration"
     
-    # Set default organization
+    local namespace="rhtap"
+    local registry_secrets=("rhtap-artifactory-integration" "rhtap-nexus-integration" "rhtap-quay-integration" )
+    local registry_secret=""
+    
+    # Set default organization and registry values
     export IMAGE_REGISTRY_ORG="rhtap"
     
-    # Check for Quay integration
-    if secret_exists "rhtap" "rhtap-quay-integration"; then
-        log "INFO" "======Quay integration found in rhtap namespace==============="
-        #TODO: need to handle quay.io as image registry
-        export IMAGE_REGISTRY="$(kubectl get secret rhtap-quay-integration -n rhtap -o go-template='{{index .data "url" | base64decode}}' | sed 's|^https://||')"
-        export IMAGE_REGISTRY_USERNAME=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "username")
-        export IMAGE_REGISTRY_PASSWORD=$(get_secret_value "rhtap-quay" "rhtap-quay-super-user" "password")
+    # Find the first available registry secret, we suppose that only one registry secret is available
+    for secret in "${registry_secrets[@]}"; do
+        if secret_exists "$namespace" "$secret"; then
+            registry_secret="$secret"
+            log "INFO" "Using image registry integration: $registry_secret"
+            break
+        fi
+    done
+    
+    # Exit if no registry secret found
+    if [[ -z "$registry_secret" ]]; then
+        log "WARN" "No supported image registry integration found"
+        return 1
+    fi
+    
+    # Extract and export registry credentials
+    export IMAGE_REGISTRY="$(extract_registry_credentials "$namespace" "$registry_secret" "endpoint")"
+    export IMAGE_REGISTRY_USERNAME="$(extract_registry_credentials "$namespace" "$registry_secret" "username")"
+    export IMAGE_REGISTRY_PASSWORD="$(extract_registry_credentials "$namespace" "$registry_secret" "password")"
+    
+    # Check if extraction was successful
+    if [[ -z "$IMAGE_REGISTRY" || -z "$IMAGE_REGISTRY_USERNAME" || -z "$IMAGE_REGISTRY_PASSWORD" ]]; then
+        log "ERROR" "Failed to extract registry credentials from secret: $registry_secret"
+        return 1
+    fi
+    
+    # Set organization based on registry type
+    if [[ "$IMAGE_REGISTRY" == "quay.io" ]]; then
+        export IMAGE_REGISTRY_ORG="rhtap_qe"
+    fi
 
-        log "INFO" "Using Quay registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
-        return 0
-    fi
-    
-    # Check for Artifactory integration
-    if secret_exists "rhtap" "rhtap-artifactory-integration"; then
-        export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-artifactory-integration -n rhtap -o json | jq '.data.url | @base64d') | sed -E 's|https://([^/]+).*|\1|')"
-        log "INFO" "Using Artifactory registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
-        return 0
-    fi
-    
-    # Check for Nexus integration
-    if secret_exists "rhtap" "rhtap-nexus-integration"; then
-        export IMAGE_REGISTRY="$(echo $(kubectl get secret rhtap-nexus-integration -n rhtap -o json | jq '.data.url | @base64d') | sed -E 's|https://([^/]+).*|\1|')"
-        log "INFO" "Using Nexus registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
-        return 0
-    fi
-    
-    log "WARN" "No supported image registry integration found"
+    log "INFO" "Using image registry: ${IMAGE_REGISTRY} with org: ${IMAGE_REGISTRY_ORG}"
 }
 
 # Configure Red Hat Developer Hub URL
@@ -131,32 +179,6 @@ configure_developer_hub() {
     
     export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap-dh -o jsonpath='{.spec.host}')"
     log "INFO" "Red Hat Developer Hub URL: ${RED_HAT_DEVELOPER_HUB_URL}"
-}
-
-# Generate cosign keys for GitLabCI
-generate_cosign_keys() {
-    log "INFO" "Setting up cosign configuration"
-    
-    # Delete existing cosign key files if they exist
-    if [ -f cosign.key ]; then
-        rm cosign.key
-    fi
-    if [ -f cosign.pub ]; then
-        rm cosign.pub
-    fi
-    
-    # Generate a secure random password without newlines
-    PASSWORD=$(openssl rand -hex 32)
-    
-    # Generate key pair using cosign
-    COSIGN_PASSWORD="$PASSWORD" cosign generate-key-pair
-    
-    # Export required environment variables
-    export COSIGN_SECRET_PASSWORD="$(base64 -w0 <<< "$PASSWORD")"
-    export COSIGN_SECRET_KEY="$(base64 -w0 < cosign.key)"
-    export COSIGN_PUBLIC_KEY="$(base64 -w0 < cosign.pub)"
-    
-    log "INFO" "Cosign keys generated successfully"
 }
 
 # Clean up and push artifacts to OCI container
@@ -236,11 +258,11 @@ main() {
     trap post_actions EXIT
     
     # Load credentials and configure environment
-    load_credentials
-    configure_gitlab_credentials
+    load_oci_storage_credentials
+    configure_github_variables
+    configure_gitlab_variables
     configure_image_registry
     configure_developer_hub
-    generate_cosign_keys
     
     # Generate templates and run tests
     generate_templates

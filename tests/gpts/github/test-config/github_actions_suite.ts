@@ -95,8 +95,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
                 "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
                 "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
-                "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
+                // "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
+                // "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
                 "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
                 "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
                 "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
@@ -104,8 +104,28 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
                 "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
             });
             //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-            expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
-            expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            const rekorHost = await kubeClient.getRekorServerUrl(RHTAPRootNamespace);
+            const tufMirror = await kubeClient.getTUFUrl(RHTAPRootNamespace);
+            
+            // Make both changes in a single commit
+            expect(await gitHubClient.commitMultipleFilesInGitHub(
+                githubOrganization,
+                repositoryName,
+                [
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
+                        replacementString: tufMirror
+                    },
+                    {
+                        path: 'rhtap/env.sh',
+                        stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
+                        replacementString: rekorHost
+                    }
+                ],
+                "Update Sigstore configuration (Rekor host and TUF mirror)"
+            )).not.toBe(undefined);
+            
 
         }, 600000);
 

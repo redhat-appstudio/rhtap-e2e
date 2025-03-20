@@ -26,7 +26,7 @@ import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, c
  * 
  * @param softwareTemplateName The name of the software template.
  */
-export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: string, stringOnRoute: string) => {
+export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: string, stringOnRoute: string, gitLabOrganization: string) => {
     describe(`RHTAP ${softwareTemplateName} template test GitLab provider with GitLab CI`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
@@ -51,7 +51,6 @@ export const gitLabProviderGitLabCIWithPromotionTests = (softwareTemplateName: s
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
-        const gitLabOrganization = process.env.GITLAB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe-"+ `${softwareTemplateName}`;
