@@ -253,7 +253,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRunResult = tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, 'pull_request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, 'pull_request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
