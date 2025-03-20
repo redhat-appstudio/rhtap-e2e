@@ -192,7 +192,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRunResult = tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
