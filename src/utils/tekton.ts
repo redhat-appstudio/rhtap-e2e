@@ -105,7 +105,14 @@ export class Tekton {
         if (pipelineRun === undefined) {
             throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verify PAC controller logs.");
         }
-    
+        
+        // print out pipelineRun content
+        console.log(`=======================PipelineRun: ${JSON.stringify(pipelineRun, null, 2)}`);
+        // print out metadata of pipelineRun
+        console.log(`=======================PipelineRun metadata: ${JSON.stringify(pipelineRun.metadata, null, 2)}`);
+        // print out name of pipelineRun
+        console.log(`=======================PipelineRun name: ${pipelineRun.metadata?.name}`);
+        
         if (pipelineRun?.metadata?.name) {
             const finished = await this.kubeClient.waitPipelineRunToBeFinished(pipelineRun.metadata.name, namespace, 900000);
 
