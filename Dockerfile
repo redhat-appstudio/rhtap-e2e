@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.5-1739751568 as builder
+FROM registry.access.redhat.com/ubi9/ubi:9.5-1741850090 as builder
 
 LABEL KONFLUX_CI="true"
 LABEL MAINTAINERS="RHTAP QE"
@@ -69,7 +69,7 @@ ADD https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosig
 RUN chmod +x /usr/local/bin/cosign && \
     cosign version
 
-FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1739801907
+FROM registry.access.redhat.com/ubi9/go-toolset:9.5-1742197705
 
 USER root
 
