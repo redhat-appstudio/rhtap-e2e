@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes, workflowRuns } from "@octokit/rest";
 import { AxiosError } from "axios";
 import { Utils } from "./utils";
 import { generateRandomChars } from "../../utils/generator";
@@ -231,7 +231,7 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number | undefined> {
+    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number> {
         const baseBranch = "main"; // Specify the base branch
         const newBranch = generateRandomChars(5); // Specify the new branch name
 
@@ -273,6 +273,7 @@ export class GitHubProvider extends Utils {
 
         } catch (error) {
             console.error("Error:", error);
+            throw new Error(`Error: ${error}`);
         }
     }
 
@@ -303,7 +304,7 @@ export class GitHubProvider extends Utils {
      * @param {string} componentName - component name.
      * @param {string} environment - environment name(development, stage, prod).
      */
-    public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string | undefined> {
+    public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
@@ -346,7 +347,7 @@ export class GitHubProvider extends Utils {
      * @param {string} environment - environment name(development, stage, prod).
      * @param {string} image - image name.
      */
-    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number | undefined> {
+    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
@@ -369,9 +370,41 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    // Function to wait for the latest job in a GitHub Actions workflow to finish and get its status
-    public async waitForLatestJobStatus(owner: string, repo: string, workflow_id: string, timeout = 300000): Promise<string | null> { // Default timeout is 5 minutes
-        console.log(`Waiting for the latest job in workflow '${workflow_id}' in repository '${owner}/${repo}' to finish...`);
+    /**
+     * Function to get latest GitHub Actions Run Status of specified Workflow
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} workflowName - The workflow name in the repo
+     * @returns {Promise<string>} A Promise resolving to string
+     */
+    public async getLatestWorkflowRunStatus(owner: string, repo: string, workflowName: string) : Promise<string> {
+        const workflowId = await this.getWorkflowId(owner, repo, workflowName);
+        const latestRun = await this.waitForLatestWorkflowRunInfo(owner, repo, workflowId);
+        return latestRun.conclusion;
+    }
+
+    /**
+     * Function to get latest GitHub Actions Run ID of specified Workflow
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} workflowName - The workflow name in the repo
+     * @returns {Promise<number>} A Promise resolving to number
+     */
+    public async getLatestWorkflowRunId(owner: string, repo: string, workflowName: string): Promise<number> {
+        const workflowId = await this.getWorkflowId(owner, repo, workflowName);
+        const latestRun = await this.waitForLatestWorkflowRunInfo(owner, repo, workflowId);
+        return latestRun.id;
+    }
+
+    /**
+     * Function to wait for the latest run in a GitHub Actions workflow to finish and get its info
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {number} workflowId - The workflow ID in the repo
+     * @returns {Promise<workflowRuns>} A Promise resolving to workflowRuns
+     */
+    public async waitForLatestWorkflowRunInfo(owner: string, repo: string, workflow_id: number, timeout = 300000): Promise<workflowRuns> { // Default timeout is 5 minutes
+        console.log(`Waiting for the latest run in workflow '${workflow_id}' in repository '${owner}/${repo}' to finish...`);
         // workaround for the issue with the GitHub API not returning the latest job status immediately
         await this.sleep(10000);
         
@@ -380,7 +413,7 @@ export class GitHubProvider extends Utils {
         while (true) {
             // Check for timeout
             if (Date.now() - startTime > timeout) {
-                throw new Error(`Timeout: The latest job did not finish within the specified time.`);
+                throw new Error(`Timeout: The latest run did not finish within the specified time.`);
             }
 
             try {
@@ -403,8 +436,8 @@ export class GitHubProvider extends Utils {
 
                 // Check if the run is still in progress
                 if (latestRun.status === 'completed') {
-                    console.log(`Latest job '${latestRun.id}' in workflow '${workflow_id}' in repository '${owner}/${repo}' has finished. Status: ${latestRun.conclusion}`);
-                    return latestRun.conclusion; // Return only the status of the job
+                    console.log(`Latest run '${latestRun.id}' in workflow '${workflow_id}' in repository '${owner}/${repo}' has finished. Status: ${latestRun.conclusion}`);
+                    return latestRun;
                 }
             } catch (error) {
                 console.error('Error fetching workflow run details:', error);
@@ -735,5 +768,110 @@ export class GitHubProvider extends Utils {
             console.error(`Error getting file content: ${error}`);
             throw error;
         }
+    }
+
+    /**
+     * Commits multiple changes to workflow file required to enable RekorHost and TufMirror Secrets.
+     *
+     * @param {string} githubOrganization - The name of the GitHub organization.
+     * @param {string} repositoryName - The name of the repository where the files will be committed.
+     * @param {string} workflowPath - The workflow file name
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+    */
+    async updateWorkflowFileToEnableSecrets(githubOrganization: string, repositoryName: string, workflowPath: string) {
+        return await this.commitMultipleFilesInGitHub(
+            githubOrganization,
+            repositoryName,
+            [
+                {
+                    path: workflowPath,
+                    stringToFind: "# REKOR_HOST: ${{ secrets.REKOR_HOST }}",
+                    replacementString: "REKOR_HOST: ${{ secrets.REKOR_HOST }}"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "/*REKOR_HOST: `${{ secrets.REKOR_HOST }}`, */",
+                    replacementString: "REKOR_HOST: `${{ secrets.REKOR_HOST }}`,"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "# TUF_MIRROR: ${{ secrets.TUF_MIRROR }}",
+                    replacementString: "TUF_MIRROR: ${{ secrets.TUF_MIRROR }}"
+                },
+                {
+                    path: workflowPath,
+                    stringToFind: "/*TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`, */",
+                    replacementString: "TUF_MIRROR: `${{ secrets.TUF_MIRROR }}`,"
+                }
+            ],
+            "Update Workflow file for Rekor host and TUF mirror secrets"
+        );
+    }
+
+    /**
+     * Function to get latest job ID for a specific workflow run
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {number} runId - The workflow Run ID in the repo
+     * @returns {Promise<number>} A Promise resolving to number
+     */
+    public async getLatestWorkflowRunsJobId(owner: string, repo: string, runId: number): Promise<number> {
+        try {
+            console.log(`Getting latest job info for workflow run ${runId}`);
+            const { data: jobs } = await this.octokit.rest.actions.listJobsForWorkflowRun({
+                owner,
+                repo,
+                run_id: runId,
+            });
+            const latestJob = jobs.jobs[0];
+            console.log(`Fetched latest job id: ${latestJob.id} for workflow run ${runId}`);
+            return latestJob.id;
+        } catch (error) {
+            console.error('Error fetching jobs for workflow run:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Function to get logs for a specific job in a workflow run
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {number} jobId - The job ID of workflow run in the repo
+     * @returns {Promise<number>} A Promise resolving to string
+     */
+    public async getJobLogsFromWorkflowRun(owner: string, repo: string, jobId: number): Promise<string> {
+        try {
+            console.log(`Fetching job logs for ${jobId}`);
+            const response = await this.octokit.rest.actions.downloadJobLogsForWorkflowRun({
+                owner,
+                repo,
+                job_id: jobId
+            });
+            console.log(`Successfully fetched logs for job with ID: ${jobId}`);
+
+            // The response includes download URL
+            const logDownloadUrl = response.url;
+
+            // Fetch the log content from the download URL
+            const logResponse = await fetch(logDownloadUrl);
+            const logContent = await logResponse.text();
+            return logContent;
+        } catch (error) {
+            console.error('Error fetching job logs:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Function to get logs of a job for a specific workflow
+     * @param {string} owner - The name of the GitHub organization.
+     * @param {string} repo - The name of the repository.
+     * @param {string} workflowName - The workflow name in the repo
+     * @returns {Promise<string>} A Promise resolving to string
+     */
+    public async getJobLogsFromWorkflowName(owner: string, repo: string, workflowName: string): Promise<string> {
+        const runId = await this.getLatestWorkflowRunId(owner, repo, workflowName);
+        const jobId = await this.getLatestWorkflowRunsJobId(owner, repo, runId);
+        return await this.getJobLogsFromWorkflowRun(owner, repo, jobId);
     }
 }
