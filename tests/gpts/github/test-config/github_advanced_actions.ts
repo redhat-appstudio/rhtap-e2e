@@ -28,6 +28,17 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true});
 
+        let developerHubTask: TaskIdReponse;
+        let backstageClient: DeveloperHubClient;
+        let gitHubClient: GitHubProvider;
+        let kubeClient: Kubernetes;
+
+        let gitopsPromotionPRNumber: number;
+        let extractedBuildImage: string;
+
+        let RHTAPGitopsNamespace: string;
+        let RHTAPRootNamespace: string;
+
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
@@ -45,21 +56,8 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
-        let RHTAPGitopsNamespace: string;
-        let RHTAPRootNamespace: string;
-
-        let gitopsPromotionPRNumber: number;
-        let extractedBuildImage: string;
-
-        let developerHubTask: TaskIdReponse;
-        let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
-        let kubeClient: Kubernetes;
-
         /**
-         * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
-         * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
-         * resources
+         * Initializes Github and Kubernetes client for interaction.
         */
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
@@ -91,24 +89,23 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         }, 120000);
 
         /**
-             * Once test send a task to Developer Hub, test start to look for the task until all the steps are processed. Once all the steps are processed
-             * test will grab logs in $ROOT_DIR/artifacts/backstage/xxxxx-component-name.log
-             */
+         * Waits for the ${softwareTemplateName} component creation task to be completed in Developer Hub.
+         * If the task is not completed within the timeout, it writes logs to the specified directory.
+         */
         it(`wait ${gptTemplate} component to be finished`, async () => {
             await waitForComponentCreation(backstageClient, repositoryName, developerHubTask);
         }, 120000);
 
         /**
-         * Once a DeveloperHub task is processed should create an argocd application in openshift-gitops namespace.
-         * Need to wait until application is synced until commit something to github and trigger a pipelinerun
+         * Waits for the specified ArgoCD application associated with the DeveloperHub task to be synchronized in the cluster.
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
             expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
         }, 600000);
 
         /**
-         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of
-         * my application. Also verifies if the repository contains a workflow file.
+         * Verifies if Red Hat Developer Hub created a repository from the specified template.
+         * The repository should contain the source code of the application and contains a workflow file.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains a workflow file`, async () => {
             expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName)).toBe(true);
@@ -116,11 +113,11 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         }, 120000);
 
         /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with wrkflow file
+         * Verifies if Red Hat Developer Hub created the gitops repository with workflow file
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a workflow file`, async () => {
             expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.github/workflows/gitops-promotion.yml')).toBe(true);
         }, 120000);
 
         /**
@@ -163,20 +160,11 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
          * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async () => {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName);
+            extractedBuildImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName);
+            expect(extractedBuildImage).toBeDefined();
 
-            if (getImage !== undefined) {
-                extractedBuildImage = getImage;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
-
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            gitopsPromotionPRNumber = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
+            expect(gitopsPromotionPRNumber).toBeDefined();
         });
 
         /**
@@ -205,12 +193,8 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            gitopsPromotionPRNumber = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
+            expect(gitopsPromotionPRNumber).toBeDefined();
         });
 
         /**

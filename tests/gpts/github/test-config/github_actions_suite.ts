@@ -99,11 +99,11 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         }, 120000);
 
         /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with wrkflow file
+         * Verification to check if Red Hat Developer Hub created the gitops repository with workflow file
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a workflow file`, async () => {
             expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.github/workflows/gitops-promotion.yml')).toBe(true);
         }, 120000);
 
         /**
