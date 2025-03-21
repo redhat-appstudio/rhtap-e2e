@@ -231,7 +231,7 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number | undefined> {
+    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number> {
         const baseBranch = "main"; // Specify the base branch
         const newBranch = generateRandomChars(5); // Specify the new branch name
 
@@ -273,6 +273,7 @@ export class GitHubProvider extends Utils {
 
         } catch (error) {
             console.error("Error:", error);
+            throw new Error(`Error: ${error}`);
         }
     }
 
@@ -303,7 +304,7 @@ export class GitHubProvider extends Utils {
      * @param {string} componentName - component name.
      * @param {string} environment - environment name(development, stage, prod).
      */
-    public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string | undefined> {
+    public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
@@ -346,7 +347,7 @@ export class GitHubProvider extends Utils {
      * @param {string} environment - environment name(development, stage, prod).
      * @param {string} image - image name.
      */
-    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number | undefined> {
+    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
