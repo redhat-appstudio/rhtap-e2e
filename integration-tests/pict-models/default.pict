@@ -14,5 +14,5 @@ AUTH: gitlab
 ACS: new
 Registry: nexus
 TPA: new
-SCM: bitbucket
+SCM: github
 Pipeline: tekton
