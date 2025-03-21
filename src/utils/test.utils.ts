@@ -187,7 +187,7 @@ export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Ku
     expect(await waitForStringInPageContent(`https://${componentRoute}`, stringOnRoute, 600000)).toBe(true);
 }
 
-export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesGitLab(componentRootNamespace: string, gitLabOrganization: string, imageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -196,7 +196,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
         throw new Error("The 'GITLAB_ORGANIZATION_PUBLIC' or 'GITLAB_ORGANIZATION_PRIVATE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (ImageOrg === '') {
+    if (imageOrg === '') {
         throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
@@ -206,7 +206,7 @@ export async function checkEnvVariablesGitLab(componentRootNamespace: string, gi
 }
 
 
-export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, ImageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
+export async function checkEnvVariablesGitHub(componentRootNamespace: string, githubOrganization: string, imageOrg: string, ciNamespace: string, kubeClient: Kubernetes) {
     if (componentRootNamespace === '') {
         throw new Error("The 'APPLICATION_ROOT_NAMESPACE' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
@@ -215,7 +215,7 @@ export async function checkEnvVariablesGitHub(componentRootNamespace: string, gi
         throw new Error("The 'GITHUB_ORGANIZATION' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
-    if (ImageOrg === '') {
+    if (imageOrg === '') {
         throw new Error("The 'IMAGE_REGISTRY_ORG' environment variable is not set. Please ensure that the environment variable is defined properly or you have cluster connection.");
     }
 
@@ -256,14 +256,14 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
     * 
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
     * @param {string} imageName Registry image name for the component to be pushed.
-    * @param {string} ImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitLab repository.
     * @param {string} gitLabOrganization Owner of the GitLab repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, imageName: string, ImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -271,7 +271,7 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
             glHost: 'gitlab.com',
             hostType: 'GitLab',
             imageName: imageName,
-            imageOrg: ImageOrg,
+            imageOrg: imageOrg,
             imageRegistry: imageRegistry,
             name: repositoryName,
             namespace: componentRootNamespace,
@@ -289,14 +289,14 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
     * 
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
     * @param {string} imageName Registry image name for the component to be pushed.
-    * @param {string} ImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitHub repository.
     * @param {string} gitLabOrganization Owner of the GitHub repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, ImageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -304,7 +304,7 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
             ghHost: 'github.com',
             hostType: 'GitHub',
             imageName: imageName,
-            imageOrg: ImageOrg,
+            imageOrg: imageOrg,
             imageRegistry: imageRegistry,
             name: repositoryName,
             namespace: componentRootNamespace,

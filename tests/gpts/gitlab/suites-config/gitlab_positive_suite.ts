@@ -39,7 +39,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe-" + `${softwareTemplateName}`;
-        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
@@ -53,7 +53,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
 
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -61,8 +61,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
-
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);
