@@ -43,8 +43,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -65,7 +65,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "githubactions");
+            const taskCreatorOptions = createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "githubactions");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -90,8 +90,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it (`creates env variables in repo`, async () => {
             await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
                 "IMAGE_REGISTRY": imageRegistry,
-                "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
-                "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
+                "ROX_API_TOKEN": await kubeClient.getACSToken(getRHTAPRootNamespace()),
+                "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(getRHTAPRootNamespace()),
                 "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
                 "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
                 "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
