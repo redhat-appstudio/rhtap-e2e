@@ -9,7 +9,7 @@ import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middl
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ??'rhtap-gitops';
+const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ?? 'rhtap-gitops';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -36,7 +36,7 @@ export class Kubernetes extends Utils {
     public async namespaceExists(name: string): Promise<boolean> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespace({ name: name});
+            const response = await k8sCoreApi.readNamespace({ name: name });
             if (response?.metadata?.name === name) {
                 return true;
             }
@@ -57,7 +57,7 @@ export class Kubernetes extends Utils {
     public async getTaskRunsFromPipelineRun(pipelineRunName: string): Promise<TaskRunKind[]> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const taskRunList = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version: 'v1', plural: 'taskruns'});
+            const taskRunList = await customObjectsApi.listClusterCustomObject({ group: 'tekton.dev', version: 'v1', plural: 'taskruns' });
             const taskRunInterface = taskRunList as TaskRunList;
             return taskRunInterface.items.filter(taskRun => taskRun?.metadata?.ownerReferences?.[0].name === pipelineRunName);
 
@@ -76,7 +76,7 @@ export class Kubernetes extends Utils {
     public async getOpenshiftRoute(name: string, namespace: string): Promise<string> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         try {
-            const route = await customObjectsApi.getNamespacedCustomObject({group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace});
+            const route = await customObjectsApi.getNamespacedCustomObject({ group: 'route.openshift.io', version: 'v1', plural: 'routes', name: name, namespace: namespace });
             return route.spec.host;
         } catch (error) {
             console.error(error);
@@ -95,19 +95,19 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Get the pod object
-            const pod = await k8sApi.readNamespacedPod({name: podName, namespace: namespace});
+            const pod = await k8sApi.readNamespacedPod({ name: podName, namespace: namespace });
 
             // Check if pod.spec is defined
             if (pod.spec?.containers) {
                 // Iterate over each container in the pod
                 for (const container of pod.spec.containers) {
                     // Get logs from each container
-                    const response = await k8sApi.readNamespacedPodLog({name: podName, namespace: namespace, container: container.name});
+                    const response = await k8sApi.readNamespacedPodLog({ name: podName, namespace: namespace, container: container.name });
 
                     // Append container name before the logs
                     const logsWithContainerInfo = `Container: ${container.name}\n${response}\n\n`;
                     const logFilePath = path.join('taskruns-logs', podName);
-                    await this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo);
+                    this.writeLogsToArtifactDir(logFilePath, `${container.name}.log`, logsWithContainerInfo);
                 }
 
             } else {
@@ -130,7 +130,7 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Get logs from the given container
-            const response = await k8sApi.readNamespacedPodLog({name: podName, namespace: namespace, container: containerName});
+            const response = await k8sApi.readNamespacedPodLog({ name: podName, namespace: namespace, container: containerName });
             return (response);
         } catch (err) {
             console.error('Error:', err);
@@ -151,8 +151,10 @@ export class Kubernetes extends Utils {
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                const body = await customObjectsApi.listClusterCustomObject({group: 'tekton.dev', version:'v1', plural: 'pipelineruns',
-                    labelSelector: `pipelinesascode.tekton.dev/url-repository=${gitRepository}`});
+                const body = await customObjectsApi.listClusterCustomObject({
+                    group: 'tekton.dev', version: 'v1', plural: 'pipelineruns',
+                    labelSelector: `pipelinesascode.tekton.dev/url-repository=${gitRepository}`
+                });
                 const pr = body as PipelineRunList;
 
                 const filteredPipelineRuns = pr.items.filter((pipelineRun: PipelineRunKind) => {
@@ -203,7 +205,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const body = await customObjectsApi.getNamespacedCustomObject({group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name});
+                const body = await customObjectsApi.getNamespacedCustomObject({ group: 'tekton.dev', version: 'v1', namespace: namespace, plural: 'pipelineruns', name: name });
                 const pr = body as PipelineRunKind;
 
                 if (pr.status?.conditions) {
@@ -272,7 +274,7 @@ export class Kubernetes extends Utils {
 
         while (timeoutMs === 0 || totalTimeMs < timeoutMs) {
             try {
-                const body = await customObjectsApi.getNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPGitopsNamespace, plural: 'applications', name: name});
+                const body = await customObjectsApi.getNamespacedCustomObject({ group: 'argoproj.io', version: 'v1alpha1', namespace: RHTAPGitopsNamespace, plural: 'applications', name: name });
                 const application = body as ApplicationSpec;
 
                 if (application.status?.sync?.status &&
@@ -320,9 +322,9 @@ export class Kubernetes extends Utils {
             const headerPatchMiddleware = new PromiseMiddlewareWrapper({
                 pre: async (requestContext: RequestContext) => {
                     requestContext.setHeaderParam('Content-Type', 'application/merge-patch+json');
-                    return requestContext;
+                    return await Promise.resolve(requestContext);
                 },
-                post: async (responseContext: ResponseContext) => responseContext,
+                post: async (responseContext: ResponseContext) => await Promise.resolve(responseContext),
             });
             const currentContext = this.kubeConfig.getCurrentContext();
             const currentCluster = this.kubeConfig.getCluster(currentContext);
@@ -344,11 +346,11 @@ export class Kubernetes extends Utils {
             });
 
             // Patch the app
-            await k8sCoreApi.patchNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName, body: patchObject}, configuration);
+            await k8sCoreApi.patchNamespacedCustomObject({ group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName, body: patchObject }, configuration);
 
 
             // Delete the app
-            await k8sCoreApi.deleteNamespacedCustomObject({group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName});
+            await k8sCoreApi.deleteNamespacedCustomObject({ group: 'argoproj.io', version: 'v1alpha1', namespace: namespace, plural: 'applications', name: applicationName });
 
             console.log(`App ${applicationName} patched and deleted successfully.`);
         } catch (error) {
@@ -369,7 +371,7 @@ export class Kubernetes extends Utils {
         const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
             // Fetch the secret from the specified namespace
-            const secret = await k8sApi.readNamespacedSecret({name: secretName, namespace: namespace});
+            const secret = await k8sApi.readNamespacedSecret({ name: secretName, namespace: namespace });
 
             // Check if the key exists in the secret data
             if (secret.data && secret.data[keyName]) {
@@ -392,7 +394,7 @@ export class Kubernetes extends Utils {
             const k8sApi = this.kubeConfig.makeApiClient(CoreV1Api);
 
             // List all secrets
-            const secretList = await k8sApi.listNamespacedSecret({namespace: namespace});
+            const secretList = await k8sApi.listNamespacedSecret({ namespace: namespace });
 
             // Filter secrets
             const matchingSecrets = secretList.items.filter(secret => secret.metadata?.name?.startsWith(partialSecretName));
@@ -461,21 +463,21 @@ export class Kubernetes extends Utils {
     * Gets cosign public key.
     */
     public async getCosignPublicKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", false);
+        return await this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.pub", false);
     }
 
     /**
     * Gets cosign private key.
     */
     public async getCosignPrivateKey(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", false);
+        return await this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.key", false);
     }
 
     /**
     * Gets cosign password.
     */
     public async getCosignPassword(): Promise<string> {
-        return this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", false);
+        return await this.getSecretPartialName("openshift-pipelines", "signing-secrets", "cosign.password", false);
     }
 
     /**
@@ -485,7 +487,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getACSEndpoint(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "endpoint");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "endpoint");
     }
 
     /**
@@ -495,7 +497,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns token.
     */
     public async getACSToken(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "token");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "token");
     }
 
     /**
@@ -505,7 +507,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getRekorServerUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "rekor_url");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "rekor_url");
     }
 
     /**
@@ -515,7 +517,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTUFUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
     }
 
     /**
@@ -527,7 +529,7 @@ export class Kubernetes extends Utils {
     public async getPodYaml(PodName: string, nameSpace: string): Promise<string | null> {
         const k8sCoreApi = this.kubeConfig.makeApiClient(CoreV1Api);
         try {
-            const response = await k8sCoreApi.readNamespacedPod({name: PodName, namespace: nameSpace});
+            const response = await k8sCoreApi.readNamespacedPod({ name: PodName, namespace: nameSpace });
             const podYaml = dumpYaml(response);
             return podYaml;
         }
@@ -544,7 +546,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationBombasticApiUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "bombastic_api_url");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "bombastic_api_url");
     }
 
     /**
@@ -554,7 +556,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationOidcIssuerUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_issuer_url");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_issuer_url");
     }
 
     /**
@@ -564,7 +566,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationClientId(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_id");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_id");
     }
 
     /**
@@ -574,7 +576,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationClientSecret(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_secret");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_secret");
     }
 
     /**
@@ -584,6 +586,6 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationSupportedCycloneDXVersion(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
+        return await this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
     }
 }

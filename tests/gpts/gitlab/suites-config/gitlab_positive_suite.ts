@@ -19,7 +19,7 @@ import { onPushTasks } from '../../../../src/constants/tekton';
  */
 export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -43,7 +43,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
 
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
@@ -61,7 +61,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);

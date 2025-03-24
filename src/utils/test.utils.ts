@@ -77,15 +77,15 @@ export async function waitForStringInPageContent(
     return false;
 }
 
-export async function getRHTAPRootNamespace() {
+export function getRHTAPRootNamespace() {
     return process.env.RHTAP_ROOT_NAMESPACE ?? 'rhtap';
 }
 
-export async function getRHTAPGitopsNamespace() {
+export function getRHTAPGitopsNamespace() {
     return process.env.RHTAP_GITOPS_NAMESPACE ?? 'rhtap-gitops';
 }
 
-export async function getRHTAPRHDHNamespace() {
+export function getRHTAPRHDHNamespace() {
     return process.env.RHTAP_RHDH_NAMESPACE ?? 'rhtap-dh';
 }
 
@@ -93,7 +93,7 @@ export async function getGitHubClient(kubeClient: Kubernetes) {
     if (process.env.GITHUB_TOKEN) {
         return new GitHubProvider(process.env.GITHUB_TOKEN);
     } else {
-        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
+        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
     }
 }
 
@@ -101,7 +101,7 @@ export async function getDeveloperHubClient(kubeClient: Kubernetes) {
     if (process.env.RED_HAT_DEVELOPER_HUB_URL) {
         return new DeveloperHubClient(process.env.RED_HAT_DEVELOPER_HUB_URL);
     } else {
-        return new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(await getRHTAPRHDHNamespace()));
+        return new DeveloperHubClient(await kubeClient.getDeveloperHubRoute(getRHTAPRHDHNamespace()));
     }
 }
 
@@ -109,9 +109,9 @@ export async function getJenkinsCI(kubeClient: Kubernetes) {
     if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN) {
         return new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
     } else {
-        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
-        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
-        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
+        const jenkinsURL = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
+        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
+        const jenkinsToken = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
         return new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
     }
 }
@@ -120,7 +120,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     if (process.env.GITLAB_TOKEN) {
         return new GitLabProvider(process.env.GITLAB_TOKEN);
     } else {
-        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
+        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
     }
 }
 
@@ -128,8 +128,8 @@ export async function getBitbucketClient(kubeClient: Kubernetes) {
     if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
-        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
-        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
+        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
         return new BitbucketProvider(bitbucketUserName, bitbucketAppPassword);
     }
 }
@@ -166,7 +166,7 @@ export async function waitForComponentCreation(backstageClient: DeveloperHubClie
 
         try {
             const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-            await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
+            backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `gitlab-${repositoryName}.log`, logs);
         } catch (error) {
             throw new Error(`Failed to write logs to artifact directory: ${error}`);
         }
@@ -177,7 +177,7 @@ export async function waitForComponentCreation(backstageClient: DeveloperHubClie
 
 export async function checkComponentSyncedInArgoAndRouteIsWorking(kubeClient: Kubernetes, backstageClient: DeveloperHubClient, namespaceName: string, environmentName: string, repositoryName: string, stringOnRoute: string) {
     console.log(`syncing argocd application in ${environmentName} environment`);
-    await syncArgoApplication(await getRHTAPGitopsNamespace(), `${repositoryName}-${environmentName}`);
+    await syncArgoApplication(getRHTAPGitopsNamespace(), `${repositoryName}-${environmentName}`);
     const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, namespaceName);
     const isReady = await backstageClient.waitUntilComponentEndpointBecomeReady(`https://${componentRoute}`, 10 * 60 * 1000);
     if (!isReady) {
@@ -263,7 +263,7 @@ export async function checkEnvVariablesBitbucket(componentRootNamespace: string,
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitlab(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export function createTaskCreatorOptionsGitlab(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): ScaffolderScaffoldOptions {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -296,7 +296,7 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): ScaffolderScaffoldOptions {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -331,7 +331,7 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsBitbucket(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, bitbucketUsername: string, bitbucketWorkspace: string, bitbucketProject: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export function createTaskCreatorOptionsBitbucket(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, bitbucketUsername: string, bitbucketWorkspace: string, bitbucketProject: string, repositoryName: string, componentRootNamespace: string, ciType: string): ScaffolderScaffoldOptions {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -401,16 +401,16 @@ export async function setSecretsForGitLabCI(gitLabProvider: GitLabProvider, gitl
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient));
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_USERNAME", 'fakeUsername');
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", await gitLabProvider.getGitlabToken());
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "GITOPS_AUTH_PASSWORD", gitLabProvider.getGitlabToken());
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '');
     await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "IMAGE_REGISTRY_USER", process.env.IMAGE_REGISTRY_USERNAME ?? '');
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()));
-    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_API_TOKEN", await kubeClient.getACSToken(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(getRHTAPRootNamespace()));
+    await gitLabProvider.setEnvironmentVariable(gitlabRepositoryID, "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(getRHTAPRootNamespace()));
 }
 
 export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProvider, gitlabRepositoryID: number, pipelineRunNumber: number) {
@@ -468,10 +468,10 @@ export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName
  * @throws {Error} If there is an error during search.
  */
 export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchString: string) {
-    const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace());
-    const oidcIssuesUrl = await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace());
-    const oidcclientId = await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace());
-    const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace());
+    const bombasticApiUrl = await kubeClient.getTTrustificationBombasticApiUrl(getRHTAPRootNamespace());
+    const oidcIssuesUrl = await kubeClient.getTTrustificationOidcIssuerUrl(getRHTAPRootNamespace());
+    const oidcclientId = await kubeClient.getTTrustificationClientId(getRHTAPRootNamespace());
+    const oidcclientSecret = await kubeClient.getTTrustificationClientSecret(getRHTAPRootNamespace());
 
     const trust = new TrustificationClient(bombasticApiUrl, oidcIssuesUrl, oidcclientId, oidcclientSecret);
 
@@ -501,45 +501,47 @@ export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kub
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '', folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_API_TOKEN", await kubeClient.getACSToken(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_API_TOKEN", await kubeClient.getACSToken(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(getRHTAPRootNamespace()), folderName);
 }
 
 export async function setSecretsForJenkinsInFolderForTPA(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string) {
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(getRHTAPRootNamespace()), folderName);
+    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(getRHTAPRootNamespace()), folderName);
 }
 
 export async function setGitHubActionSecrets(gitHubClient: GitHubProvider, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string) {
     await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
-        "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
+        "ROX_API_TOKEN": await kubeClient.getACSToken(getRHTAPRootNamespace()),
         "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
         "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
         "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
         "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
-        "TRUSTIFICATION_OIDC_CLIENT_SECRET": await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()),
+        "TRUSTIFICATION_OIDC_CLIENT_SECRET": await kubeClient.getTTrustificationClientSecret(getRHTAPRootNamespace()),
     });
 }
 
 export async function setGitHubActionVariables(gitHubClient: GitHubProvider, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string, imageRegistry: string) {
     await gitHubClient.setGitHubVariables(githubOrganization, repositoryName, {
         "IMAGE_REGISTRY": imageRegistry,
-        "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
+        "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(getRHTAPRootNamespace()),
         "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
         "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
-        "REKOR_HOST": await kubeClient.getRekorServerUrl(await getRHTAPRootNamespace()) || '',
-        "TUF_MIRROR": await kubeClient.getTUFUrl(await getRHTAPRootNamespace()) || '',
-        "TRUSTIFICATION_BOMBASTIC_API_URL": await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()),
-        "TRUSTIFICATION_OIDC_ISSUER_URL":  await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()),
-        "TRUSTIFICATION_OIDC_CLIENT_ID": await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()),
-        "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
+        "REKOR_HOST": await kubeClient.getRekorServerUrl(getRHTAPRootNamespace()) || '',
+        "TUF_MIRROR": await kubeClient.getTUFUrl(getRHTAPRootNamespace()) || '',
+        "TRUSTIFICATION_BOMBASTIC_API_URL": await kubeClient.getTTrustificationBombasticApiUrl(getRHTAPRootNamespace()),
+        "TRUSTIFICATION_OIDC_ISSUER_URL":  await kubeClient.getTTrustificationOidcIssuerUrl(getRHTAPRootNamespace()),
+        "TRUSTIFICATION_OIDC_CLIENT_ID": await kubeClient.getTTrustificationClientId(getRHTAPRootNamespace()),
+        "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(getRHTAPRootNamespace()),
     });
 }
 
 //Parse SBOM version from build log
-export async function parseSbomVersionFromLogs(log: string): Promise<string> {
+export function parseSbomVersionFromLogs(log: string): string {
     const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
     if (filter != undefined){
         return filter.substring(

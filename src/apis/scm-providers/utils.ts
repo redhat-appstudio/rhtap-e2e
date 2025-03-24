@@ -7,7 +7,7 @@ export class Utils {
         this.artifactDir = process.env.ARTIFACT_DIR ?? path.join(__dirname, '../../../', 'artifacts');
     }
 
-    public async writeLogsToArtifactDir(storeDirectory: string, fileName: string, logData: string) {
+    public writeLogsToArtifactDir(storeDirectory: string, fileName: string, logData: string) {
         const directoryPath = path.join(this.artifactDir, storeDirectory);
         const logFilePath = path.join(directoryPath, fileName);
 
