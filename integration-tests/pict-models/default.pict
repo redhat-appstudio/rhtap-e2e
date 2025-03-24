@@ -15,4 +15,4 @@ ACS: new
 Registry: nexus
 TPA: new
 SCM: github
-Pipeline: tekton
+Pipeline: gitlabci
