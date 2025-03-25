@@ -42,7 +42,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         const repositoryName = `${generateRandomChars(9)}-${softwareTemplateName}`;
 
         const imageName = "rhtap-qe-"+ `${softwareTemplateName}`;
-        const ImageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
+        const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
@@ -54,14 +54,14 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitLabProvider = await getGitLabProvider(kubeClient);
           
-            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, ImageOrg, ciNamespace, kubeClient);
+            await checkEnvVariablesGitLab(componentRootNamespace, gitLabOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, ImageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
