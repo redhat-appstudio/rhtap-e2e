@@ -5,6 +5,27 @@ import importPlugin from "eslint-plugin-import";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+    {
+        files: ["**/*.ts"],
+        languageOptions: {
+            parser: tseslint.parser,
+            parserOptions: {
+                project: "./tsconfig.json",
+            },
+        },
+        rules: {
+            "require-await": "error",
+            "@typescript-eslint/no-floating-promises": [
+                "error",
+                {
+                    "checkThenables": true,
+                    "ignoreIIFE": false,
+                    "ignoreVoid": false,
+                }
+            ],
+            "@typescript-eslint/await-thenable": "error",  
+        },
+    },
     { files: ["**/*.{js,mjs,cjs,ts}"] },
     { ignores: ["**/artifacts"] },
     { languageOptions: { globals: globals.node } },
@@ -31,7 +52,6 @@ export default [
                     "caughtErrorsIgnorePattern": "^_"
                 }
             ],
-
             
             "no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 1, "maxBOF": 0 }],
             "eol-last": ["error", "always"],

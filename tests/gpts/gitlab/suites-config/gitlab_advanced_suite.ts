@@ -60,7 +60,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         beforeAll(async () => {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
             gitLabProvider = await getGitLabProvider(kubeClient);
@@ -77,7 +77,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * 
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "tekton");
 
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
         }, 120000);

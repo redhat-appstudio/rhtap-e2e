@@ -19,7 +19,7 @@ import { onPushTasks } from '../../../../src/constants/tekton';
  */
 export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
@@ -45,7 +45,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * resources
         */
         beforeAll(async () => {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
             gitHubClient = await getGitHubClient(kubeClient);
@@ -78,7 +78,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

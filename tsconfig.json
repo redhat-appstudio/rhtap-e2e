@@ -1,28 +1,30 @@
 {
-    "$schema": "https://schemastore.azurewebsites.net/schemas/json/tsconfig.json",
-    "compilerOptions": {
-      "baseUrl": ".",
-      "paths": { "*": ["types/*"] },
-      "declaration": true,
-      "importHelpers": true,
-      "rootDir": ".",
-      "strict": true,
-      "composite": true,
-      "skipLibCheck": true,
-      "experimentalDecorators": true,
-      "noUnusedLocals": true,
-      "emitDecoratorMetadata": true,
-      "downlevelIteration": true,
-      "noEmitOnError": false,
-      "module": "commonjs",
-      "moduleResolution": "node",
-      "target": "ES2019",
-      "sourceMap": true,
-      "allowSyntheticDefaultImports": true,
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "types/*"
+      ]
     },
-    "include": [
-      "src/",
-      "src/api/*",
-      "tests/*"    
-    ]
-  }
+    "declaration": true,
+    "importHelpers": true,
+    "rootDir": ".",
+    "strict": true,
+    "composite": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "noUnusedLocals": true,
+    "emitDecoratorMetadata": true,
+    "downlevelIteration": true,
+    "noEmitOnError": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2019",
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+  },
+  "include": [
+    "**/*.ts"
+  ]
+}

@@ -301,7 +301,7 @@ export class JenkinsCI extends Utils {
     }
 
     //Parse SBOM version from build log
-    public async parseSbomVersionFromConsoleLog(log: string): Promise<string> {
+    public parseSbomVersionFromConsoleLog(log: string): string {
         const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
         if (filter != undefined){
             return filter.substring(
@@ -355,7 +355,7 @@ export class JenkinsCI extends Utils {
     }
 
 
-    public async getJenkinsURL() {
+    public getJenkinsURL(): string {
         return this.jenkinsUrl;
     }
 }

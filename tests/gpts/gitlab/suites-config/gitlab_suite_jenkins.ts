@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 
 /**
@@ -22,7 +22,7 @@ import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
  */
 export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
@@ -47,8 +47,8 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
 
         beforeAll(async () => {
             kubeClient = new Kubernetes();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
@@ -61,7 +61,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

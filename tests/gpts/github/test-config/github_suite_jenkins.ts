@@ -5,7 +5,6 @@ import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
-import { Utils } from '../../../../src/apis/scm-providers/utils';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -48,8 +47,8 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -73,7 +72,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -136,7 +135,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName, repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**
@@ -166,7 +165,6 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Trigger and wait for Jenkins job to finish(it will also run deployment pipeline)
          */
         it(`Trigger job and wait for ${gptTemplate} jenkins job to finish`, async () => {
-            new Utils().sleep(5000);
             await new Promise(resolve => setTimeout(resolve, 5000));
             const jobStatus = await jenkinsClient.waitForJobToFinishInFolder(repositoryName, 2, 600000, repositoryName);
             expect(jobStatus).not.toBe(undefined);
