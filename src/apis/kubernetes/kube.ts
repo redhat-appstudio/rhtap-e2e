@@ -144,7 +144,7 @@ export class Kubernetes extends Utils {
      * @returns {Promise<PipelineRunKind | undefined>} A Promise resolving to the most recent PipelineRun associated with the repository, or undefined if no PipelineRun is found.
      * @throws This function may throw errors during API calls or retries.
      */
-    public async getPipelineRunByRepository(gitRepository: string, eventType: string): Promise<PipelineRunKind | undefined> {
+    public async getPipelineRunByRepository(gitRepository: string, commitRevision: string, eventType: string): Promise<PipelineRunKind | undefined> {
         const customObjectsApi = this.kubeConfig.makeApiClient(CustomObjectsApi);
         const maxAttempts = 10;
         const retryInterval = 10 * 1000;
@@ -162,7 +162,7 @@ export class Kubernetes extends Utils {
                     }
                     const labels = metadata.labels;
 
-                    return labels?.['pipelinesascode.tekton.dev/event-type'] === eventType;
+                    return labels?.['pipelinesascode.tekton.dev/event-type'] === eventType && labels?.['pipelinesascode.tekton.dev/sha']  === commitRevision;
                 });
 
                 if (filteredPipelineRuns.length > 0) {
@@ -183,7 +183,7 @@ export class Kubernetes extends Utils {
             }
         }
 
-        throw new Error(`Max attempts reached. Unable to fetch pipeline runs for your component in cluster for ${gitRepository}. Check Openshift Pipelines resources...`);
+        throw new Error(`Max attempts reached. Unable to fetch pipeline runs for your component in cluster for ${gitRepository} with commit ${commitRevision}. Check Openshift Pipelines resources...`);
     }
 
     /**

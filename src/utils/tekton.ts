@@ -100,8 +100,8 @@ export class Tekton {
         }
     }
 
-    public async verifyPipelineRunByRepository(repositoryName: string, namespace: string, eventType: string, expectedTasks: string[]) {
-        const pipelineRun = await this.kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+    public async verifyPipelineRunByRepository(repositoryName: string, namespace: string, commitRevision: string, eventType: string, expectedTasks: string[]) {
+        const pipelineRun = await this.kubeClient.getPipelineRunByRepository(repositoryName, commitRevision, eventType);
         if (pipelineRun === undefined) {
             throw new Error("Error to read pipelinerun from the cluster. Seems like pipelinerun was never created; verify PAC controller logs.");
         }

@@ -106,7 +106,7 @@ export class GitHubProvider extends Utils {
      * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
      * @throws Any error that occurs during the execution of the function.
      */
-    public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+    public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string> {
         try {
             const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' });
 
@@ -130,7 +130,7 @@ export class GitHubProvider extends Utils {
 
             return newCommit.data.sha;
         } catch (error) {
-            console.log(error);
+            throw new Error(`Failed to create empty commit: ${error}`);
         }
     }
 
@@ -231,7 +231,7 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<number | undefined> {
+    public async createPullRequestFromMainBranch(owner: string, repo: string, filePath: string, content: string, fileSHA = ""): Promise<[number, string]> {
         const baseBranch = "main"; // Specify the base branch
         const newBranch = generateRandomChars(5); // Specify the new branch name
 
@@ -250,7 +250,7 @@ export class GitHubProvider extends Utils {
                 sha: latestCommit.commit.sha
             });
 
-            await this.octokit.repos.createOrUpdateFileContents({
+            const response = await this.octokit.repos.createOrUpdateFileContents({
                 owner,
                 repo,
                 path: filePath,
@@ -259,6 +259,12 @@ export class GitHubProvider extends Utils {
                 branch: newBranch,
                 sha: fileSHA
             });
+
+            const commitSha = response.data.commit.sha;
+
+            if (commitSha === undefined) {
+                throw new Error("Failed to create commit");
+            }
 
             const { data: pullRequest } = await this.octokit.pulls.create({
                 owner,
@@ -269,10 +275,10 @@ export class GitHubProvider extends Utils {
                 body: "RHTAP E2E: Automatic Pull Request"
             });
 
-            return pullRequest.number;
+            return [pullRequest.number, commitSha];
 
         } catch (error) {
-            console.error("Error:", error);
+            throw new Error(`Failed to create pull request from main branch: ${error}`);
         }
     }
 
@@ -282,15 +288,17 @@ export class GitHubProvider extends Utils {
      * @param {string} repo - The name of the repository.
      * @param {string} pullRequest - PR number.
      */
-    public async mergePullRequest(owner: string, repo: string, pullRequest: number) {
+    public async mergePullRequest(owner: string, repo: string, pullRequest: number): Promise<string> {
         try {
-            await this.octokit.pulls.merge({
+            const response = await this.octokit.pulls.merge({
                 owner,
                 repo,
                 pull_number: pullRequest,
                 commit_title: "RHTAP E2E: Automatic Pull Request merge",
                 merge_method: "squash"
             });
+
+            return response.data.sha;
         } catch (error) {
             throw new Error(`Failed to merge Pull Request ${pullRequest}, owner: ${owner}, repo: ${repo}. Error: ${error}`);
         }
@@ -346,7 +354,7 @@ export class GitHubProvider extends Utils {
      * @param {string} environment - environment name(development, stage, prod).
      * @param {string} image - image name.
      */
-    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number | undefined> {
+    public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<[number, string]> {
         try {
             const response = await this.octokit.repos.getContent({
                 owner,
