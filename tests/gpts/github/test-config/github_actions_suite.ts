@@ -4,15 +4,17 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPassword, getCosignPrivateKey, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, waitForComponentCreation} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
  * 3. Check if Red Hat Developer Hub created GitHub repositories with workflow files
- * 4. Wait for GitHub Actions Job to finish
- * 5. Check if the application is deployed in development namespace and pod is synched
+ * 4. Creates secrets for GitHub Actions Workflow.
+ * 5. Wait for GitHub Actions Job to finish
+ * 6. Check if the application is deployed in development namespace and pod is synced
  */
+
 export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, stringOnRoute: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
@@ -87,50 +89,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             expect(await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000)).toBe(true);
         }, 600000);
 
-        it (`creates env variables in repo`, async () => {
-            await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
-                "IMAGE_REGISTRY": imageRegistry,
-                "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
-                "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
-                "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
-                "IMAGE_REGISTRY_USER": process.env.IMAGE_REGISTRY_USERNAME || '',
-                "IMAGE_REGISTRY_PASSWORD": process.env.IMAGE_REGISTRY_PASSWORD || '',
-                // "QUAY_IO_CREDS_USR": process.env.QUAY_USERNAME || '',
-                // "QUAY_IO_CREDS_PSW": process.env.QUAY_PASSWORD || '',
-                "COSIGN_SECRET_PASSWORD": await getCosignPassword(kubeClient),
-                "COSIGN_SECRET_KEY": await getCosignPrivateKey(kubeClient),
-                "COSIGN_PUBLIC_KEY": await getCosignPublicKey(kubeClient),
-                "REKOR_HOST": await kubeClient.getRekorServerUrl(RHTAPRootNamespace) || '',
-                "TUF_MIRROR": await kubeClient.getTUFUrl(RHTAPRootNamespace) || ''
-            });
-            //Workaround for https://issues.redhat.com/browse/RHTAP-3314, please remove after fixing this
-            const rekorHost = await kubeClient.getRekorServerUrl(RHTAPRootNamespace);
-            const tufMirror = await kubeClient.getTUFUrl(RHTAPRootNamespace);
-            
-            // Make both changes in a single commit
-            expect(await gitHubClient.commitMultipleFilesInGitHub(
-                githubOrganization,
-                repositoryName,
-                [
-                    {
-                        path: 'rhtap/env.sh',
-                        stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
-                        replacementString: tufMirror
-                    },
-                    {
-                        path: 'rhtap/env.sh',
-                        stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
-                        replacementString: rekorHost
-                    }
-                ],
-                "Update Sigstore configuration (Rekor host and TUF mirror)"
-            )).not.toBe(undefined);
-            
-
-        }, 600000);
-
         /**
-         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
+         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of
          * my application. Also verifies if the repository contains a workflow file.
          */
         it(`verifies if component ${gptTemplate} was created in GitHub and contains a workflow file`, async () => {
@@ -139,30 +99,27 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         }, 120000);
 
         /**
-         * Verification to check if Red Hat Developer Hub created the gitops repository with wrkflow file
+         * Verification to check if Red Hat Developer Hub created the gitops repository with workflow file
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a workflow file`, async () => {
             expect(await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`)).toBe(true);
-            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).toBe(true);
+            expect(await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.github/workflows/gitops-promotion.yml')).toBe(true);
         }, 120000);
+
+        /**
+         * Creates secrets for GitHub Actions Workflow
+         */
+        it (`creates env variables in repo`, async () => {
+            await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repositoryName, imageRegistry, RHTAPRootNamespace);
+            expect(await gitHubClient.updateWorkflowFileToEnableSecrets(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
+        }, 600000);
 
         /**
          * Trigger and wait for Actions job to finish
          */
         it(`Trigger and wait for ${gptTemplate} GitHub Actions job`, async () => {
-            let jobStatus;
-            try {
-                // Wait for the latest job and get only the status
-                const workflowId = await gitHubClient.getWorkflowId(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy");
-                expect(workflowId).not.toBe(0);
-                jobStatus = await gitHubClient.waitForLatestJobStatus(githubOrganization, repositoryName, workflowId?.toString());
-                console.log('Job Status:', jobStatus);
-            } catch (error) {
-                console.error('Error waiting for job completion:', error);
-            }
-            expect(jobStatus).not.toBe(undefined);
-            expect(jobStatus).toBe("success");
-        }, 240000);
+            expect(await gitHubClient.getLatestWorkflowRunStatus(githubOrganization, repositoryName, "TSSC-Build-Attest-Scan-Deploy")).toBe("success");
+        }, 300000);
 
         /**
          * Obtain the openshift Route for the component and verify that the previous builded image was synced in the cluster and deployed in development environment
