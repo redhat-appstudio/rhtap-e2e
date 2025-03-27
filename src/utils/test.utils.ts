@@ -322,14 +322,14 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
     * 
     * @param {string} softwareTemplateName Refers to the Developer Hub template name.
     * @param {string} imageName Registry image name for the component to be pushed.
-    * @param {string} ImageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitHub repository.
-    * @param {string} gitLabOrganization Owner of the GitHub repository.
+    * @param {string} gitHubOrganization Owner of the GitHub repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createImportTaskGitHub(newRepositoryName: string, inputUrl: string, imageName: string, ImageOrg: string, imageRegistry: string, gitLabOrganization: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createImportTaskGitHub(newRepositoryName: string, inputUrl: string, imageName: string, imageOrg: string, imageRegistry: string, gitHubOrganization: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/import-repo`,
         values: {
@@ -342,11 +342,11 @@ export async function createImportTaskGitHub(newRepositoryName: string, inputUrl
             hostType: 'GitHub',
             repoName: newRepositoryName,
             branch: 'main',
-            ghOwner: gitLabOrganization,
+            ghOwner: gitHubOrganization,
             ghHost: 'github.com',
             imageRegistry: imageRegistry,
             imageName: imageName,
-            imageOrg: ImageOrg,
+            imageOrg: imageOrg,
             namespace: componentRootNamespace,
             ciType: ciType
         }

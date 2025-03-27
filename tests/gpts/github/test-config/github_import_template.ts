@@ -109,15 +109,16 @@ export const gitHubImportTemplateTests = (gptTemplate: string) => {
         }, 120000);
 
         /**
-         * Delete catalog file and tekton folder.
+         * Delete catalog file, tekton folder and gitops folder.
          */
         it(`Delete catalog file and tekton folder.`, async () => {
             await gitHubClient.deleteFolderInRepository(githubOrganization, repositoryName, '.tekton');
             await gitHubClient.deleteFolderInRepository(githubOrganization, repositoryName, 'gitops');
+            await gitHubClient.deleteFileInRepository(githubOrganization, repositoryName, 'catalog-info.yaml');
         }, 120000);
 
         /**
-         * Delete location from backstage
+         * Delete entities from backstage
          */
         it(`Delete location from backstage`, async () => {
             const componentIsUnregistered = await backstageClient.deleteEntitiesBySelector(repositoryName);
@@ -139,8 +140,7 @@ export const gitHubImportTemplateTests = (gptTemplate: string) => {
         }, 120000);
 
         /**
-         * Once a DeveloperHub task is processed should create an argocd application in openshift-gitops namespace. 
-         * Need to wait until application is synced until commit something to github and trigger a pipelinerun
+         * Check argo resources for imported template
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster for imported template`, async () => {
             const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-imported-development`, 500000);
@@ -151,7 +151,7 @@ export const gitHubImportTemplateTests = (gptTemplate: string) => {
          * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
          * my application. Also verifies if the repository contains a '.tekton' folder.
          */
-        it(`verifies if component ${gptTemplate} was created in GitHub and contains 'catalog-info.yaml' file in imported template`, async () => {
+        it(`verifies if imported component ${gptTemplate} was created in GitHub and contains 'catalog-info.yaml' file in imported template`, async () => {
             const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName  + "-imported");
             expect(repositoryExists).toBe(true);
 

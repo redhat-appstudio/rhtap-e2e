@@ -874,7 +874,37 @@ export class GitHubProvider extends Utils {
         const jobId = await this.getLatestWorkflowRunsJobId(owner, repo, runId);
         return await this.getJobLogsFromWorkflowRun(owner, repo, jobId);
     }
-    
+
+    public async deleteFileInRepository(gitOrg: string, gitRepository: string, fileNamePath: string) : Promise<boolean | undefined>{
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: fileNamePath,
+                ref: `main`,
+            });
+
+            if (!('sha' in responseContent.data)) {
+                throw new Error(`SHA not found for file: ${fileNamePath}`);
+            }
+
+            const fileSha = responseContent.data.sha;
+            await this.octokit.repos.deleteFile({
+                owner: gitOrg, repo: gitRepository,
+                path: fileNamePath,
+                message: `Delete ${fileNamePath}`,
+                sha: fileSha,
+                branch: `main`,
+            });
+
+            console.log("File deleted successfully!");
+            return true;
+
+        } catch (error) {
+            console.error("An error occurred while deleting file", error);
+        }
+        return false;
+    }
+
     /**
      * Get the list of files in a folder from a GitHub repository.
      * @param folderPath - Path to the folder in the repository.
@@ -895,7 +925,7 @@ export class GitHubProvider extends Utils {
 
             return response.data.map((item) => ({
                 path: item.path,
-                sha: item.sha!,
+                sha: item.sha,
                 type: item.type, // 'file' or 'dir'
             }));
         } catch (error) {
