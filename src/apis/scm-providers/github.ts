@@ -591,6 +591,52 @@ export class GitHubProvider extends Utils {
         }
     }
 
+    public async setGitHubVariables(owner: string, repo: string, envVars: Record<string, string>) {
+        console.group(`Adding variables to github ${owner}/${repo}`);
+        let variables;
+        try {
+            const response = await this.octokit.actions.listRepoVariables({
+                owner,
+                repo,
+            });
+            variables = response.data.variables;
+        } catch (error) {
+            console.error(`Error listing variables: ${error}`);
+            console.groupEnd();
+            throw error;
+        }
+        console.log("Variables:", variables);
+        for (const [envVarName, envVarValue] of Object.entries(envVars)) {
+            if (variables.map(variable => variable.name).includes(envVarName)) {
+                console.log(`Updating ${envVarName}`);
+                try {
+                    await this.octokit.actions.updateRepoVariable({
+                        owner,
+                        repo,
+                        name: envVarName,
+                        value: envVarValue
+                    });
+                } catch (error) {
+                    console.error(`Error updating variable ${envVarName}: ${error}`);
+                    console.groupEnd();
+                }
+                continue;
+            }
+            try {
+                await this.octokit.actions.createRepoVariable({
+                    owner,
+                    repo,
+                    name: envVarName,
+                    value: envVarValue
+                });
+            } catch (error) {
+                console.error(`Error creating variable ${envVarName}: ${error}`);
+                console.groupEnd();
+                throw error;
+            }
+        }
+        console.groupEnd();
+    }
     /**
      * Commits multiple file changes to the main branch of a specified Git repository.
      * 
