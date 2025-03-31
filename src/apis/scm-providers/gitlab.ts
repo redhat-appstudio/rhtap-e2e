@@ -261,6 +261,9 @@ export class GitLabProvider extends Utils {
                 ]
             );
 
+            // Wait for GitLab to process the commit
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
             const mergeRequest = await this.gitlab.MergeRequests.create(repositoryID, branchName, "main", title);
 
             console.log(`Pull request "${title}" created successfully. URL: ${mergeRequest.web_url}`);
