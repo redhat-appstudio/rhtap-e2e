@@ -143,7 +143,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         }, 120000);
 
         it(`Create credentials in Jenkins for ${softwareTemplateName}`, async () => {
-            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, true);
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, "gitlab");
             await setSecretsForJenkinsInFolderForTPA(jenkinsClient, kubeClient, repositoryName);
         }, 120000);
 

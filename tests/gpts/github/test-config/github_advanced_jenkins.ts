@@ -148,7 +148,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         }, 120000);
 
         it(`Create credentials in Jenkins for ${gptTemplate} job folder`, async () => {
-            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName);
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, "github");
             await setSecretsForJenkinsInFolderForTPA(jenkinsClient, kubeClient, repositoryName);
         }, 120000);
 
