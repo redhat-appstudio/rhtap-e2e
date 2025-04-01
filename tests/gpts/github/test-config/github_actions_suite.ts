@@ -4,7 +4,18 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import {
+    checkComponentSyncedInArgoAndRouteIsWorking,
+    checkEnvVariablesGitHub,
+    cleanAfterTestGitHub,
+    createTaskCreatorOptionsGitHub,
+    getDeveloperHubClient,
+    getGitHubClient,
+    getRHTAPGitopsNamespace,
+    setGitHubActionSecrets,
+    setGitHubActionVariables,
+    waitForComponentCreation
+} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -32,7 +43,6 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
         let RHTAPGitopsNamespace: string;
-        let RHTAPRootNamespace: string;
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
@@ -46,7 +56,6 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         */
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -110,7 +119,8 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Creates secrets for GitHub Actions Workflow
          */
         it (`creates env variables in repo`, async () => {
-            await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repositoryName, imageRegistry, RHTAPRootNamespace);
+            await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repositoryName);
+            await setGitHubActionVariables(gitHubClient, kubeClient, githubOrganization, repositoryName, imageRegistry);
             expect(await gitHubClient.updateWorkflowFileToEnableSecrets(githubOrganization, repositoryName, '.github/workflows/build-and-update-gitops.yml')).not.toBe(undefined);
         }, 600000);
 

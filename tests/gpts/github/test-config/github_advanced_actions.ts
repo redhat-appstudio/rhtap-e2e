@@ -4,7 +4,20 @@ import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, getRHTAPRootNamespace, setGitHubActionSecrets, parseSbomVersionFromLogs, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import {
+    checkComponentSyncedInArgoAndRouteIsWorking,
+    checkEnvVariablesGitHub,
+    checkSBOMInTrustification,
+    cleanAfterTestGitHub,
+    createTaskCreatorOptionsGitHub,
+    getDeveloperHubClient,
+    getGitHubClient,
+    getRHTAPGitopsNamespace,
+    setGitHubActionSecrets,
+    parseSbomVersionFromLogs,
+    waitForComponentCreation,
+    setGitHubActionVariables
+} from "../../../../src/utils/test.utils";
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -37,7 +50,6 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         let extractedBuildImage: string;
 
         let RHTAPGitopsNamespace: string;
-        let RHTAPRootNamespace: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const developmentEnvironmentName = 'development';
@@ -61,7 +73,6 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
         */
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
             kubeClient = new Kubernetes();
             gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
@@ -135,7 +146,8 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
                 }
             ];
             for (const repoData of repoDict) {
-                await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repoData.repoName, imageRegistry, RHTAPRootNamespace);
+                await setGitHubActionSecrets(gitHubClient, kubeClient, githubOrganization, repoData.repoName);
+                await setGitHubActionVariables(gitHubClient, kubeClient, githubOrganization, repoData.repoName, imageRegistry);
                 expect(await gitHubClient.updateWorkflowFileToEnableSecrets(githubOrganization, repoData.repoName, repoData.workflowPath)).not.toBe(undefined);
             }
 
