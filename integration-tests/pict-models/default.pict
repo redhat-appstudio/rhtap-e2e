@@ -14,7 +14,7 @@ AUTH: github
 ACS: new
 Registry: nexus
 TPA: new
-SCM: bitbucket
+SCM: gitlab
 Pipeline: jenkins
 
 # Constraints

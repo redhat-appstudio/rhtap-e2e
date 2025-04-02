@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation, getCosignPublicKey} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Utils } from "../../../../src/apis/scm-providers/utils";
 
@@ -113,17 +113,9 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Creates commits to update Jenkins agent and enable ACS scan
         */
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
-            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
-            await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main');
-
-            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
-            await gitLabProvider.createUsernameCommit(gitlabGitOpsRepositoryID, 'main');
-
-            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
-            await gitLabProvider.enableACSJenkins(gitlabGitOpsRepositoryID, 'main');
-
-            await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
-            await gitLabProvider.createRegistryUserCommit(gitlabGitOpsRepositoryID, 'main');
+            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main', "quay.io/jkopriva/rhtap-jenkins-agent:0.6");
+            //usign different images as temporary workaround for SIGSEGV build issues
+            await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main', "quay.io/jkopriva/rhtap-jenkins-agent:0.6");
 
             await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.createRegistryPasswordCommit(gitlabGitOpsRepositoryID, 'main');
@@ -131,11 +123,16 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.disableQuayCommit(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
-            await gitLabProvider.updateRekorHost(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
+            await gitLabProvider.disableCosignPublicKeyFromCreds(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
-            await gitLabProvider.updateTufMirror(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateEnvFileForJenkins(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
+            await gitLabProvider.updateEnvFileForJenkins(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
+
+            await gitLabProvider.updateRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await gitLabProvider.updateRoxCentralEndpoint(gitlabGitOpsRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+
+            await gitLabProvider.updateEnvFileForJenkinsTustification(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
+            
         }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins folder`, async () => {

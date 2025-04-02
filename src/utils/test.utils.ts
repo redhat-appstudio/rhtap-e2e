@@ -505,9 +505,6 @@ export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kub
 }
 
 export async function setSecretsForJenkinsInFolderForTPA(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string) {
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_BOMBASTIC_API_URL", await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_ISSUER_URL", await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_ID", await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_OIDC_CLIENT_SECRET", await kubeClient.getTTrustificationClientSecret(await getRHTAPRootNamespace()), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()), folderName);
 }
