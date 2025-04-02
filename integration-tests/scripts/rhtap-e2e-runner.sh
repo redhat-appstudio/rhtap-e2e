@@ -14,9 +14,6 @@ export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 
 # Default namespace and organization settings
 export APPLICATION_ROOT_NAMESPACE="rhtap-app"
-export BITBUCKET_USERNAME="rhtap-test-admin"
-export BITBUCKET_WORKSPACE="rhtap-test"
-export BITBUCKET_PROJECT="RHTAP"
 
 # OCI container registry settings
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
@@ -95,6 +92,19 @@ configure_gitlab_variables() {
     export GITLAB_TOKEN="$(get_secret_value "rhtap" "rhtap-gitlab-integration" "token")"
     
     log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION})"
+}
+
+configure_bitbucket_variables() {
+    log "INFO" "Configuring Bitbucket credentials from cluster secrets"
+
+    if ! secret_exists "rhtap" "rhtap-bitbucket-integration"; then
+        log "WARN" "No Bitbucket integration secret found in the rhtap namespace"
+        return 0
+    fi
+    export BITBUCKET_USERNAME="rhtap-test-admin"
+    export BITBUCKET_WORKSPACE="rhtap-test"
+    export BITBUCKET_PROJECT="RHTAP"
+    export BITBUCKET_APP_PASSWORD="$(get_secret_value "rhtap" "rhtap-bitbucket-integration" "appPassword")"
 }
 
 # Extract registry credentials from docker config JSON in a Kubernetes secret
@@ -261,6 +271,7 @@ main() {
     load_oci_storage_credentials
     configure_github_variables
     configure_gitlab_variables
+    configure_bitbucket_variables
     configure_image_registry
     configure_developer_hub
     

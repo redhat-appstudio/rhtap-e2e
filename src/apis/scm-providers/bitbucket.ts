@@ -6,12 +6,14 @@ import { generateRandomChars } from '../../../src/utils/generator';
 
 export class BitbucketProvider extends Utils {
     private readonly bitbucket;
+    private readonly bitbucketUsername;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.1";
+    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.2";
 
     constructor(bitbucketUsername: string, bitbucketAppPassword: string) {
         super();
+        this.bitbucketUsername = bitbucketUsername;
         this.bitbucket = axios.create({
             baseURL: "https://api.bitbucket.org/2.0",
             auth: {
@@ -22,6 +24,11 @@ export class BitbucketProvider extends Utils {
                 'Content-Type': 'application/json',
             },
         });
+    }
+
+    // Get Bitbucket username
+    public async getBitbucketUsername(): Promise<string> {
+        return this.bitbucketUsername;
     }
 
     /**
@@ -286,14 +293,6 @@ export class BitbucketProvider extends Utils {
                 replacementString: "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n        }\n        }"
             },
             {
-                stringToFind: "/* GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME') */",
-                replacementString: "GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')"
-            },
-            {
-                stringToFind: "/* IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER') */",
-                replacementString: "IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER')"
-            },
-            {
                 stringToFind: "/* IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD') */",
                 replacementString: "IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD')"
             },
@@ -317,18 +316,54 @@ export class BitbucketProvider extends Utils {
      * @param repoSlug valid Bitbucket repository slug
      * @param rekorHost valid rekor host url
      * @param tufMirrorUrl valid tuf mirror url
+     * @param roxCentralEndpoint valid rox central endpount url
+     * @param cosignPublicKey valid cosign public key
+     * @param imageRegistryUser valid image registry username
      */
-    public async updateEnvFileForJenkinsCI(workspace: string, repoSlug: string, rekorHost: string, tufMirrorUrl: string): Promise<boolean> {
+    public async updateEnvFileForJenkinsCI(
+        workspace: string,
+        repoSlug: string,
+        rekorHost: string,
+        tufMirrorUrl: string,
+        roxCentralEndpoint:string,
+        cosignPublicKey: string,
+        imageRegistryUser: string
+    ): Promise<boolean> {
         const filePath = 'rhtap/env.sh';
-        const fileContent = await this.getFileContent(workspace, repoSlug, 'main', filePath);
+        let fileContent = await this.getFileContent(workspace, repoSlug, 'main', filePath);
         console.log(`File before all changes: ${filePath}\n${fileContent}`);
 
-        // Replace rekor
-        let updatedContent = fileContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
-        // Replace TUF
-        updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirrorUrl);
+        // Replace env variable values
+        const stringReplaceContent = [
+            {
+                stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
+                replacementString: rekorHost
+            },
+            {
+                stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
+                replacementString: tufMirrorUrl
+            },
+            {
+                stringToFind: "# export ROX_CENTRAL_ENDPOINT=central-acs.apps.user.cluster.domain.com:443",
+                replacementString: `export ROX_CENTRAL_ENDPOINT=${roxCentralEndpoint}`
+            },
+        ];
+        for (const content of stringReplaceContent) {
+            fileContent = fileContent.replace(content.stringToFind, content.replacementString);
+        }
 
-        console.log(`File after all changes: ${filePath}\n${updatedContent}`);
-        return await this.createCommit(workspace, repoSlug, 'main', filePath, updatedContent, "Update RekorHost and TufUrl in rhtap/env.sh for e2e-tests");
+        // Add new lines for Cosign pub key, Image user, Gitops user variables
+        const newContentList: string[] = [
+            `export COSIGN_PUBLIC_KEY=${cosignPublicKey}`,
+            `export IMAGE_REGISTRY_USER=${imageRegistryUser}`,
+            `export GITOPS_AUTH_USERNAME=${await this.getBitbucketUsername()}`
+        ];
+        for (const newVars of newContentList) {
+            fileContent = fileContent.concat(`\n${newVars}\n`);
+        }
+
+        console.log(`File after all changes: ${filePath}\n${fileContent}`);
+        return await this.createCommit(workspace, repoSlug, 'main', filePath, fileContent, "Update variables in rhtap/env.sh for e2e-tests");
     }
+
 }

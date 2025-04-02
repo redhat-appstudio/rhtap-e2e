@@ -4,7 +4,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { BitbucketProvider } from "../../../../src/apis/scm-providers/bitbucket";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getDeveloperHubClient, getBitbucketClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesBitbucket, cleanAfterTestBitbucket, createTaskCreatorOptionsBitbucket, getCosignPublicKey, getDeveloperHubClient, getBitbucketClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -122,7 +122,14 @@ export const bitbucketJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string
          * Creates commits to update Jenkins agent and enable ACS scan
          */
         it(`Commit updated agent for ${gptTemplate} Jenkinsfile and enable ACS scan`, async () => {
-            expect(await bitbucketClient.updateEnvFileForJenkinsCI(bitbucketWorkspace, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace))).toBe(true);
+            expect(await bitbucketClient.updateEnvFileForJenkinsCI(
+                bitbucketWorkspace, repositoryName,
+                await kubeClient.getRekorServerUrl(RHTAPRootNamespace),
+                await kubeClient.getTUFUrl(RHTAPRootNamespace),
+                await kubeClient.getACSEndpoint(RHTAPRootNamespace),
+                await getCosignPublicKey(kubeClient),
+                process.env.IMAGE_REGISTRY_USERNAME ?? '')
+            ).toBe(true);
             expect(await bitbucketClient.updateJenkinsfileForCI(bitbucketWorkspace, repositoryName)).toBe(true);
         }, 120000);
 
