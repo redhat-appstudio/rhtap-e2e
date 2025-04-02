@@ -4,7 +4,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
 import { Utils } from '../../../../src/apis/scm-providers/utils';
 
 /**
@@ -115,6 +115,9 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName, await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()))).not.toBe(undefined);
+            expect(await gitHubClient.updateCosignPublicKey(githubOrganization, repositoryName, await getCosignPublicKey(kubeClient))).not.toBe(undefined);
+            expect(await gitHubClient.updateImageRegistryUser(githubOrganization, repositoryName, process.env.IMAGE_REGISTRY_USERNAME ?? '')).not.toBe(undefined);
         }, 120000);
 
         /**

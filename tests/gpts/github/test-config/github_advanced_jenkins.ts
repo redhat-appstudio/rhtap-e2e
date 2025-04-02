@@ -5,7 +5,7 @@ import { generateRandomChars } from '../../../../src/utils/generator';
 import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation, getCosignPublicKey} from "../../../../src/utils/test.utils";
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -118,8 +118,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
-            expect(await gitHubClient.createRegistryUserCommit(githubOrganization, repositoryName)).not.toBe(undefined);
-            expect(await gitHubClient.createRegistryUserCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            expect(await gitHubClient.deleteCosignPublicKey(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName)).not.toBe(undefined);
             expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
             expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName)).not.toBe(undefined);
@@ -128,6 +127,12 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName + "-gitops", await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName + "-gitops", await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
+            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName, await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()))).not.toBe(undefined);
+            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName + "-gitops", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()))).not.toBe(undefined);
+            expect(await gitHubClient.updateCosignPublicKey(githubOrganization, repositoryName, await getCosignPublicKey(kubeClient))).not.toBe(undefined);
+            expect(await gitHubClient.updateCosignPublicKey(githubOrganization, repositoryName + "-gitops", await getCosignPublicKey(kubeClient))).not.toBe(undefined);
+            expect(await gitHubClient.updateImageRegistryUser(githubOrganization, repositoryName, process.env.IMAGE_REGISTRY_USERNAME ?? '')).not.toBe(undefined);
+            expect(await gitHubClient.updateImageRegistryUser(githubOrganization, repositoryName + "-gitops", process.env.IMAGE_REGISTRY_USERNAME ?? '')).not.toBe(undefined);
         }, 120000);
 
         /**
