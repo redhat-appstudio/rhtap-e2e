@@ -292,11 +292,11 @@ export async function createTaskCreatorOptionsGitlab(softwareTemplateName: strin
     * @param {string} imageOrg Registry organization name for the component to be pushed.
     * @param {string} imageRegistry Image registry provider. Default is Quay.io.
     * @param {string} repositoryName Name of the GitHub repository.
-    * @param {string} gitLabOrganization Owner of the GitHub repository.
+    * @param {string} gitHubOrganization Owner of the GitHub repository.
     * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
     * @param {string} ciType CI Type: "jenkins" "tekton"
 */
-export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitLabOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+export async function createTaskCreatorOptionsGitHub(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitHubOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
     const taskCreatorOptions: ScaffolderScaffoldOptions = {
         templateRef: `template:default/${softwareTemplateName}`,
         values: {
@@ -310,7 +310,44 @@ export async function createTaskCreatorOptionsGitHub(softwareTemplateName: strin
             namespace: componentRootNamespace,
             owner: "user:guest",
             repoName: repositoryName,
-            ghOwner: gitLabOrganization,
+            ghOwner: gitHubOrganization,
+            ciType: ciType
+        }
+    };
+    return taskCreatorOptions;
+}
+
+/**
+    * Creates a task creator options for Developer Hub to generate a new component using specified git and kube options.
+    * 
+    * @param {string} softwareTemplateName Refers to the Developer Hub template name.
+    * @param {string} imageName Registry image name for the component to be pushed.
+    * @param {string} imageOrg Registry organization name for the component to be pushed.
+    * @param {string} imageRegistry Image registry provider. Default is Quay.io.
+    * @param {string} repositoryName Name of the GitHub repository.
+    * @param {string} gitHubOrganization Owner of the GitHub repository.
+    * @param {string} componentRootNamespace Kubernetes namespace where ArgoCD will create component manifests.
+    * @param {string} ciType CI Type: "jenkins" "tekton"
+*/
+export async function createImportTaskGitHub(newRepositoryName: string, inputUrl: string, imageName: string, imageOrg: string, imageRegistry: string, gitHubOrganization: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+    const taskCreatorOptions: ScaffolderScaffoldOptions = {
+        templateRef: `template:default/import-repo`,
+        values: {
+            name: newRepositoryName,
+            owner: "user:guest",
+            inputUrl: inputUrl,
+            dockerfileLocation: "Dockerfile",
+            dockerfileBuildContext: ".",
+            appPort: "8080",
+            hostType: 'GitHub',
+            repoName: newRepositoryName,
+            branch: 'main',
+            ghOwner: gitHubOrganization,
+            ghHost: 'github.com',
+            imageRegistry: imageRegistry,
+            imageName: imageName,
+            imageOrg: imageOrg,
+            namespace: componentRootNamespace,
             ciType: ciType
         }
     };

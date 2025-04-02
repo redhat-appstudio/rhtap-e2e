@@ -135,4 +135,128 @@ export class DeveloperHubClient extends Utils {
         }
         return false;
     }
+
+    public async unregisterComponentById(id: string) : Promise<boolean>{
+        try {
+            const response = await this.axiosInstance.delete(`${this.RHDHUrl}/api/catalog/entities/by-uid/${id}`);
+
+            if (response.status === 204) {
+                console.log("Component ID:" + id + " deleted successfully");
+                return true;
+            } else {
+                console.log('Failed to delete component:', response.status, response.statusText);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting component:', error);
+        }
+        return false;
+    }
+
+    public async unregisterComponentByName(name: string): Promise<boolean> {
+        const componentId = await this.getComponentUid(name);
+        if (componentId) {
+            console.log("Component ID:" + componentId + " to be deleted");
+            return await this.unregisterComponentById(componentId);
+        }
+        return false;
+    }
+
+    public async getComponentUid(name: string): Promise<string | null> {
+        try {
+            const response = await this.axiosInstance.get(`${this.RHDHUrl}/api/catalog/entities`, {
+                params: {
+                    filter: `metadata.name=${name}`
+                }
+            });
+
+            const entities = response.data;
+            if (entities.length > 0) {
+                return entities[0].metadata.uid;
+            } else {
+                console.log('Component not found');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching component ID:', error);
+            return null;
+        }
+    }
+
+    public async deleteEntitiesByName(name: string): Promise<boolean> {
+        try {
+            const response = await this.axiosInstance.get(`${this.RHDHUrl}/api/catalog/entities`, {
+                params: {
+                    filter: `metadata.name=${name}`
+                }
+            });
+
+            const entities = response.data;
+            if (entities.length > 0) {
+                let i = 0;
+                let returnStatement  = true;
+                for (i; i < entities.length; i++) {
+                    const entity = entities[i];
+                    console.log(entity);
+                    returnStatement = returnStatement && await this.unregisterComponentById(entity.metadata.uid);
+                }
+                return returnStatement;
+            } else {
+                console.log('Component not found');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error fetching component ID:', error);
+            return false;
+        }
+    }
+
+    public async deleteEntitiesBySelector(name: string): Promise<boolean> {
+        try {
+            const response = await this.axiosInstance.get(`${this.RHDHUrl}/api/catalog/entities`);
+            const filteredEntities = response.data.filter((entity) => (entity.kind === 'Component'&& entity.metadata?.name?.includes(name)) || (entity.kind === 'Resource'&& entity.metadata?.name?.includes(name)) || (entity.kind === 'Location' && entity.spec?.target?.includes(name) ));
+
+            if (filteredEntities.length === 0) {
+                console.log(`No components found in catalog with the description containing "${name}".`);
+                return false;
+            }
+            const results = await Promise.all(filteredEntities.map(entity => this.unregisterComponentById(entity.metadata.uid)));
+            if (results.every(r => r === true)) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            console.error('Error fetching component ID:', error);
+            return false;
+        }
+    }
+      
+    public async registerLocation(repositoryName: string): Promise<boolean> {
+        try {
+            const response = await this.axiosInstance.post(
+                `${this.RHDHUrl}/api/catalog/locations`,
+                {
+                    type: 'url',
+                    target: `https://github.com/${process.env.GITHUB_ORGANIZATION}/${repositoryName}/blob/main/catalog-info.yaml`,
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            );
+
+            console.log('Location registered successfully:', response.data);
+            return true;
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                console.error('Error registering location:', error.response.data);
+            } else {
+                console.error('Error registering location:', error);
+            }
+        }
+        return false;
+    }
+
 }
