@@ -494,13 +494,10 @@ export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kub
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITHUB_TOKEN ?? '', folderName);
         await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername", process.env.GITHUB_TOKEN ?? '', folderName);
     }
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_PUBLIC_KEY", await getCosignPublicKey(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_KEY", await getCosignPrivateKey(kubeClient), folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "COSIGN_SECRET_PASSWORD", await getCosignPassword(kubeClient), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "IMAGE_REGISTRY_USER", process.env.IMAGE_REGISTRY_USERNAME ?? '', folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "IMAGE_REGISTRY_PASSWORD", process.env.IMAGE_REGISTRY_PASSWORD ?? '', folderName);
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_API_TOKEN", await kubeClient.getACSToken(await getRHTAPRootNamespace()), folderName);
-    await jenkinsClient.createCredentialsInFolder("GLOBAL", "ROX_CENTRAL_ENDPOINT", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()), folderName);
 }
 
 export async function setSecretsForJenkinsInFolderForTPA(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string) {

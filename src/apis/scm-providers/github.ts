@@ -9,7 +9,7 @@ export class GitHubProvider extends Utils {
     private readonly octokit: Octokit;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.1";
+    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.2";
 
     constructor(githubToken: string) {
         super();
@@ -196,6 +196,22 @@ export class GitHubProvider extends Utils {
         return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.rhtap-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
     }
 
+    public async updateRoxCentralEndpoint(gitOrg: string, gitRepository: string, roxCentralEndpoint: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "# export ROX_CENTRAL_ENDPOINT=central-acs.apps.user.cluster.domain.com:443", "export ROX_CENTRAL_ENDPOINT=" + roxCentralEndpoint, "Update roxCentralEndpoint URL in environment file");//NOSONAR
+    }
+
+    public async deleteCosignPublicKey(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+        return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "COSIGN_PUBLIC_KEY = credentials('COSIGN_PUBLIC_KEY')", "", "Delete cosign");//NOSONAR
+    }
+
+    public async updateCosignPublicKey(gitOrg: string, gitRepository: string, cosignPublicKey: string): Promise<string | undefined> {
+        return await this.commitNewLineInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export COSIGN_PUBLIC_KEY=" + cosignPublicKey, "Update cosign public key in environment file");//NOSONAR
+    }
+
+    public async updateImageRegistryUser(gitOrg: string, gitRepository: string, imageRegistryUser: string): Promise<string | undefined> {
+        return await this.commitNewLineInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export IMAGE_REGISTRY_USER=" + imageRegistryUser, "Update image registry user in environment file");//NOSONAR
+    }
+
     public async commitInGitHub(gitOrg: string, gitRepository: string, path: string, stringToFind: string, replacementString: string, commitMessage: string): Promise<string | undefined> {
         try {
             const responseContent = await this.octokit.repos.getContent({
@@ -212,6 +228,38 @@ export class GitHubProvider extends Utils {
                 stringToFind,
                 replacementString
             );
+
+            // Step 3: Create a commit with the new content
+            await this.octokit.repos.createOrUpdateFileContents({
+                owner: gitOrg, repo: gitRepository,
+                path: path,
+                message: commitMessage,
+                content: Buffer.from(updatedContent).toString("base64"),
+                sha: responseContent.data.sha, // The current commit SHA of the file
+                ref: `main`,
+            });
+
+            console.log("env.sh updated successfully! Message:" + commitMessage);
+            return "true";
+
+        } catch (error) {
+            console.error("An error occurred while updating the enviroment file", error);
+        }
+    }
+
+    public async commitNewLineInGitHub(gitOrg: string, gitRepository: string, path: string,  lineToAppend: string, commitMessage: string): Promise<string | undefined> {
+        try {
+            const responseContent = await this.octokit.repos.getContent({
+                owner: gitOrg, repo: gitRepository,
+                path: path,
+                ref: `main`,
+            });
+
+            //   // Decode the base64 content
+            const content = Buffer.from(responseContent.data.content, "base64").toString();
+
+            // Step 2: Modify the content
+            const updatedContent = content.concat("\n" + lineToAppend + "\n");
 
             // Step 3: Create a commit with the new content
             await this.octokit.repos.createOrUpdateFileContents({
