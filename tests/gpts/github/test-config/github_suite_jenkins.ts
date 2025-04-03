@@ -133,7 +133,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
         }, 120000);
 
         it(`Create credentials in Jenkins for ${gptTemplate}`, async () => {
-            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName);
+            await setSecretsForJenkinsInFolder(jenkinsClient, kubeClient, repositoryName, "github");
         }, 120000);
 
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {

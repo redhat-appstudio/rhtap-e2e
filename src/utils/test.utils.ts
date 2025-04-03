@@ -485,11 +485,15 @@ export async function checkSBOMInTrustification(kubeClient: Kubernetes, searchSt
     }
 }
 
-export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string, isGitLab = false) {
-    if (isGitLab) {
+export async function setSecretsForJenkinsInFolder(jenkinsClient: JenkinsCI, kubeClient: Kubernetes, folderName: string, scmProvider: string) {
+    if (scmProvider == "gitlab") {
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_USERNAME", 'fakeUsername', folderName);
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITLAB_TOKEN ?? '', folderName);
         await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername", process.env.GITLAB_TOKEN ?? '', folderName);
+    } else if (scmProvider == "bitbucket") {
+        await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_USERNAME", process.env.BITBUCKET_USERNAME ?? '', folderName);
+        await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.BITBUCKET_APP_PASSWORD ?? '', folderName);
+        await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", process.env.BITBUCKET_USERNAME ?? '', process.env.BITBUCKET_APP_PASSWORD ?? '', folderName);
     } else {
         await jenkinsClient.createCredentialsInFolder("GLOBAL", "GITOPS_AUTH_PASSWORD", process.env.GITHUB_TOKEN ?? '', folderName);
         await jenkinsClient.createCredentialsUsernamePasswordInFolder("GLOBAL", "GITOPS_CREDENTIALS", "fakeUsername", process.env.GITHUB_TOKEN ?? '', folderName);
