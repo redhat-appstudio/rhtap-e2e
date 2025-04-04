@@ -104,7 +104,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
         * Creates commits to update Jenkins agent and enable ACS scan
         */
         it(`Commit updated agent ${softwareTemplateName} and enable ACS scan`, async () => {
-            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main'); 
+            await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main', "quay.io/jkopriva/rhtap-jenkins-agent:0.4");
             await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');

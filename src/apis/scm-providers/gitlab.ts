@@ -7,9 +7,6 @@ export class GitLabProvider extends Utils {
     private readonly gitlab;
     private readonly gitlabToken;
     private readonly extractImagePatternFromGitopsManifest;
-    //Uncomment this, in case you want to build image for Jenkins Agent
-    //private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.2";
 
     constructor(gitlabToken: string) {
         super();
@@ -113,9 +110,9 @@ export class GitLabProvider extends Utils {
         }
     }
 
-    public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
+    public async updateJenkinsfileAgent(repositoryID: number, branchName: string, jenkinsAgentImage: string): Promise<boolean> {
         const stringToFind = "agent any";
-        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n         resourceRequestMemory '2048Mi'\n         resourceLimitMemory '2048Mi'\n        }\n       }    \n}";
+        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention never()\n        idleMinutes '0'\n        containerTemplate {\n         name 'jnlp'\n         image '" + jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n         resourceRequestMemory '2048Mi'\n         resourceLimitMemory '2048Mi'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
