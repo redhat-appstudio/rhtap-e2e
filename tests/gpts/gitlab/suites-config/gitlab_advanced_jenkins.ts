@@ -116,14 +116,13 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
             await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
-            await gitLabProvider.createRegistryUserCommit(gitlabGitOpsRepositoryID, 'main');
-
             await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.createRegistryPasswordCommit(gitlabGitOpsRepositoryID, 'main');
 
             await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.disableQuayCommit(gitlabGitOpsRepositoryID, 'main');
+
+            await gitLabProvider.disableCosignPublicKeyFromCreds(gitlabGitOpsRepositoryID, 'main');
 
             await gitLabProvider.updateEnvFileForJenkins(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
             await gitLabProvider.updateEnvFileForJenkins(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');

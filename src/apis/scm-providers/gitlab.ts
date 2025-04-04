@@ -142,6 +142,11 @@ export class GitLabProvider extends Utils {
         const replacementString = `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Disable Quay creds for Gitlab', stringToFind, replacementString);
     }
+    public async disableCosignPublicKeyFromCreds(repositoryID: number, branchName: string): Promise<boolean> {
+        const stringToFind = "COSIGN_PUBLIC_KEY = credentials('COSIGN_PUBLIC_KEY')";
+        const replacementString = `/* COSIGN_PUBLIC_KEY = credentials('COSIGN_PUBLIC_KEY') */`;
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Disable Quay creds for Gitlab', stringToFind, replacementString);
+    }
 
     public async updateRoxCentralEndpoint(repositoryID: number, branchName: string, roxCentralEndpoint: string) {
         const stringToFind = "# export ROX_CENTRAL_ENDPOINT=central-acs.apps.user.cluster.domain.com:443";
