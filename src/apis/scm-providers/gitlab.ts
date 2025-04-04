@@ -9,7 +9,7 @@ export class GitLabProvider extends Utils {
     private readonly extractImagePatternFromGitopsManifest;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage="image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
-    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.1";
+    private readonly jenkinsAgentImage = "quay.io/jkopriva/rhtap-jenkins-agent:0.2";
 
     constructor(gitlabToken: string) {
         super();
@@ -115,7 +115,7 @@ export class GitLabProvider extends Utils {
 
     public async updateJenkinsfileAgent(repositoryID: number, branchName: string): Promise<boolean> {
         const stringToFind = "agent any";
-        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }    \n}";
+        const replacementString = "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n         resourceRequestMemory '2048Mi'\n         resourceLimitMemory '2048Mi'\n        }\n       }    \n}";
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Update Jenkins agent', stringToFind, replacementString);
     }
 
@@ -141,6 +141,12 @@ export class GitLabProvider extends Utils {
         const stringToFind = "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')";
         const replacementString = `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Disable Quay creds for Gitlab', stringToFind, replacementString);
+    }
+
+    public async updateRoxCentralEndpoint(repositoryID: number, branchName: string, roxCentralEndpoint: string) {
+        const stringToFind = "# export ROX_CENTRAL_ENDPOINT=central-acs.apps.user.cluster.domain.com:443";
+        const replacementString = "export ROX_CENTRAL_ENDPOINT=" + roxCentralEndpoint;
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh',  "Update roxCentralEndpoint URL in environment file", stringToFind, replacementString);
     }
 
     public async getImageToPromotion(repositoryID: number, branch: string, componentName: string, environment: string) {
@@ -449,25 +455,28 @@ export class GitLabProvider extends Utils {
         }
     }
 
-    public async enableACSJenkins(repositoryID: number, branchName: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update ACS scan for Gitlab', `DISABLE_ACS=true`, `DISABLE_ACS=false`);
-    }
-
-    public async updateRekorHost(repositoryID: number, branchName: string, rekorHost: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `http://rekor-server.rhtap-tas.svc`, rekorHost);
-    }
-
-    public async updateTufMirror(repositoryID: number, branchName: string, tufMirror: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `http://tuf.rhtap-tas.svc`, tufMirror);
+    public async updateEnvFileForJenkins(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string, cosignPublicKey: string, imageRegistryUser: string): Promise<boolean> {
+        const filePath = 'rhtap/env.sh';
+        const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
+        // Replace rekor
+        let updatedContent = fileContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
+        // Replace TUF
+        updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirror);
+        // Add cosign public key variable
+        updatedContent = updatedContent.concat("\n" + "export COSIGN_PUBLIC_KEY=" + cosignPublicKey + "\n");
+        // Add image registry username
+        updatedContent = updatedContent.concat("\n" +"export IMAGE_REGISTRY_USER=" + imageRegistryUser + "\n");
+        // Add GitHub username
+        updatedContent = updatedContent.concat("\n" +"export GITOPS_AUTH_USERNAME=fakeUsername\n");
+        //Commit changed file
+        return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for GitLabCI", updatedContent);
     }
 
     public async updateEnvFileForGitLabCI(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string): Promise<boolean> {
         const filePath = 'rhtap/env.sh';
         const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
-        // Replace ACS
-        let updatedContent = fileContent.replace(`DISABLE_ACS=true`, `DISABLE_ACS=false`);
         // Replace rekor
-        updatedContent = updatedContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
+        let updatedContent = fileContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
         // Replace TUF
         updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirror);
         //Commit changed file

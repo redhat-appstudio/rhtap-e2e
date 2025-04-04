@@ -4,7 +4,7 @@ import { TaskIdReponse } from "../../../../src/apis/backstage/types";
 import { GitLabProvider } from "../../../../src/apis/scm-providers/gitlab";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { generateRandomChars } from "../../../../src/utils/generator";
-import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation} from "../../../../src/utils/test.utils";
+import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitLab, checkSBOMInTrustification, cleanAfterTestGitLab, createTaskCreatorOptionsGitlab, getDeveloperHubClient, getGitLabProvider, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, setSecretsForJenkinsInFolderForTPA, parseSbomVersionFromLogs, waitForComponentCreation, getCosignPublicKey} from "../../../../src/utils/test.utils";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Utils } from "../../../../src/apis/scm-providers/utils";
 
@@ -116,12 +116,6 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.updateJenkinsfileAgent(gitlabRepositoryID, 'main');
             await gitLabProvider.updateJenkinsfileAgent(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.createUsernameCommit(gitlabRepositoryID, 'main');
-            await gitLabProvider.createUsernameCommit(gitlabGitOpsRepositoryID, 'main');
-
-            await gitLabProvider.enableACSJenkins(gitlabRepositoryID, 'main');
-            await gitLabProvider.enableACSJenkins(gitlabGitOpsRepositoryID, 'main');
-
             await gitLabProvider.createRegistryUserCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.createRegistryUserCommit(gitlabGitOpsRepositoryID, 'main');
 
@@ -131,11 +125,12 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.disableQuayCommit(gitlabGitOpsRepositoryID, 'main');
 
-            await gitLabProvider.updateRekorHost(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
-            await gitLabProvider.updateRekorHost(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateEnvFileForJenkins(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
+            await gitLabProvider.updateEnvFileForJenkins(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
 
-            await gitLabProvider.updateTufMirror(gitlabRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
-            await gitLabProvider.updateTufMirror(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTUFUrl(RHTAPRootNamespace));
+            await gitLabProvider.updateRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await gitLabProvider.updateRoxCentralEndpoint(gitlabGitOpsRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            
         }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins folder`, async () => {
