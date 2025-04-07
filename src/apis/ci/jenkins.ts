@@ -31,7 +31,7 @@ export class JenkinsCI extends Utils {
     }
 
     // createJenkinsJob creates a new Jenkins job
-    public async createJenkinsJobURL(gitProvider: string, organization: string, jobName: string, url: string) {
+    public async createJenkinsJobURL(gitProvider: string, organization: string, jobName: string, url: string): Promise<boolean> {
         const jobConfigXml = `
             <flow-definition plugin="workflow-job@2.40">
                 <actions/>
@@ -75,24 +75,27 @@ export class JenkinsCI extends Utils {
             const response = await this.axiosInstance.post(url, jobConfigXml);
             if (response.status === 200) {
                 console.log(`Job '${jobName}' created successfully.`);
+                return true;
             } else {
                 console.error(`Failed to create job. Status: ${response.status}`);
+                return false;
             }
         } catch (error) {
             console.error('Error creating job:', error);
+            throw error;
         }
     }
 
     // createJenkinsJob creates a new Jenkins job
-    public async createJenkinsJob(gitProvider: string, organization: string, jobName: string) {
+    public async createJenkinsJob(gitProvider: string, organization: string, jobName: string): Promise<boolean> {
         const url = `${this.jenkinsUrl}/createItem?name=${jobName}`;
-        await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
+        return await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
     }
 
     // createJenkinsJob creates a new Jenkins job
-    public async createJenkinsJobInFolder(gitProvider: string, organization: string, jobName: string, jobFolder: string) {
+    public async createJenkinsJobInFolder(gitProvider: string, organization: string, jobName: string, jobFolder: string): Promise<boolean> {
         const url = `${this.jenkinsUrl}/job/${jobFolder}/createItem?name=${jobName}`;
-        await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
+        return await this.createJenkinsJobURL(gitProvider, organization, jobName, url);
     }
 
     // Create credentials in Jenkins instance
@@ -195,15 +198,18 @@ export class JenkinsCI extends Utils {
     }
 
     // waitForJobCreation waits until a job is created
-    public async waitForJobCreationInFolder(jobName: string, folderName: string) {
+    public async waitForJobCreationInFolder(jobName: string, folderName: string): Promise<boolean> {
+        let result = false;
         console.log(`Waiting for job '${jobName}' to be created...`);
         while (true) {
             if (await this.jobExistsInFolder(jobName, folderName)) {
                 console.log(`Job '${jobName}' is now available.`);
+                result = true;
                 break;
             }
             await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds
         }
+        return result;
     }
 
     // buildJenkinsJob triggers a build for a Jenkins job
@@ -316,7 +322,7 @@ export class JenkinsCI extends Utils {
         }
     }
 
-    public async createFolder(folderName: string) {
+    public async createFolder(folderName: string): Promise<boolean> {
         const url = `${this.jenkinsUrl}/createItem?name=${folderName}`;
 
         const folderXml = `
@@ -332,8 +338,10 @@ export class JenkinsCI extends Utils {
 
             if (response.status === 200) {
                 console.log(`Folder '${folderName}' created successfully.`);
+                return true;
             } else {
                 console.log(`Failed to create folder '${folderName}', status: ${response.status}`);
+                return false;
             }
         } catch (error) {
             console.error('Error creating Jenkins folder:', error);
