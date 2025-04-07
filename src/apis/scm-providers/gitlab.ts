@@ -26,7 +26,7 @@ export class GitLabProvider extends Utils {
     }
 
     // Get GitLab token
-    public async getGitlabToken(): Promise<string> {
+    public getGitlabToken(): string {
         return this.gitlabToken;
     }
 
@@ -580,7 +580,7 @@ export class GitLabProvider extends Utils {
 
     // Return buildah job for GitLab pipeline
     public async getLogForBuildah(projectId: number, pipelineId: number) : Promise<string>{
-        return this.getLogForJobName(projectId, pipelineId, "buildah-rhtap");
+        return await this.getLogForJobName(projectId, pipelineId, "buildah-rhtap");
     }
 
     // Return job with name for GitLab pipeline
@@ -600,7 +600,7 @@ export class GitLabProvider extends Utils {
     }
 
     //Parse SBOM version from buildah log
-    public async parseSbomVersionFromLog(log: string) : Promise<string>{
+    public parseSbomVersionFromLog(log: string) : string {
         return log.substring(
             log.indexOf("sha256-") + 7,
             log.lastIndexOf(".sbom")

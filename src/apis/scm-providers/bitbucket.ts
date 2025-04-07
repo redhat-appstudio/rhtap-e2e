@@ -27,7 +27,7 @@ export class BitbucketProvider extends Utils {
     }
 
     // Get Bitbucket username
-    public async getBitbucketUsername(): Promise<string> {
+    public getBitbucketUsername(): string {
         return this.bitbucketUsername;
     }
 
@@ -356,7 +356,7 @@ export class BitbucketProvider extends Utils {
         const newContentList: string[] = [
             `export COSIGN_PUBLIC_KEY=${cosignPublicKey}`,
             `export IMAGE_REGISTRY_USER=${imageRegistryUser}`,
-            `export GITOPS_AUTH_USERNAME=${await this.getBitbucketUsername()}`
+            `export GITOPS_AUTH_USERNAME=${this.getBitbucketUsername()}`
         ];
         for (const newVars of newContentList) {
             fileContent = fileContent.concat(`\n${newVars}\n`);

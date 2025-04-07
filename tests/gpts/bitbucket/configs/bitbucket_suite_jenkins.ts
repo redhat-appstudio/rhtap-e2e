@@ -50,12 +50,12 @@ export const bitbucketJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string
          * resources
         */
         beforeAll(async () => {
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
-            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+            bitbucketUsername = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
             jenkinsClient = await getJenkinsCI(kubeClient);
 
             await checkEnvVariablesBitbucket(componentRootNamespace, bitbucketWorkspace, bitbucketProject, imageOrg, ciNamespace, kubeClient);
@@ -88,7 +88,7 @@ export const bitbucketJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`Creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsBitbucket(gptTemplate, imageName, imageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = createTaskCreatorOptionsBitbucket(gptTemplate, imageName, imageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

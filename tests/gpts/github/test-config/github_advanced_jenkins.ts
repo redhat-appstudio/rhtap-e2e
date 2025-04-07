@@ -57,8 +57,8 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         */
         beforeAll(async () => {
             kubeClient = new Kubernetes();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
             gitHubClient = await getGitHubClient(kubeClient);
@@ -79,7 +79,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * 
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -127,8 +127,8 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName + "-gitops", await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName + "-gitops", await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
-            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName, await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()))).not.toBe(undefined);
-            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName + "-gitops", await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()))).not.toBe(undefined);
+            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName, await kubeClient.getACSEndpoint(getRHTAPRootNamespace()))).not.toBe(undefined);
+            expect(await gitHubClient.updateRoxCentralEndpoint(githubOrganization, repositoryName + "-gitops", await kubeClient.getACSEndpoint(getRHTAPRootNamespace()))).not.toBe(undefined);
             expect(await gitHubClient.updateCosignPublicKey(githubOrganization, repositoryName, await getCosignPublicKey(kubeClient))).not.toBe(undefined);
             expect(await gitHubClient.updateCosignPublicKey(githubOrganization, repositoryName + "-gitops", await getCosignPublicKey(kubeClient))).not.toBe(undefined);
             expect(await gitHubClient.updateImageRegistryUser(githubOrganization, repositoryName, process.env.IMAGE_REGISTRY_USERNAME ?? '')).not.toBe(undefined);
@@ -155,13 +155,13 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName, repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${gptTemplate} GitOps jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName + "-gitops", repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName + "-gitops", repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**
@@ -310,7 +310,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         */
         it('check sbom uploaded in RHTPA', async () => {
             const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
-            const sbomVersion = await parseSbomVersionFromLogs(buildLog);
+            const sbomVersion = parseSbomVersionFromLogs(buildLog);
             await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 

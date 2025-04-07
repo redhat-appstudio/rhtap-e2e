@@ -55,9 +55,9 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
 
         beforeAll(async () => {
             kubeClient = new Kubernetes();
-            RHTAPRootNamespace = await getRHTAPRootNamespace();
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
-            RHTAPRHDHNamespace = await getRHTAPRHDHNamespace();
+            RHTAPRootNamespace = getRHTAPRootNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
+            RHTAPRHDHNamespace = getRHTAPRHDHNamespace();
             kubeClient = new Kubernetes();
             backstageClient = await getDeveloperHubClient(kubeClient);
             jenkinsClient = await getJenkinsCI(kubeClient);
@@ -69,7 +69,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         * Creates a task in Developer Hub to generate a new component using specified git and kube options.
         */
         it(`creates ${softwareTemplateName} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
+            const taskCreatorOptions = createTaskCreatorOptionsGitlab(softwareTemplateName, imageName, imageOrg, imageRegistry, gitLabOrganization, repositoryName, componentRootNamespace, "jenkins");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -259,7 +259,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
          */
         it(`merge gitops pull request to sync new image in production environment`, async () => {
-            new Utils().sleep(100000);
+            await new Utils().sleep(100000);
             await gitLabProvider.waitForMergeableMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber, 30000);
             await gitLabProvider.mergeMergeRequest(gitlabGitOpsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
@@ -288,7 +288,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         */
         it('check sbom uploaded in RHTPA', async () => {
             const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
-            const sbomVersion = await parseSbomVersionFromLogs(buildLog);
+            const sbomVersion = parseSbomVersionFromLogs(buildLog);
             await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 

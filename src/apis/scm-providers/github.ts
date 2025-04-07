@@ -455,7 +455,7 @@ export class GitHubProvider extends Utils {
         console.log(`Waiting for the latest run in workflow '${workflow_id}' in repository '${owner}/${repo}' to finish...`);
         // workaround for the issue with the GitHub API not returning the latest job status immediately
         await this.sleep(10000);
-        
+
         const startTime = Date.now();
 
         while (true) {
@@ -606,12 +606,12 @@ export class GitHubProvider extends Utils {
         }
         for (const [envVarName, envVarValue] of Object.entries(envVars)) {
             console.log("Setting env var: " + envVarName);
-            this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse);
+            await this.setSecret(owner, repo, envVarName, envVarValue, publicKeyResponse);
         }
         console.groupEnd();
     }
 
-    public async encryptSecret(publicKey: string, secretValue: string) {
+    public encryptSecret(publicKey: string, secretValue: string) {
         const keyBuffer = Buffer.from(publicKey, 'base64');
         const secretBuffer = Buffer.from(secretValue, 'utf8');
         const encryptedBuffer = Buffer.alloc(secretBuffer.length + sodium.crypto_box_SEALBYTES);
@@ -621,7 +621,7 @@ export class GitHubProvider extends Utils {
 
     public async setSecret(owner: string, repo: string, secretName: string, secretValue: string, publicKeyResponse: RestEndpointMethodTypes["actions"]["getRepoPublicKey"]["response"]) {
         try {
-            const encryptedValue = await this.encryptSecret(publicKeyResponse.data.key, secretValue);
+            const encryptedValue = this.encryptSecret(publicKeyResponse.data.key, secretValue);
             await this.octokit.rest.actions.createOrUpdateRepoSecret(
                 {
                     owner,
@@ -695,13 +695,13 @@ export class GitHubProvider extends Utils {
      * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
      */
     public async commitMultipleFilesInGitHub(
-        gitOrg: string, 
-        gitRepository: string, 
+        gitOrg: string,
+        gitRepository: string,
         fileChanges: {
             path: string,
             stringToFind?: string | RegExp,
             replacementString: string
-        }[], 
+        }[],
         commitMessage: string
     ): Promise<string | undefined> {
         try {
@@ -710,13 +710,13 @@ export class GitHubProvider extends Utils {
                 content: string,
                 sha: string
             }>();
-    
+
             // Group changes by file path
             const changesByPath = new Map<string, {
                 stringToFind?: string | RegExp,
                 replacementString: string
             }[]>();
-            
+
             // Organize changes by path
             for (const change of fileChanges) {
                 if (!changesByPath.has(change.path)) {
@@ -730,7 +730,7 @@ export class GitHubProvider extends Utils {
                     });
                 }
             }
-            
+
             // Process each unique file path
             for (const [path, pathChanges] of changesByPath.entries()) {
                 try {
@@ -741,18 +741,18 @@ export class GitHubProvider extends Utils {
                         path,
                         ref: 'main'
                     });
-    
+
                     let currentContent = Buffer.from(response.data.content, "base64").toString();
                     console.log(`File before all changes: ${path}\n${currentContent}`);
-                    
+
                     // Apply all changes sequentially to this file
                     for (const change of pathChanges) {
                         if (change.stringToFind) {
                             // Create a regular expression for global replacement if stringToFind is a string
-                            const searchPattern = typeof change.stringToFind === 'string' 
-                                ? new RegExp(change.stringToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g') 
+                            const searchPattern = typeof change.stringToFind === 'string'
+                                ? new RegExp(change.stringToFind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')
                                 : change.stringToFind;
-                            
+
                             // Update the content with this change
                             currentContent = currentContent.replace(searchPattern, change.replacementString);
                         } else {
@@ -761,26 +761,26 @@ export class GitHubProvider extends Utils {
                             break; // No need to process more changes if we're replacing the whole file
                         }
                     }
-                    
+
                     console.log(`File after all changes: ${path}\n${currentContent}`);
-                    
+
                     // Store the final content for this file
                     fileContentsMap.set(path, {
                         content: Buffer.from(currentContent).toString("base64"),
                         sha: response.data.sha
                     });
-                    
+
                 } catch (error) {
                     console.error(`Error processing file ${path}:`, error);
                     throw error;
                 }
             }
-    
+
             // Convert the map to the array format needed for the commit
             const fileUpdates = Array.from(fileContentsMap.entries()).map(
-                ([path, {content, sha}]) => ({path, content, sha})
+                ([path, { content, sha }]) => ({ path, content, sha })
             );
-            
+
             // If we have file changes, create a commit
             if (fileUpdates.length > 0) {
                 // Rest of the function remains the same...
@@ -789,13 +789,13 @@ export class GitHubProvider extends Utils {
                     repo: gitRepository,
                     ref: 'heads/main'
                 });
-                
+
                 const { data: commitData } = await this.octokit.git.getCommit({
                     owner: gitOrg,
                     repo: gitRepository,
                     commit_sha: refData.object.sha
                 });
-                
+
                 // Create a tree with all file changes
                 const { data: treeData } = await this.octokit.git.createTree({
                     owner: gitOrg,
@@ -808,7 +808,7 @@ export class GitHubProvider extends Utils {
                         content: Buffer.from(file.content, 'base64').toString('utf8')
                     }))
                 });
-                
+
                 // Create a commit with the new tree
                 const { data: newCommitData } = await this.octokit.git.createCommit({
                     owner: gitOrg,
@@ -817,7 +817,7 @@ export class GitHubProvider extends Utils {
                     tree: treeData.sha,
                     parents: [commitData.sha]
                 });
-                
+
                 // Update the reference
                 await this.octokit.git.updateRef({
                     owner: gitOrg,
@@ -825,7 +825,7 @@ export class GitHubProvider extends Utils {
                     ref: 'heads/main',
                     sha: newCommitData.sha
                 });
-                
+
                 console.log(`Multiple files updated successfully in ${gitOrg}/${gitRepository}!`);
                 return "true";
             } else {
@@ -851,7 +851,7 @@ export class GitHubProvider extends Utils {
                 repo,
                 path
             });
-            
+
             // GitHub returns file content as base64 encoded
             if ('content' in response.data && !Array.isArray(response.data)) {
                 const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
