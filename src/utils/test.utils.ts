@@ -376,8 +376,8 @@ export async function waitForJenkinsJobToFinish(jenkinsClient: JenkinsCI, jobNam
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+export async function checkIfAcsScanIsPass(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, revision: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, revision, eventType);
     if (pipelineRun?.metadata?.name) {
         const podName: string = pipelineRun.metadata.name + '-acs-image-scan-pod';
         // Read the logs from the related container
@@ -437,8 +437,8 @@ export async function waitForGitLabCIPipelineToFinish(gitLabProvider: GitLabProv
  * @throws {Error} If the pipeline run cannot be found or if there is an error interacting with the Kubernetes API.
  * 
  */
-export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, eventType: string): Promise<boolean> {
-    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, eventType);
+export async function verifySyftImagePath(kubeClient: Kubernetes, repositoryName: string, ciNamespace: string, revision: string, eventType: string): Promise<boolean> {
+    const pipelineRun = await kubeClient.getPipelineRunByRepository(repositoryName, revision, eventType);
     let result = true;
     if (pipelineRun?.metadata?.name) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

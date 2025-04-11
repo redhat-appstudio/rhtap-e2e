@@ -30,7 +30,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         const bitbucketProject = process.env.BITBUCKET_PROJECT || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
-        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageName = "rhtap-qe-" + `${gptTemplate}`;
         const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
@@ -42,6 +42,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         let pipelineAsCodeRoute: string;
 
         let RHTAPGitopsNamespace: string;
+        let commitRevision: string;
 
         /**
          * Initializes Bitbucket and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
@@ -154,7 +155,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
         /**
             * Creates an Webhook in the repository for a pipelinerun run.
         */
-        it(`Creates webhook in the repository for pipeline run`, async ()=> {
+        it(`Creates webhook in the repository for pipeline run`, async () => {
             const hook = await bitbucketClient.createRepoWebHook(bitbucketWorkspace, repositoryName, pipelineAsCodeRoute);
             expect(hook).not.toBe(undefined);
         }, 120000);
@@ -163,8 +164,8 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * Creates an commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            const commit = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
-            expect(commit).toBe(true);
+            commitRevision = await bitbucketClient.createCommit(bitbucketWorkspace, repositoryName, "main", "test.txt", "Hello World!");
+            expect(commitRevision).not.toBe(undefined);
 
         }, 120000);
 
@@ -172,7 +173,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -181,7 +182,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -189,7 +190,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
