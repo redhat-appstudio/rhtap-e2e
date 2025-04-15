@@ -145,7 +145,7 @@ export class GitLabProvider extends Utils {
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'Jenkinsfile', 'Disable Quay creds for Gitlab', stringToFind, replacementString);
     }
 
-    public async updateRoxCentralEndpoint(repositoryID: number, branchName: string, roxCentralEndpoint: string) {
+    public async setRoxCentralEndpoint(repositoryID: number, branchName: string, roxCentralEndpoint: string) {
         const stringToFind = "# export ROX_CENTRAL_ENDPOINT=central-acs.apps.user.cluster.domain.com:443";
         const replacementString = "export ROX_CENTRAL_ENDPOINT=" + roxCentralEndpoint;
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh',  "Update roxCentralEndpoint URL in environment file", stringToFind, replacementString);
@@ -474,15 +474,16 @@ export class GitLabProvider extends Utils {
         return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for GitLabCI", updatedContent);
     }
 
-<<<<<<< HEAD
     public async updateRekorHost(repositoryID: number, branchName: string, rekorHost: string): Promise<boolean> {
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `http://rekor-server.tssc-tas.svc`, rekorHost);
     }
 
     public async updateTufMirror(repositoryID: number, branchName: string, tufMirror: string): Promise<boolean> {
         return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `http://tuf.tssc-tas.svc`, tufMirror);
-=======
-    public async updateEnvFileForJenkinsTustification(repositoryID: number, branchName: string, bombastitApiURL: string, oidcIssuesrURL: string, oidcClientId: string): Promise<boolean> {
+    }
+
+    public async updateEnvFileForJenkinsTrustification(repositoryID: number, branchName: string, bombastitApiURL: string, oidcIssuesrURL: string, oidcClientId: string): Promise<boolean> {
+
         const filePath = 'rhtap/env.sh';
         const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
         // Add cosign public key variable
@@ -492,19 +493,14 @@ export class GitLabProvider extends Utils {
         // Add GitHub username
         updatedContent = updatedContent.concat("\n" +"export TRUSTIFICATION_OIDC_CLIENT_ID=" + oidcClientId + "\n");
         //Commit changed file
-        return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for GitLabCI", updatedContent);
->>>>>>> 10150f7 (RHTAP-4831 Fixes for GitHub/Jenkins after changes in pipelines)
+        return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for trustification", updatedContent);
     }
 
     public async updateEnvFileForGitLabCI(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string): Promise<boolean> {
         const filePath = 'rhtap/env.sh';
         const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
         // Replace rekor
-<<<<<<< HEAD
-        updatedContent = updatedContent.replace(`http://rekor-server.tssc-tas.svc`, rekorHost);
-=======
-        let updatedContent = fileContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
->>>>>>> 10150f7 (RHTAP-4831 Fixes for GitHub/Jenkins after changes in pipelines)
+        let updatedContent = fileContent.replace(`http://rekor-server.tssc-tas.svc`, rekorHost);
         // Replace TUF
         updatedContent = updatedContent.replace(`http://tuf.tssc-tas.svc`, tufMirror);
         //Commit changed file

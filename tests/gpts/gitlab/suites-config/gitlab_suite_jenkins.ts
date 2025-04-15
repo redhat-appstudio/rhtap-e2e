@@ -109,7 +109,7 @@ export const gitLabJenkinsBasicTests = (softwareTemplateName: string, stringOnRo
             await gitLabProvider.createRegistryPasswordCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.disableQuayCommit(gitlabRepositoryID, 'main');
             await gitLabProvider.updateEnvFileForJenkins(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
-            await gitLabProvider.updateRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await gitLabProvider.setRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
         }, 120000);
 
         it(`creates ${softwareTemplateName} jenkins job and folder and wait for creation`, async () => {

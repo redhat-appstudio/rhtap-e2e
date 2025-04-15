@@ -128,10 +128,10 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
             await gitLabProvider.updateEnvFileForJenkins(gitlabRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
             await gitLabProvider.updateEnvFileForJenkins(gitlabGitOpsRepositoryID, 'main', await kubeClient.getRekorServerUrl(RHTAPRootNamespace), await kubeClient.getTUFUrl(RHTAPRootNamespace), await getCosignPublicKey(kubeClient), process.env.IMAGE_REGISTRY_USERNAME ?? '');
 
-            await gitLabProvider.updateRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
-            await gitLabProvider.updateRoxCentralEndpoint(gitlabGitOpsRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await gitLabProvider.setRoxCentralEndpoint(gitlabRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
+            await gitLabProvider.setRoxCentralEndpoint(gitlabGitOpsRepositoryID, 'main', await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()));
 
-            await gitLabProvider.updateEnvFileForJenkinsTustification(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
+            await gitLabProvider.updateEnvFileForJenkinsTrustification(gitlabGitOpsRepositoryID, 'main', await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()), await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()));
             
         }, 120000);
 
