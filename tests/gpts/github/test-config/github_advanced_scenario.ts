@@ -3,11 +3,11 @@ import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
 import { syncArgoApplication } from '../../../../src/utils/argocd';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation } from "../../../../src/utils/test.utils";
 import { Tekton } from '../../../../src/utils/tekton';
 import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/constants/tekton';
+import { GithubController } from '../../../controllers/git/github-controller';
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
@@ -50,7 +50,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
+        let gitHubClient: GithubController;
         let kubeClient: Kubernetes;
         let tektonClient: Tekton;
 

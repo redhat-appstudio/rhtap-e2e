@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
 import { Tekton } from '../../../../src/utils/tekton';
 import { onPushTasks } from '../../../../src/constants/tekton';
+import { GithubController } from '../../../controllers/git/github-controller';
 
 
 /**
@@ -33,7 +33,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
+        let gitHubClient: GithubController;
         let kubeClient: Kubernetes;
         let tektonClient: Tekton;
 
@@ -128,7 +128,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName);
+            const commit = await gitHubClient.createCommit(githubOrganization, repositoryName);
             expect(commit).not.toBe(undefined);
 
         }, 120000);

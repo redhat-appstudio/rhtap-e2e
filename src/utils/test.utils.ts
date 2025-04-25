@@ -1,5 +1,5 @@
 import { GitLabProvider } from "../../src/apis/scm-providers/gitlab";
-import { GitHubProvider } from "../../src/apis/scm-providers/github";
+import { GithubController } from "../../tests/controllers/git/github-controller";
 import { BitbucketProvider } from "../../src/apis/scm-providers/bitbucket";
 import { Kubernetes } from "../../src/apis/kubernetes/kube";
 import { DeveloperHubClient } from "../../src/apis/backstage/developer-hub";
@@ -10,7 +10,7 @@ import { TaskIdReponse } from "../../src/apis/backstage/types";
 import { TrustificationClient } from "../../src/apis/trustification/trustification";
 
 
-export async function cleanAfterTestGitHub(gitHubClient: GitHubProvider, kubeClient: Kubernetes, gitopsNamespace: string, githubOrganization: string, repositoryName: string) {
+export async function cleanAfterTestGitHub(gitHubClient: GithubController, kubeClient: Kubernetes, gitopsNamespace: string, githubOrganization: string, repositoryName: string) {
     //Check, if gitops repo exists and delete
     await gitHubClient.checkIfRepositoryExistsAndDelete(githubOrganization, `${repositoryName}-gitops`);
 
@@ -91,9 +91,9 @@ export async function getRHTAPRHDHNamespace() {
 
 export async function getGitHubClient(kubeClient: Kubernetes) {
     if (process.env.GITHUB_TOKEN) {
-        return new GitHubProvider(process.env.GITHUB_TOKEN);
+        return new GithubController(process.env.GITHUB_TOKEN);
     } else {
-        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
+        return new GithubController(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
     }
 }
 
@@ -512,7 +512,7 @@ export async function setSecretsForJenkinsInFolderForTPA(jenkinsClient: JenkinsC
     await jenkinsClient.createCredentialsInFolder("GLOBAL", "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION", await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()), folderName);
 }
 
-export async function setGitHubActionSecrets(gitHubClient: GitHubProvider, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string) {
+export async function setGitHubActionSecrets(gitHubClient: GithubController, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string) {
     await gitHubClient.setGitHubSecrets(githubOrganization, repositoryName, {
         "ROX_API_TOKEN": await kubeClient.getACSToken(await getRHTAPRootNamespace()),
         "GITOPS_AUTH_PASSWORD": process.env.GITHUB_TOKEN || '',
@@ -523,7 +523,7 @@ export async function setGitHubActionSecrets(gitHubClient: GitHubProvider, kubeC
     });
 }
 
-export async function setGitHubActionVariables(gitHubClient: GitHubProvider, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string, imageRegistry: string) {
+export async function setGitHubActionVariables(gitHubClient: GithubController, kubeClient: Kubernetes, githubOrganization: string, repositoryName: string, imageRegistry: string) {
     await gitHubClient.setGitHubVariables(githubOrganization, repositoryName, {
         "IMAGE_REGISTRY": imageRegistry,
         "ROX_CENTRAL_ENDPOINT": await kubeClient.getACSEndpoint(await getRHTAPRootNamespace()),
@@ -532,7 +532,7 @@ export async function setGitHubActionVariables(gitHubClient: GitHubProvider, kub
         "REKOR_HOST": await kubeClient.getRekorServerUrl(await getRHTAPRootNamespace()) || '',
         "TUF_MIRROR": await kubeClient.getTUFUrl(await getRHTAPRootNamespace()) || '',
         "TRUSTIFICATION_BOMBASTIC_API_URL": await kubeClient.getTTrustificationBombasticApiUrl(await getRHTAPRootNamespace()),
-        "TRUSTIFICATION_OIDC_ISSUER_URL":  await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()),
+        "TRUSTIFICATION_OIDC_ISSUER_URL": await kubeClient.getTTrustificationOidcIssuerUrl(await getRHTAPRootNamespace()),
         "TRUSTIFICATION_OIDC_CLIENT_ID": await kubeClient.getTTrustificationClientId(await getRHTAPRootNamespace()),
         "TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION": await kubeClient.getTTrustificationSupportedCycloneDXVersion(await getRHTAPRootNamespace()),
     });
@@ -541,7 +541,7 @@ export async function setGitHubActionVariables(gitHubClient: GitHubProvider, kub
 //Parse SBOM version from build log
 export async function parseSbomVersionFromLogs(log: string): Promise<string> {
     const filter = log.split("Uploading SBOM file for").pop()?.split("vnd.cyclonedx+json").shift()?.trim();
-    if (filter != undefined){
+    if (filter != undefined) {
         return filter.substring(
             filter.indexOf("sha256-") + 7,
             filter.lastIndexOf(".sbom")

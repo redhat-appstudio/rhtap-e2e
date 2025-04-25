@@ -1,11 +1,11 @@
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { JenkinsCI } from "../../../../src/apis/ci/jenkins";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import { checkComponentSyncedInArgoAndRouteIsWorking, checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getCosignPublicKey, getDeveloperHubClient, getGitHubClient, getJenkinsCI, getRHTAPGitopsNamespace, getRHTAPRHDHNamespace, getRHTAPRootNamespace, setSecretsForJenkinsInFolder, waitForComponentCreation } from "../../../../src/utils/test.utils";
 import { Utils } from '../../../../src/apis/scm-providers/utils';
+import { GithubController } from '../../../controllers/git/github';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -38,7 +38,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
+        let gitHubClient: GithubController;
         let kubeClient: Kubernetes;
         let jenkinsClient: JenkinsCI;
 
@@ -160,7 +160,7 @@ export const gitHubJenkinsBasicGoldenPathTemplateTests = (gptTemplate: string, s
          * Creates an empty commit
          */
         it(`Creates empty commit`, async () => {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName);
+            const commit = await gitHubClient.createCommit(githubOrganization, repositoryName);
             expect(commit).not.toBe(undefined);
 
         }, 120000);
