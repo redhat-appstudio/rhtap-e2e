@@ -266,6 +266,9 @@ main() {
     
     # Set up trap for cleanup
     trap post_actions EXIT
+
+    # Disable TLS - not needed for e2e tests
+    export NODE_TLS_REJECT_UNAUTHORIZED=0
     
     # Load credentials and configure environment
     load_oci_storage_credentials
