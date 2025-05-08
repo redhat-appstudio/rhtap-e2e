@@ -1,20 +1,21 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
-import { TaskIdReponse } from '../../../../src/apis/backstage/types';
-import { generateRandomChars } from '../../../../src/utils/generator';
-import { syncArgoApplication } from '../../../../src/utils/argocd';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
-import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, checkIfAcsScanIsPass, checkSBOMInTrustification, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation } from "../../../../src/utils/test.utils";
-import { Tekton } from '../../../../src/utils/tekton';
-import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/constants/tekton';
+import { DeveloperHubClient } from '../../src/apis/backstage/developer-hub';
+import { TaskIdReponse } from '../../src/apis/backstage/types';
+import { generateRandomChars } from '../../src/utils/generator';
+import { syncArgoApplication } from '../../src/utils/argocd';
+import { Kubernetes } from "../../src/apis/kubernetes/kube";
+import { checkIfAcsScanIsPass, checkSBOMInTrustification, getDeveloperHubClient, getRHTAPGitopsNamespace, verifySyftImagePath, waitForComponentCreation } from "../../src/utils/test.utils";
+import { Tekton } from '../../src/utils/tekton';
+import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../src/constants/tekton';
+import { GitController } from '../controllers/git/git-controller';
+import { GitFactory } from '../controllers/git/git-factory';
 
 /**
  * Advanced end-to-end test scenario for Red Hat Trusted Application Pipelines:
  * 1. Create components in Red Hat Developer Hub.
  * 2. Verify successful creation of components in Red Hat Developer Hub.
- * 3. Ensure Red Hat Developer Hub creates a corresponding GitHub repository.
- * 4. Initiate a Pull Request to trigger a PipelineRun for pull_request events in the GitHub repository.
+ * 3. Ensure Red Hat Developer Hub creates a corresponding Git repository.
+ * 4. Initiate a Pull Request to trigger a PipelineRun for pull_request events in the Git repository.
  * 5. Merge the Pull Request if the PipelineRun succeeds.
  * 6. Upon merging the Pull Request, validate that the push PipelineRun starts and finishes successfully.
  * 7. Verify that the new image is deployed correctly in the development environment.
@@ -27,8 +28,8 @@ import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/con
  * 14. Merge the Pull Request to main.
  * 15. Wait for the new image to be deployed to the production environment.
  */
-export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
+export const advancedGoldenPathTests = (gptTemplate: string, gitProvider: string, gitOrganization: string) => {
+    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Git provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
 
@@ -41,7 +42,6 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
         const prodNamespace = `${componentRootNamespace}-${productionEnvironmentName}`;
 
-        const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const imageName = "rhtap-qe-"+ `${gptTemplate}`;
@@ -50,8 +50,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
         let kubeClient: Kubernetes;
+        let gitController: GitController;
         let tektonClient: Tekton;
 
         let pullRequestNumber: number;
@@ -61,7 +61,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let RHTAPGitopsNamespace: string;
 
         /**
-         * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
+         * Initializes Git and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
@@ -69,10 +69,10 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
-            gitHubClient = await getGitHubClient(kubeClient);
+            gitController = await GitFactory.create(gitProvider);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, imageOrg, ciNamespace, kubeClient);
+            await gitController.checkEnvVariables(componentRootNamespace, gitOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -88,7 +88,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {            
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await gitController.createTaskCreatorOptions(gptTemplate, imageName, imageOrg, imageRegistry, gitOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -102,16 +102,16 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         }, 600000);
 
         /**
-         * Verifies if Red Hat Developer Hub created a repository from the specified template in GitHub.
+         * Verifies if Red Hat Developer Hub created a repository from the specified template in Git.
          * The repository should contain the source code of the application and a '.tekton' folder.
          */
-        it(`verifies if component ${gptTemplate} was created in GitHub and contains '.tekton' folder`, async () => {
-            // Check if the repository exists in GitHub
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName);
+        it(`verifies if component ${gptTemplate} was created in Git and contains '.tekton' folder`, async () => {
+            // Check if the repository exists in Git
+            const repositoryExists = await gitController.checkIfRepositoryExists(gitOrganization, repositoryName);
             expect(repositoryExists).toBe(true);
 
             // Check if the '.tekton' folder exists in the repository
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            const tektonFolderExists = await gitController.checkIfFolderExistsInRepository(gitOrganization, repositoryName, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -121,12 +121,12 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * 
          */
         it(`verifies if component ${gptTemplate} have a valid GitOps repository and there exists a '.tekton' folder`, async () => {
-            // Check if the GitOps repository exists in GitHub
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`);
+            // Check if the GitOps repository exists in Git
+            const repositoryExists = await gitController.checkIfRepositoryExists(gitOrganization, `${repositoryName}-gitops`);
             expect(repositoryExists).toBe(true);
 
             // Check if the '.tekton' folder exists in the GitOps repository
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, `${repositoryName}-gitops`, '.tekton');
+            const tektonFolderExists = await gitController.checkIfFolderExistsInRepository(gitOrganization, `${repositoryName}-gitops`, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -148,7 +148,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * @throws {Error} Throws an error if the creation of the pull request fails.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
-            const prNumber = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content');
+            const prNumber = await gitController.createPullRequestFromMainBranch(gitOrganization, repositoryName, 'test_file.txt', 'Test content');
 
             // Set the pull request number if creation was successful
             if (prNumber !== undefined) {
@@ -170,7 +170,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Merge pull_request to trigger a push pipelinerun`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber);
+            await gitController.mergePullRequest(gitOrganization, repositoryName, pullRequestNumber);
         }, 120000);
 
         /**
@@ -220,7 +220,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Trigger a promotion Pull Request in Gitops repository to promote development image to stage environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async () => {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName);
+            const getImage = await gitController.extractImageFromContent(gitOrganization, `${repositoryName}-gitops`, repositoryName, developmentEnvironmentName);
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage;
@@ -228,7 +228,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
+            const gitopsPromotionPR = await gitController.promoteGitopsImageEnvironment(gitOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR;
             } else {
@@ -248,7 +248,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
          */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+            await gitController.mergePullRequest(gitOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
         }, 120000);
 
         /*
@@ -272,7 +272,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
-            const getImage = await gitHubClient.extractImageFromContent(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName);
+            const getImage = await gitController.extractImageFromContent(gitOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName);
 
             if (getImage !== undefined) {
                 extractedBuildImage = getImage;
@@ -280,7 +280,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
+            const gitopsPromotionPR = await gitController.promoteGitopsImageEnvironment(gitOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
             if (gitopsPromotionPR !== undefined) {
                 gitopsPromotionPRNumber = gitopsPromotionPR;
             } else {
@@ -300,7 +300,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * If pipelinerun succeeds merge the PR to allow image to sync in prod environment
          */
         it(`merge gitops pull request to sync new image in prod environment`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+            await gitController.mergePullRequest(gitOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
         }, 120000);
 
         /**
@@ -332,7 +332,8 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
+                gitController.cleanAfterTest(gitOrganization, repositoryName);
+                await kubeClient.deleteApplicationFromNamespace(RHTAPGitopsNamespace, `${repositoryName}-app-of-apps`);
             }
         });
     });

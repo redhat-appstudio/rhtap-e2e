@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
 import { TaskIdReponse } from '../../../../src/apis/backstage/types';
 import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
 import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
 import {
     checkComponentSyncedInArgoAndRouteIsWorking,
@@ -16,6 +15,7 @@ import {
     setGitHubActionVariables,
     waitForComponentCreation
 } from "../../../../src/utils/test.utils";
+import { GithubController } from '../../../controllers/git/github';
 
 /**
  * 1. Components get created in Red Hat Developer Hub
@@ -46,7 +46,7 @@ export const gitHubActionsBasicGoldenPathTemplateTests = (gptTemplate: string, s
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
+        let gitHubClient: GithubController;
         let kubeClient: Kubernetes;
 
         /**

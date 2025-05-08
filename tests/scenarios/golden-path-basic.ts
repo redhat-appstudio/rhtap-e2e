@@ -1,30 +1,30 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
-import { DeveloperHubClient } from '../../../../src/apis/backstage/developer-hub';
-import { TaskIdReponse } from '../../../../src/apis/backstage/types';
-import { generateRandomChars } from '../../../../src/utils/generator';
-import { GitHubProvider } from "../../../../src/apis/scm-providers/github";
-import { Kubernetes } from "../../../../src/apis/kubernetes/kube";
-import { checkEnvVariablesGitHub, cleanAfterTestGitHub, createTaskCreatorOptionsGitHub, getDeveloperHubClient, getGitHubClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../../../src/utils/test.utils";
-import { Tekton } from '../../../../src/utils/tekton';
-import { onPushTasks } from '../../../../src/constants/tekton';
+import { DeveloperHubClient } from '../../src/apis/backstage/developer-hub';
+import { TaskIdReponse } from '../../src/apis/backstage/types';
+import { generateRandomChars } from '../../src/utils/generator';
+import { Kubernetes } from "../../src/apis/kubernetes/kube";
+import { getDeveloperHubClient, checkIfAcsScanIsPass, verifySyftImagePath, getRHTAPGitopsNamespace, waitForComponentCreation } from "../../src/utils/test.utils";
+import { Tekton } from '../../src/utils/tekton';
+import { onPushTasks } from '../../src/constants/tekton';
+import { GitController } from '../controllers/git/git-controller';
+import { GitFactory } from '../controllers/git/git-factory';
 
 
 /**
  * 1. Components get created in Red Hat Developer Hub
  * 2. Check that components gets created successfully in Red Hat Developer Hub
- * 3. Red Hat Developer Hub created GitHub repository
- * 4. Perform an commit in GitHub to trigger a push PipelineRun
+ * 3. Red Hat Developer Hub created Git repository
+ * 4. Perform an commit in Git to trigger a push PipelineRun
  * 5. Wait For PipelineRun to start and finish successfully. This is not done yet. We need SprayProxy in place and
  * wait for RHTAP bug to be solved: https://issues.redhat.com/browse/RHTAPBUGS-1136
  */
-export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
-    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
+export const basicGoldenPathTests = (gptTemplate: string, gitProvider: string, gitOrganization: string) => {
+    describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Git provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
 
-        const githubOrganization = process.env.GITHUB_ORGANIZATION || '';
         const repositoryName = `${generateRandomChars(9)}-${gptTemplate}`;
 
         const imageName = "rhtap-qe-" + `${gptTemplate}`;
@@ -33,25 +33,25 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
 
         let developerHubTask: TaskIdReponse;
         let backstageClient: DeveloperHubClient;
-        let gitHubClient: GitHubProvider;
+        let gitController: GitController;
         let kubeClient: Kubernetes;
         let tektonClient: Tekton;
 
         let RHTAPGitopsNamespace: string;
 
         /**
-         * Initializes Github and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
+         * Initializes Git and Kubernetes client for interaction. After clients initialization will start to create a test namespace.
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
         beforeAll(async () => {
             RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
+            gitController = await GitFactory.create(gitProvider);
             tektonClient = new Tekton();
-            gitHubClient = await getGitHubClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
 
-            await checkEnvVariablesGitHub(componentRootNamespace, githubOrganization, imageOrg, ciNamespace, kubeClient);
+            await gitController.checkEnvVariables(componentRootNamespace, gitOrganization, imageOrg, ciNamespace, kubeClient);
         });
 
         /**
@@ -69,7 +69,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param templateRef Refers to the Developer Hub template name.
          * @param values Set of options to create the component.
          * @param owner Developer Hub username who initiates the task.
-         * @param name Name of the repository to be created in GitHub.
+         * @param name Name of the repository to be created in Git.
          * @param branch Default git branch for the component.
          * @param repoUrl Complete URL of the git provider where the component will be created.
          * @param imageRegistry Image registry provider. Default is Quay.io.
@@ -78,7 +78,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * @param imageOrg Registry organization name for the component to be pushed.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = await gitController.createTaskCreatorOptions(gptTemplate, imageName, imageOrg, imageRegistry, gitOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -94,7 +94,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
 
         /**
          * Once a DeveloperHub task is processed should create an argocd application in openshift-gitops namespace. 
-         * Need to wait until application is synced until commit something to github and trigger a pipelinerun
+         * Need to wait until application is synced until commit something to git and trigger a pipelinerun
          */
         it(`wait ${gptTemplate} argocd to be synced in the cluster`, async () => {
             const argoCDAppISSynced = await kubeClient.waitForArgoCDApplicationToBeHealthy(`${repositoryName}-development`, 500000);
@@ -102,14 +102,14 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         }, 600000);
 
         /**
-         * Start to verify if Red Hat Developer Hub created repository from our template in GitHub. This repository should contain the source code of 
+         * Start to verify if Red Hat Developer Hub created repository from our template in Git. This repository should contain the source code of 
          * my application. Also verifies if the repository contains a '.tekton' folder.
          */
-        it(`verifies if component ${gptTemplate} was created in GitHub and contains '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, repositoryName);
+        it(`verifies if component ${gptTemplate} was created in Git and contains '.tekton' folder`, async () => {
+            const repositoryExists = await gitController.checkIfRepositoryExists(gitOrganization, repositoryName);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            const tektonFolderExists = await gitController.checkIfFolderExistsInRepository(gitOrganization, repositoryName, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -117,10 +117,10 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * Verification to check if Red Hat Developer Hub created the gitops repository with all our manifests for argoCd
          */
         it(`verifies if component ${gptTemplate} have a valid gitops repository and there exists a '.tekton' folder`, async () => {
-            const repositoryExists = await gitHubClient.checkIfRepositoryExists(githubOrganization, `${repositoryName}-gitops`);
+            const repositoryExists = await gitController.checkIfRepositoryExists(gitOrganization, `${repositoryName}-gitops`);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await gitHubClient.checkIfFolderExistsInRepository(githubOrganization, repositoryName, '.tekton');
+            const tektonFolderExists = await gitController.checkIfFolderExistsInRepository(gitOrganization, repositoryName, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -128,7 +128,7 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            const commit = await gitHubClient.createEmptyCommit(githubOrganization, repositoryName);
+            const commit = await gitController.createCommit(gitOrganization, repositoryName);
             expect(commit).not.toBe(undefined);
 
         }, 120000);
@@ -165,9 +165,9 @@ export const gitHubBasicGoldenPathTemplateTests = (gptTemplate: string) => {
         */
         afterAll(async () => {
             if (process.env.CLEAN_AFTER_TESTS === 'true') {
-                await cleanAfterTestGitHub(gitHubClient, kubeClient, RHTAPGitopsNamespace, githubOrganization, repositoryName);
+                gitController.cleanAfterTest(gitOrganization, repositoryName);
+                await kubeClient.deleteApplicationFromNamespace(RHTAPGitopsNamespace, `${repositoryName}-app-of-apps`);
             }
         });
     });
-
 };

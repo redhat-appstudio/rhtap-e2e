@@ -1,6 +1,6 @@
+import { advancedGoldenPathTests } from '../../scenarios/golden-path-advanced.ts';
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
-import { githubSoftwareTemplatesAdvancedScenarios } from "./test-config/github_advanced_scenario.ts";
 
 /**
  * Tests Quarkus template in Github with Tekton
@@ -12,13 +12,14 @@ import { githubSoftwareTemplatesAdvancedScenarios } from "./test-config/github_a
  */
 
 const quarkusTemplateName = 'java-quarkus';
+const gitProvider = 'github';
+const gitOrganization = process.env.GITHUB_ORGANIZATION || '';
 
 const runQuarkusBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(quarkusTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
-
-        githubSoftwareTemplatesAdvancedScenarios(quarkusTemplateName);
+        advancedGoldenPathTests(quarkusTemplateName, gitProvider, gitOrganization);
     } else {
         skipSuite(quarkusTemplateName);
     }

@@ -1,11 +1,15 @@
 /* eslint-disable camelcase */
 import { Octokit, RestEndpointMethodTypes, workflowRuns } from "@octokit/rest";
 import { AxiosError } from "axios";
-import { Utils } from "./utils";
-import { generateRandomChars } from "../../utils/generator";
+import { Utils } from "../../../src/apis/scm-providers/utils";
+import { generateRandomChars } from "../../../src/utils/generator";
 import sodium from 'sodium-native';
+import { Kubernetes } from '../../../src/apis/kubernetes/kube';
+import { checkEnvVariablesGitHub, createTaskCreatorOptionsGitHub } from '../../../src/utils/test.utils';
+import { GitController } from './git-controller';
+import { ScaffolderScaffoldOptions } from '@backstage/plugin-scaffolder-react';
 
-export class GitHubProvider extends Utils {
+export class GithubController extends Utils implements GitController {
     private readonly octokit: Octokit;
     //Uncomment this, in case you want to build image for Jenkins Agent
     //private readonly jenkinsAgentImage = "image-registry.openshift-image-registry.svc:5000/jenkins/jenkins-agent-base:latest";
@@ -21,11 +25,14 @@ export class GitHubProvider extends Utils {
         });
     }
 
-    /**
-     * checkifRepositoryExists return if a repository exists in GitHub
-     * @param organization A valid GitHub organization
-     * @param name A valid GitHub repository
-     */
+    public async createTaskCreatorOptions(softwareTemplateName: string, imageName: string, imageOrg: string, imageRegistry: string, gitOrganization: string, repositoryName: string, componentRootNamespace: string, ciType: string): Promise<ScaffolderScaffoldOptions> {
+        return createTaskCreatorOptionsGitHub(softwareTemplateName, imageName, imageOrg, imageRegistry, gitOrganization, repositoryName, componentRootNamespace, ciType);
+    }
+
+    public async checkEnvVariables(componentRootNamespace: string, gitOrganization: string, imageOrg: string, ciNamespace: string, kubeClient: Kubernetes): Promise<void> {
+        return checkEnvVariablesGitHub(componentRootNamespace, gitOrganization, imageOrg, ciNamespace, kubeClient);
+    }
+
     public async checkIfRepositoryExists(organization: string, name: string): Promise<boolean> {
         try {
             const repositoryResponse = await this.octokit.repos.get({ owner: organization, repo: name });
@@ -79,12 +86,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * checkIfFolderExistsInRepository
-     * @param organization
-     * @param name
-     * @param folderPath
-     */
     public async checkIfFolderExistsInRepository(organization: string, name: string, folderPath: string): Promise<boolean> {
         try {
             const response = await this.octokit.repos.getContent({ owner: organization, repo: name, path: folderPath });
@@ -98,15 +99,7 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Commits a file to the main branch of a specified Git repository.
-     * 
-     * @param {string} gitOrg - The name of the GitHub organization.
-     * @param {string} gitRepository - The name of the repository where the file will be committed.
-     * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
-     * @throws Any error that occurs during the execution of the function.
-     */
-    public async createEmptyCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
+    public async createCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         try {
             const baseBranchRef = await this.octokit.git.getRef({ owner: gitOrg, repo: gitRepository, ref: 'heads/main' });
 
@@ -134,14 +127,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Commits a Jenkins agent configuration for testing to the main branch of a specified Git repository.
-     * 
-     * @param {string} gitOrg - The name of the GitHub organization.
-     * @param {string} gitRepository - The name of the repository where the file will be committed.
-     * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
-     * @throws Any error that occurs during the execution of the function.
-     */
     public async createAgentCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "agent any",
             "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
@@ -160,38 +145,14 @@ export class GitHubProvider extends Utils {
         return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')", `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`, "Enable ACS scan in Jenkins");
     }
 
-    /**
-     * Enables ACS scan for testing to the main branch of a specified Git repository.
-     * 
-     * @param {string} gitOrg - The name of the GitHub organization.
-     * @param {string} gitRepository - The name of the repository where the file will be committed.
-     * @returns {Promise<string | undefined>} A Promise resolving to the SHA of the commit if successful, otherwise undefined.
-     * @throws Any error that occurs during the execution of the function.
-     */
     public async enableACSJenkins(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "export DISABLE_ACS=false", "export DISABLE_ACS=true", "Enable ACS scan in Jenkins");
     }
 
-    /**
-    * Enables ACS scan for testing to the main branch of a specified Git repository.
-    * 
-    * @param {string} gitOrg - The name of the GitHub organization.
-    * @param {string} gitRepository - The name of the repository where the file will be committed.
-    * @returns {Promise<string | undefined>} A Promise resolving to the "true" if commit was successful, otherwise undefined.
-    * @throws Any error that occurs during the execution of the function.
-    */
     public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.rhtap-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
     }
 
-    /**
-     * Enables ACS scan for testing to the main branch of a specified Git repository.
-     * 
-     * @param {string} gitOrg - The name of the GitHub organization.
-     * @param {string} gitRepository - The name of the repository where the file will be committed.
-     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
-     * @throws Any error that occurs during the execution of the function.
-     */
     public async updateRekorHost(gitOrg: string, gitRepository: string, rekorHost: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.rhtap-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
     }
@@ -325,12 +286,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Merge GitHub pull request.
-     * @param {string} owner - The name of the GitHub organization.
-     * @param {string} repo - The name of the repository.
-     * @param {string} pullRequest - PR number.
-     */
     public async mergePullRequest(owner: string, repo: string, pullRequest: number) {
         try {
             await this.octokit.pulls.merge({
@@ -345,13 +300,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Extract image from GitOps repository for promotion.
-     * @param {string} owner - The name of the GitHub organization.
-     * @param {string} repo - The name of the repository.
-     * @param {string} componentName - component name.
-     * @param {string} environment - environment name(development, stage, prod).
-     */
     public async extractImageFromContent(owner: string, repo: string, componentName: string, environment: string): Promise<string> {
         try {
             const response = await this.octokit.repos.getContent({
@@ -387,14 +335,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Promote image to environment,
-     * @param {string} owner - The name of the GitHub organization.
-     * @param {string} repo - The name of the repository.
-     * @param {string} componentName - component name.
-     * @param {string} environment - environment name(development, stage, prod).
-     * @param {string} image - image name.
-     */
     public async promoteGitopsImageEnvironment(owner: string, repo: string, componentName: string, environment: string, image: string): Promise<number> {
         try {
             const response = await this.octokit.repos.getContent({
@@ -546,12 +486,6 @@ export class GitHubProvider extends Utils {
         }
     }
 
-    /**
-     * Function to create a GitHub webhook for push events(for Jenkins for example)
-     * @param {string} owner - The name of the GitHub organization.
-     * @param {string} repo - The name of the repository.
-     * @param {string} webhookUrl - webhook URL.
-     */
     public async createWebhook(owner: string, repo: string, webhookUrl: string) {
         console.log(owner + repo + webhookUrl);
         try {
@@ -967,5 +901,13 @@ export class GitHubProvider extends Utils {
         const runId = await this.getLatestWorkflowRunId(owner, repo, workflowName);
         const jobId = await this.getLatestWorkflowRunsJobId(owner, repo, runId);
         return await this.getJobLogsFromWorkflowRun(owner, repo, jobId);
+    }
+
+    public async  cleanAfterTest(githubOrganization: string, repositoryName: string) {
+        //Check, if gitops repo exists and delete
+        await this.checkIfRepositoryExistsAndDelete(githubOrganization, `${repositoryName}-gitops`);
+    
+        //Check, if repo exists and delete
+        await this.checkIfRepositoryExistsAndDelete(githubOrganization, repositoryName);
     }
 }

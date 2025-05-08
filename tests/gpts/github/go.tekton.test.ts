@@ -1,6 +1,6 @@
-import { gitHubBasicGoldenPathTemplateTests } from "./test-config/github_positive_suite.ts";
 import { skipSuite } from "../../test-utils.ts";
 import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
+import { basicGoldenPathTests } from '../../scenarios/golden-path-basic.ts';
 
 /**
  * Tests Go template in GitHub with Tekton
@@ -12,12 +12,14 @@ import { loadSoftwareTemplatesTestsGlobals } from "./test-config/config.ts";
  */
 
 const golangTemplateName = 'go';
+const gitProvider = 'github';
+const gitOrganization = process.env.GITHUB_ORGANIZATION || '';
 
 const runGolangBasicTests = () => {
     const configuration = loadSoftwareTemplatesTestsGlobals();
 
     if (configuration.templates.includes(golangTemplateName) && configuration.pipeline.github && configuration.github.tekton) {
-        gitHubBasicGoldenPathTemplateTests(golangTemplateName);
+        basicGoldenPathTests(golangTemplateName, gitProvider, gitOrganization);
     } else {
         skipSuite(golangTemplateName);
     }
