@@ -29,7 +29,7 @@ import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/con
  */
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
 
         const developmentEnvironmentName = 'development';
@@ -66,7 +66,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * resources
         */
         beforeAll(async () => {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
             gitHubClient = await getGitHubClient(kubeClient);
@@ -88,7 +88,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {            
-            const taskCreatorOptions = await createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = createTaskCreatorOptionsGitHub(gptTemplate, imageName, imageOrg, imageRegistry, githubOrganization, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);

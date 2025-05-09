@@ -350,7 +350,7 @@ export class JenkinsCI extends Utils {
     }
 
 
-    public async getJenkinsURL() {
+    public getJenkinsURL(): string {
         return this.jenkinsUrl;
     }
 }

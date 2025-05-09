@@ -34,7 +34,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
-        const imageName = "rhtap-qe-"+ `${gptTemplate}`;
+        const imageName = "rhtap-qe-" + `${gptTemplate}`;
         const imageOrg = process.env.IMAGE_REGISTRY_ORG || 'rhtap';
         const imageRegistry = process.env.IMAGE_REGISTRY || 'quay.io';
 
@@ -66,13 +66,13 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * This namespace should have gitops label: 'argocd.argoproj.io/managed-by': 'openshift-gitops' to allow ArgoCD to create
          * resources
         */
-        beforeAll(async()=> {
-            RHTAPGitopsNamespace = await getRHTAPGitopsNamespace();
+        beforeAll(async () => {
+            RHTAPGitopsNamespace = getRHTAPGitopsNamespace();
             kubeClient = new Kubernetes();
             tektonClient = new Tekton();
             bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
-            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+            bitbucketUsername = await kubeClient.getDeveloperHubSecret(getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
@@ -83,7 +83,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Creates a request to Developer Hub and check if the gpt really exists in the catalog
          */
-        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async ()=> {
+        it(`verifies if ${gptTemplate} gpt exists in the catalog`, async () => {
             const goldenPathTemplates = await backstageClient.getGoldenPathTemplates();
 
             expect(goldenPathTemplates.some(gpt => gpt.metadata.name === gptTemplate)).toBe(true);
@@ -93,7 +93,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Creates a task in Developer Hub to generate a new component using specified git and kube options.
          */
         it(`creates ${gptTemplate} component`, async () => {
-            const taskCreatorOptions = await createTaskCreatorOptionsBitbucket(gptTemplate, imageName, imageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "tekton");
+            const taskCreatorOptions = createTaskCreatorOptionsBitbucket(gptTemplate, imageName, imageOrg, imageRegistry, bitbucketUsername, bitbucketWorkspace, bitbucketProject, repositoryName, componentRootNamespace, "tekton");
 
             // Creating a task in Developer Hub to scaffold the component
             developerHubTask = await backstageClient.createDeveloperHubTask(taskCreatorOptions);
@@ -110,7 +110,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
                 console.log("failed to create backstage tasks. creating logs...");
                 try {
                     const logs = await backstageClient.getEventStreamLog(taskCreated.id);
-                    await backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `bitbucket-${repositoryName}.log`, logs);
+                    backstageClient.writeLogsToArtifactDir('backstage-tasks-logs', `bitbucket-${repositoryName}.log`, logs);
                 } catch (error) {
                     throw new Error(`failed to write files to console: ${error}`);
                 }
@@ -127,7 +127,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
             const repositoryExists = await bitbucketClient.checkIfRepositoryExists(bitbucketWorkspace, repositoryName);
             expect(repositoryExists).toBe(true);
 
-            const tektonFolderExists = await bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
+            const tektonFolderExists = bitbucketClient.checkIfFolderExistsInRepository(bitbucketWorkspace, repositoryName, '.tekton');
             expect(tektonFolderExists).toBe(true);
         }, 120000);
 
@@ -157,7 +157,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Creates an Webhook in the repository for a pipelinerun run.
          */
-        it(`Creates webhook in the repository for pipeline run`, async ()=> {
+        it(`Creates webhook in the repository for pipeline run`, async () => {
             const hookSource = await bitbucketClient.createRepoWebHook(bitbucketWorkspace, repositoryName, pipelineAsCodeRoute);
             expect(hookSource).not.toBe(undefined);
             const hookGitops = await bitbucketClient.createRepoWebHook(bitbucketWorkspace, gitopsRepoName, pipelineAsCodeRoute);
@@ -176,7 +176,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
-        it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
+        it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async () => {
             const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'pull_request', onPullTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
@@ -184,14 +184,14 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Merges a pull request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
          */
-        it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
+        it(`Merge pull_request to trigger a push pipelinerun`, async () => {
             await bitbucketClient.mergePullrequest(bitbucketWorkspace, repositoryName, pullRequestID);
         }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
-        it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
+        it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async () => {
             const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
@@ -208,7 +208,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
-        it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
+        it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
             const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
@@ -224,7 +224,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
          */
-        it('trigger pull request promotion to promote from development to stage environment', async ()=> {
+        it('trigger pull request promotion to promote from development to stage environment', async () => {
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
@@ -235,7 +235,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage
          */
-        it(`merge gitops pull request to sync new image in stage environment`, async ()=> {
+        it(`merge gitops pull request to sync new image in stage environment`, async () => {
             await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
         }, 120000);
 
@@ -249,7 +249,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
          */
-        it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
+        it('trigger pull request promotion to promote from stage to prod environment', async () => {
             gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
@@ -260,7 +260,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         /**
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in prod
          */
-        it(`merge gitops pull request to sync new image in prod environment`, async ()=> {
+        it(`merge gitops pull request to sync new image in prod environment`, async () => {
             await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
         }, 120000);
 
