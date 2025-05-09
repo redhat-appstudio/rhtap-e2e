@@ -226,12 +226,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            gitopsPromotionPRNumber = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage)[0];
         });
 
         /**
@@ -273,12 +268,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            gitopsPromotionPRNumber = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage)[0];
         });
 
         /**

@@ -28,7 +28,7 @@ import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/con
  */
 export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: string, gitLabOrganization: string) => {
     describe(`Advanced Red Hat Trusted Application Pipeline ${softwareTemplateName} tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
         let gitLabProvider: GitLabProvider;
@@ -42,6 +42,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         let pipelineAsCodeRoute: string;
 
         let RHTAPGitopsNamespace: string;
+        let commitRevision: string;
 
 
         const developmentEnvironmentName = 'development';
@@ -134,10 +135,10 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         it(`creates a Merge Request for ${softwareTemplateName} component and check if pipeline run finish successfull`, async () => {
             const mergeRequestTitleName = 'Automatic Merge Request created from testing framework';
 
-            mergeRequestNumber = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomChars(6), mergeRequestTitleName);
+            [mergeRequestNumber, commitRevision] = await gitLabProvider.createMergeRequest(gitlabRepositoryID, generateRandomChars(6), mergeRequestTitleName);
             expect(mergeRequestNumber).toBeDefined();
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Merge_Request', onPullTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'Merge_Request', onPullTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -145,9 +146,9 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * Merges a merge request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
         */
         it(`merge merge_request for component ${softwareTemplateName} and waits until push pipelinerun finished successfully`, async () => {
-            await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber);
+            commitRevision = await gitLabProvider.mergeMergeRequest(gitlabRepositoryID, mergeRequestNumber);
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'Push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -156,7 +157,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'Push');
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, commitRevision, 'Push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -164,7 +165,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * verify if the ACS Scan is successfully done from the logs of task steps
         */
         it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'Push');
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, commitRevision, 'Push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -190,11 +191,11 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from development to stage environment', async () => {
-            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
+            [gitopsPromotionMergeRequestNumber, commitRevision] = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
                 repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, commitRevision, 'Merge_Request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -202,7 +203,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
         */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
-            await gitLabProvider.mergeMergeRequest(gitlabGitopsRepositoryID, gitopsPromotionMergeRequestNumber);
+            commitRevision = await gitLabProvider.mergeMergeRequest(gitlabGitopsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
         /*
@@ -225,11 +226,11 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
         */
         it('trigger pull request promotion to promote from stage to prod environment', async () => {
-            gitopsPromotionMergeRequestNumber = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
+            [gitopsPromotionMergeRequestNumber, commitRevision] = await gitLabProvider.createMergeRequestWithPromotionImage(gitlabGitopsRepositoryID, generateRandomChars(6),
                 repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionMergeRequestNumber).toBeDefined();
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'Merge_Request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, commitRevision, 'Merge_Request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -237,7 +238,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
             * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
         */
         it.skip(`merge gitops pull request to sync new image in prod environment`, async () => {
-            await gitLabProvider.mergeMergeRequest(gitlabGitopsRepositoryID, gitopsPromotionMergeRequestNumber);
+            commitRevision = await gitLabProvider.mergeMergeRequest(gitlabGitopsRepositoryID, gitopsPromotionMergeRequestNumber);
         }, 120000);
 
         /*

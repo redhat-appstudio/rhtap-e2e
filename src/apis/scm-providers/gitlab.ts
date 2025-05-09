@@ -91,10 +91,10 @@ export class GitLabProvider extends Utils {
     /**
      * name
      */
-    public async createCommit(repositoryID: number, branchName: string) {
+    public async createCommit(repositoryID: number, branchName: string): Promise<string> {
         try {
 
-            await this.gitlab.Commits.create(
+            const commit = await this.gitlab.Commits.create(
                 repositoryID,
                 branchName,
                 'Commit message',
@@ -106,6 +106,12 @@ export class GitLabProvider extends Utils {
                     },
                 ]
             );
+
+            if (!commit) {
+                throw new Error("Commit SHA not found in the response");
+            }
+
+            return commit.id;
 
         } catch (error) {
             console.log(error);
@@ -168,7 +174,7 @@ export class GitLabProvider extends Utils {
     }
 
     public async createMergeRequestWithPromotionImage(repositoryID: number, targetBranch: string,
-        componentName: string, fromEnvironment: string, toEnvironment: string): Promise<number> {
+        componentName: string, fromEnvironment: string, toEnvironment: string): Promise<[number, string]> {
 
         let extractedImage;
 
@@ -191,7 +197,7 @@ export class GitLabProvider extends Utils {
             const pattern = /- image: (.*)/;
             const newContent = targetEnvironmentContentToString.replace(pattern, `- image: ${extractedImage}`);
 
-            await this.gitlab.Commits.create(
+            const commit = await this.gitlab.Commits.create(
                 repositoryID,
                 targetBranch,
                 `Promotion from ${fromEnvironment} to ${toEnvironment}`,
@@ -209,7 +215,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`Merge request created successfully. URL: ${mergeRequest.web_url}`);
 
-            return mergeRequest.iid;
+            return [mergeRequest.iid, commit.id];
         } catch (error) {
             console.log(error);
             throw new Error("Failed to create merge request. Check bellow error");
@@ -242,13 +248,13 @@ export class GitLabProvider extends Utils {
     /**
      * createMergeRequest
      */
-    public async createMergeRequest(repositoryID: number, branchName: string, title: string): Promise<number> {
+    public async createMergeRequest(repositoryID: number, branchName: string, title: string): Promise<[number, string]> {
         try {
             const mainBranch = await this.gitlab.Branches.show(repositoryID, 'main');
 
             await this.gitlab.Branches.create(repositoryID, branchName, mainBranch.commit.id);
 
-            await this.gitlab.Commits.create(
+            const commit = await this.gitlab.Commits.create(
                 repositoryID,
                 branchName,
                 'Automatic commit generated from RHTAP E2E framework',
@@ -268,7 +274,7 @@ export class GitLabProvider extends Utils {
 
             console.log(`Pull request "${title}" created successfully. URL: ${mergeRequest.web_url}`);
 
-            return mergeRequest.iid;
+            return [mergeRequest.iid, commit.id];
         } catch (error) {
             console.log(error);
             throw new Error("Failed to create merge request. Check bellow error");
@@ -281,12 +287,18 @@ export class GitLabProvider extends Utils {
      * @param {number} projectId - The ID number of GitLab repo.
      * @param {number} mergeRequestId - The ID number of GitLab merge request.
      */
-    public async mergeMergeRequest(projectId: number, mergeRequestId: number) {
+    public async mergeMergeRequest(projectId: number, mergeRequestId: number): Promise<string> {
         try {
             console.log(`Merging merge request "${mergeRequestId}"`);
-            await this.gitlab.MergeRequests.accept(projectId, mergeRequestId);
+            const response = await this.gitlab.MergeRequests.accept(projectId, mergeRequestId);
 
             console.log(`Pull request "${mergeRequestId}" merged successfully.`);
+
+            if (!response.merge_commit_sha) {
+                throw new Error(`Failed to get revision of merge request with id ${mergeRequestId}`);
+            }
+
+            return response.merge_commit_sha;
         } catch (error) {
             console.log(error);
             throw new Error("Failed to merge Merge Request. Check bellow error");

@@ -95,7 +95,7 @@ export class BitbucketProvider extends Utils {
         fileName: string,
         fileContent: string,
         message = "Automatic commit generated from tests"
-    ):Promise<boolean> {
+    ):Promise<string> {
         try {
 
             const commitData = qs.stringify({
@@ -114,12 +114,17 @@ export class BitbucketProvider extends Utils {
                 }
             );
 
-            console.log(`Changes in file ${fileName} successfully committed for branch ${repoBranch}`);
-            return response.status === 201;
+            // Extract the revision from the header
+            const commitSha = response.headers.location.split('/').pop();
+ 
+            console.log(`Changes in file ${fileName} successfully committed in ${commitSha} for branch ${repoBranch}`);
+            if (response.status != 201) {
+                throw new Error(`Failed to create commit, request failed with ${response.status}`);
+            }
 
+            return commitSha;
         } catch (error) {
-            console.error('Error committing file:', error);
-            return false;
+            throw new Error(`Error committing file: ${error}`);
         }
     }
 
@@ -157,7 +162,7 @@ export class BitbucketProvider extends Utils {
      * @param fileName file name in bitbucket repo to add/update in PR
      * @param fileContent file content to be committed in file
      */
-    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string):Promise<number> {
+    public async createPullrequest(workspace: string, repoSlug: string, fileName: string, fileContent: string):Promise<[number, string]> {
         const testBranch = `test-${generateRandomChars(4)}`;
 
         // create new branch
@@ -173,7 +178,7 @@ export class BitbucketProvider extends Utils {
             );
 
             // Make changes in new branch
-            await this.createCommit(workspace, repoSlug, testBranch, fileName, fileContent);
+            const commitSha = await this.createCommit(workspace, repoSlug, testBranch, fileName, fileContent);
 
             // Open PR to merge new branch into main branch
             const prData = {
@@ -196,7 +201,7 @@ export class BitbucketProvider extends Utils {
             );
 
             console.log(`Pull request ${prResponse.data.id} created in ${repoSlug} repository`);
-            return prResponse.data.id;
+            return [prResponse.data.id, commitSha];
 
         } catch(error){
             console.log(error);
@@ -210,7 +215,7 @@ export class BitbucketProvider extends Utils {
      * @param repoSlug valid bitbucket repository where PR is open
      * @param pullRequestID valid ID of pull request to merge
      */
-    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: number) {
+    public async mergePullrequest(workspace: string, repoSlug: string, pullRequestID: number): Promise<string> {
         const mergeData = {
             "type": "commit",
             "message": "PR merge by automated tests",
@@ -219,14 +224,18 @@ export class BitbucketProvider extends Utils {
         };
 
         try {
-            await this.bitbucket.post(
+            const response = await this.bitbucket.post(
                 `repositories/${workspace}/${repoSlug}/pullrequests/${pullRequestID}/merge`,
                 mergeData
             );
 
-            console.log(`Pull request "${pullRequestID}" merged successfully in ${repoSlug} repository`);
+            const commitSha = response.data.merge_commit.hash;
+
+            console.log(`Pull request "${pullRequestID}" merged successfully in ${repoSlug} repository with merge commit ${commitSha}`);
+
+            return commitSha;
         } catch (error) {
-            console.log("Error merging PR", error);
+            throw new Error(`Error merging PR: ${error} `);
         }
     }
 
@@ -237,7 +246,7 @@ export class BitbucketProvider extends Utils {
      * @param fromEnvironment valid environment name from which image will be promoted (dev, stage)
      * @param toEnvironment valid environment name to which image will be promoted (stage, prod)
      */
-    public async createPromotionPullrequest(workspace: string, componentName: string, fromEnvironment: string, toEnvironment: string):Promise<number> {
+    public async createPromotionPullrequest(workspace: string, componentName: string, fromEnvironment: string, toEnvironment: string):Promise<[number, string]> {
         const pattern = /- image: (.*)/;
         let extractedImage;
 
@@ -284,7 +293,7 @@ export class BitbucketProvider extends Utils {
      * @param workspace valid workspace in Bitbucket
      * @param repoSlug valid Bitbucket repository slug
      */
-    public async updateJenkinsfileForCI(workspace: string, repoSlug: string): Promise<boolean> {
+    public async updateJenkinsfileForCI(workspace: string, repoSlug: string): Promise<string> {
         const filePath = 'Jenkinsfile';
         let currentContent = await this.getFileContent(workspace, repoSlug, 'main', filePath);
         const stringReplaceContent = [
@@ -328,7 +337,7 @@ export class BitbucketProvider extends Utils {
         roxCentralEndpoint:string,
         cosignPublicKey: string,
         imageRegistryUser: string
-    ): Promise<boolean> {
+    ): Promise<string> {
         const filePath = 'rhtap/env.sh';
         let fileContent = await this.getFileContent(workspace, repoSlug, 'main', filePath);
         console.log(`File before all changes: ${filePath}\n${fileContent}`);
