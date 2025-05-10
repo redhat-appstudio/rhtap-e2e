@@ -132,24 +132,24 @@ spec:
           value: task
         resolver: bundles
     - name: static-code-analysis
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: $(params.git-url)
-          - name: revision
-            value: $(params.revision)
-          - name: pathInRepo
-            value: .tekton/eslint.yaml
       params:
-        - name: git-url
-          value: $(params.git-url)
-        - name: git-revision
-          value: $(params.revision)
-        - name: config-file
-          value: eslint.config.mjs
+      - name: git-url
+        value: $(params.git-url)
+      - name: git-revision
+        value: $(params.revision)
+      - name: config-file
+        value: eslint.config.mjs
       runAfter:
-        - init
+      - init
+      taskRef:
+        params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.revision)
+        - name: pathInRepo
+          value: .tekton/eslint.yaml
+        resolver: git
     - name: clone-repository
       params:
       - name: url
@@ -420,7 +420,8 @@ spec:
       - name: IMAGE
         value: $(tasks.build-image-index.results.IMAGE_URL)
       - name: ADDITIONAL_TAGS
-        value: ["latest"]
+        value:
+        - latest
       runAfter:
       - build-image-index
       taskRef:
@@ -460,7 +461,8 @@ spec:
       optional: true
     - name: netrc
       optional: true
-  taskRunTemplate: {}
+  taskRunTemplate:
+    serviceAccountName: build-pipeline-rhtap-e2e
   workspaces:
   - name: git-auth
     secret:
