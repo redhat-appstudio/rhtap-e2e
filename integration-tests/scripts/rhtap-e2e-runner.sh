@@ -12,8 +12,11 @@ set -o pipefail # The return value of a pipeline is the status of the last comma
 # Artifact and output directories
 export ARTIFACT_DIR="${ARTIFACT_DIR:-$(mktemp -d)}"
 
+# Default TSSC namespace
+export TSSC_NAMESPACE="tssc"
+
 # Default namespace and organization settings
-export APPLICATION_ROOT_NAMESPACE="rhtap-app"
+export APPLICATION_ROOT_NAMESPACE="${TSSC_NAMESPACE}-app"
 
 # OCI container registry settings
 export OCI_CONTAINER="${OCI_CONTAINER:-""}"
@@ -71,25 +74,25 @@ load_oci_storage_credentials() {
 configure_github_variables() {
     log "INFO" "Configuring GitHub credentials from cluster secrets"
 
-    if ! secret_exists "rhtap" "rhtap-github-integration"; then
-        log "WARN" "No GitHub integration secret found in the rhtap namespace"
+    if ! secret_exists "$TSSC_NAMESPACE" "tssc-github-integration"; then
+        log "WARN" "No GitHub integration secret found in the $TSSC_NAMESPACE namespace"
         return 0
     fi
     export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-    export GITHUB_TOKEN="$(get_secret_value "rhtap" "rhtap-github-integration" "token")"
+    export GITHUB_TOKEN="$(get_secret_value "" "tssc-github-integration" "token")"
 }   
 # Extract GitLab organization from Kubernetes secret
 configure_gitlab_variables() {
     log "INFO" "Configuring GitLab credentials from cluster secrets"
     
-    if ! secret_exists "rhtap" "rhtap-gitlab-integration"; then
-        log "WARN" "No GitLab integration secret found in the rhtap namespace"
+    if ! secret_exists "$TSSC_NAMESPACE" "tssc-gitlab-integration"; then
+        log "WARN" "No GitLab integration secret found in the $TSSC_NAMESPACE namespace"
         return 0
     fi
     
     # Extract and export all GitLab-related credentials
-    export GITLAB_ORGANIZATION="$(get_secret_value "rhtap" "rhtap-gitlab-integration" "group")"
-    export GITLAB_TOKEN="$(get_secret_value "rhtap" "rhtap-gitlab-integration" "token")"
+    export GITLAB_ORGANIZATION="$(get_secret_value "$TSSC_NAMESPACE" "tssc-gitlab-integration" "group")"
+    export GITLAB_TOKEN="$(get_secret_value "$TSSC_NAMESPACE" "tssc-gitlab-integration" "token")"
     
     log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION})"
 }
@@ -97,14 +100,14 @@ configure_gitlab_variables() {
 configure_bitbucket_variables() {
     log "INFO" "Configuring Bitbucket credentials from cluster secrets"
 
-    if ! secret_exists "rhtap" "rhtap-bitbucket-integration"; then
-        log "WARN" "No Bitbucket integration secret found in the rhtap namespace"
+    if ! secret_exists "$TSSC_NAMESPACE" "tssc-bitbucket-integration"; then
+        log "WARN" "No Bitbucket integration secret found in the $TSSC_NAMESPACE namespace"
         return 0
     fi
     export BITBUCKET_USERNAME="rhtap-test-admin"
     export BITBUCKET_WORKSPACE="rhtap-test"
     export BITBUCKET_PROJECT="RHTAP"
-    export BITBUCKET_APP_PASSWORD="$(get_secret_value "rhtap" "rhtap-bitbucket-integration" "appPassword")"
+    export BITBUCKET_APP_PASSWORD="$(get_secret_value "$TSSC_NAMESPACE" "tssc-bitbucket-integration" "appPassword")"
 }
 
 # Extract registry credentials from docker config JSON in a Kubernetes secret
@@ -142,8 +145,7 @@ extract_registry_credentials() {
 configure_image_registry() {
     log "INFO" "Setting up image registry configuration"
     
-    local namespace="rhtap"
-    local registry_secrets=("rhtap-artifactory-integration" "rhtap-nexus-integration" "rhtap-quay-integration" )
+    local registry_secrets=("tssc-artifactory-integration" "tssc-nexus-integration" "tssc-quay-integration" )
     local registry_secret=""
     
     # Set default organization and registry values
@@ -151,7 +153,7 @@ configure_image_registry() {
     
     # Find the first available registry secret, we suppose that only one registry secret is available
     for secret in "${registry_secrets[@]}"; do
-        if secret_exists "$namespace" "$secret"; then
+        if secret_exists "$TSSC_NAMESPACE" "$secret"; then
             registry_secret="$secret"
             log "INFO" "Using image registry integration: $registry_secret"
             break
@@ -165,9 +167,9 @@ configure_image_registry() {
     fi
     
     # Extract and export registry credentials
-    export IMAGE_REGISTRY="$(extract_registry_credentials "$namespace" "$registry_secret" "endpoint")"
-    export IMAGE_REGISTRY_USERNAME="$(extract_registry_credentials "$namespace" "$registry_secret" "username")"
-    export IMAGE_REGISTRY_PASSWORD="$(extract_registry_credentials "$namespace" "$registry_secret" "password")"
+    export IMAGE_REGISTRY="$(extract_registry_credentials "$TSSC_NAMESPACE" "$registry_secret" "endpoint")"
+    export IMAGE_REGISTRY_USERNAME="$(extract_registry_credentials "$TSSC_NAMESPACE" "$registry_secret" "username")"
+    export IMAGE_REGISTRY_PASSWORD="$(extract_registry_credentials "$TSSC_NAMESPACE" "$registry_secret" "password")"
     
     # Check if extraction was successful
     if [[ -z "$IMAGE_REGISTRY" || -z "$IMAGE_REGISTRY_USERNAME" || -z "$IMAGE_REGISTRY_PASSWORD" ]]; then
@@ -187,7 +189,7 @@ configure_image_registry() {
 configure_developer_hub() {
     log "INFO" "Setting up Red Hat Developer Hub configuration"
     
-    export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n rhtap-dh -o jsonpath='{.spec.host}')"
+    export RED_HAT_DEVELOPER_HUB_URL="https://$(kubectl get route backstage-developer-hub -n tssc-dh -o jsonpath='{.spec.host}')"
     log "INFO" "Red Hat Developer Hub URL: ${RED_HAT_DEVELOPER_HUB_URL}"
 }
 

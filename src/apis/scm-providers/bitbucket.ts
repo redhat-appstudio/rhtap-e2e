@@ -336,11 +336,11 @@ export class BitbucketProvider extends Utils {
         // Replace env variable values
         const stringReplaceContent = [
             {
-                stringToFind: "http://rekor-server.rhtap-tas.svc", //NOSONAR
+                stringToFind: "http://rekor-server.tssc-tas.svc", //NOSONAR
                 replacementString: rekorHost
             },
             {
-                stringToFind: "http://tuf.rhtap-tas.svc", //NOSONAR
+                stringToFind: "http://tuf.tssc-tas.svc", //NOSONAR
                 replacementString: tufMirrorUrl
             },
             {

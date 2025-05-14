@@ -181,7 +181,7 @@ export class GitHubProvider extends Utils {
     * @throws Any error that occurs during the execution of the function.
     */
     public async updateTUFMirror(gitOrg: string, gitRepository: string, tufURL: string): Promise<string | undefined> {
-        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.rhtap-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://tuf.tssc-tas.svc", tufURL, "Update TUF mirror in environment file");//NOSONAR
     }
 
     /**
@@ -193,7 +193,7 @@ export class GitHubProvider extends Utils {
      * @throws Any error that occurs during the execution of the function.
      */
     public async updateRekorHost(gitOrg: string, gitRepository: string, rekorHost: string): Promise<string | undefined> {
-        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.rhtap-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
+        return await this.commitInGitHub(gitOrg, gitRepository, 'rhtap/env.sh', "http://rekor-server.tssc-tas.svc", rekorHost, "Update rekor URL in environment file");//NOSONAR
     }
 
     public async updateRoxCentralEndpoint(gitOrg: string, gitRepository: string, roxCentralEndpoint: string): Promise<string | undefined> {

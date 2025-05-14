@@ -454,11 +454,11 @@ export class GitLabProvider extends Utils {
     }
 
     public async updateRekorHost(repositoryID: number, branchName: string, rekorHost: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `http://rekor-server.rhtap-tas.svc`, rekorHost);
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update Rekor host', `http://rekor-server.tssc-tas.svc`, rekorHost);
     }
 
     public async updateTufMirror(repositoryID: number, branchName: string, tufMirror: string): Promise<boolean> {
-        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `http://tuf.rhtap-tas.svc`, tufMirror);
+        return await this.commitReplacementStringInFile(repositoryID, branchName, 'rhtap/env.sh', 'Update TUF Mirror', `http://tuf.tssc-tas.svc`, tufMirror);
     }
 
     public async updateEnvFileForGitLabCI(repositoryID: number, branchName: string, rekorHost: string, tufMirror: string): Promise<boolean> {
@@ -467,9 +467,9 @@ export class GitLabProvider extends Utils {
         // Replace ACS
         let updatedContent = fileContent.replace(`DISABLE_ACS=true`, `DISABLE_ACS=false`);
         // Replace rekor
-        updatedContent = updatedContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
+        updatedContent = updatedContent.replace(`http://rekor-server.tssc-tas.svc`, rekorHost);
         // Replace TUF
-        updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirror);
+        updatedContent = updatedContent.replace(`http://tuf.tssc-tas.svc`, tufMirror);
         //Commit changed file
         return await this.commitFileContent(repositoryID, branchName, filePath, "Update env file for GitLabCI", updatedContent);
     }

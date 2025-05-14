@@ -30,7 +30,7 @@ import { onPullTasks, onPushTasks, onPullGitopsTasks } from '../../../../src/con
 export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) => {
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests GitHub provider with public/private image registry`, () => {
         jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
 
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
@@ -308,7 +308,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          */
         it('container component is successfully synced by gitops in prod environment', async () => {
             console.log("syncing argocd application in prod environment");
-            await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`);
+            await syncArgoApplication('tssc-gitops', `${repositoryName}-${productionEnvironmentName}`);
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace);
 

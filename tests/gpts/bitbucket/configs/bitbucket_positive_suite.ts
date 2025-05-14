@@ -20,7 +20,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
     describe(`Red Hat Trusted Application Pipeline ${gptTemplate} GPT tests Bitbucket provider with public/private image registry`, () => {
         jest.retryTimes(2);
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
@@ -54,7 +54,7 @@ export const bitbucketSoftwareTemplateTests = (gptTemplate: string, stringOnRout
             tektonClient = new Tekton();
             bitbucketClient = await getBitbucketClient(kubeClient);
             backstageClient = await getDeveloperHubClient(kubeClient);
-            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
+            bitbucketUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "BITBUCKET__USERNAME");
 
             const componentRoute = await kubeClient.getOpenshiftRoute('pipelines-as-code-controller', 'openshift-pipelines');
             pipelineAsCodeRoute = `https://${componentRoute}`;
