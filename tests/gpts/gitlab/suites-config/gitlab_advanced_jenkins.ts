@@ -37,7 +37,7 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         let RHTAPGitopsNamespace: string;
         let RHTAPRHDHNamespace: string;
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
@@ -150,13 +150,13 @@ export const gitLabJenkinsAdvancedTests = (softwareTemplateName: string, stringO
         it(`creates ${softwareTemplateName} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("gitlab.com", gitLabOrganization, repositoryName, repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
-            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitLabProvider.createProjectWebHook(gitlabRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "tssc-developer-hub-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${softwareTemplateName} GitOps jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("gitlab.com", gitLabOrganization, repositoryName + "-gitops", repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName + "-gitops", repositoryName);
-            await gitLabProvider.createProjectWebHook(gitlabGitOpsRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitLabProvider.createProjectWebHook(gitlabGitOpsRepositoryID, await kubeClient.getDeveloperHubSecret(RHTAPRHDHNamespace, "tssc-developer-hub-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**

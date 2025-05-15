@@ -51,7 +51,7 @@ export const githubActionsSoftwareTemplatesAdvancedScenarios = (gptTemplate: str
 
         let RHTAPGitopsNamespace: string;
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const developmentEnvironmentName = 'development';
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';

@@ -30,7 +30,7 @@ export const gitLabProviderGitLabCITests = (softwareTemplateName: string, string
         let RHTAPRootNamespace: string;
         let RHTAPGitopsNamespace: string;
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentEnvironmentName = 'development';
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;

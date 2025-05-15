@@ -48,7 +48,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -174,7 +174,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
          */
         it('container component is successfully synced by gitops in development environment', async () => {
             console.log("syncing argocd application in development environment");
-            await syncArgoApplication('rhtap', `${repositoryName}-${developmentEnvironmentName}`);
+            await syncArgoApplication('tssc-gitops', `${repositoryName}-${developmentEnvironmentName}`);
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, developmentNamespace);
 
@@ -245,7 +245,7 @@ export const gitLabSoftwareTemplatesAdvancedScenarios = (softwareTemplateName: s
         */
         it.skip('container component is successfully synced by gitops in prod environment', async () => {
             console.log("syncing argocd application in prod environment");
-            await syncArgoApplication('rhtap', `${repositoryName}-${productionEnvironmentName}`);
+            await syncArgoApplication('tssc-gitops', `${repositoryName}-${productionEnvironmentName}`);
 
             const componentRoute = await kubeClient.getOpenshiftRoute(repositoryName, prodNamespace);
 

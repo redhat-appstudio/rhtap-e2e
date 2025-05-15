@@ -78,22 +78,22 @@ export async function waitForStringInPageContent(
 }
 
 export async function getRHTAPRootNamespace() {
-    return process.env.RHTAP_ROOT_NAMESPACE ?? 'rhtap';
+    return process.env.RHTAP_ROOT_NAMESPACE ?? 'tssc';
 }
 
 export async function getRHTAPGitopsNamespace() {
-    return process.env.RHTAP_GITOPS_NAMESPACE ?? 'rhtap-gitops';
+    return process.env.RHTAP_GITOPS_NAMESPACE ?? 'tssc-gitops';
 }
 
 export async function getRHTAPRHDHNamespace() {
-    return process.env.RHTAP_RHDH_NAMESPACE ?? 'rhtap-dh';
+    return process.env.RHTAP_RHDH_NAMESPACE ?? 'tssc-dh';
 }
 
 export async function getGitHubClient(kubeClient: Kubernetes) {
     if (process.env.GITHUB_TOKEN) {
         return new GitHubProvider(process.env.GITHUB_TOKEN);
     } else {
-        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "rhtap-github-integration", "token"));
+        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-github-integration", "token"));
     }
 }
 
@@ -109,9 +109,9 @@ export async function getJenkinsCI(kubeClient: Kubernetes) {
     if (process.env.JENKINS_URL && process.env.JENKINS_USERNAME && process.env.JENKINS_TOKEN) {
         return new JenkinsCI(process.env.JENKINS_URL, process.env.JENKINS_USERNAME, process.env.JENKINS_TOKEN);
     } else {
-        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL");
-        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__USERNAME");
-        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__TOKEN");
+        const jenkinsURL = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "JENKINS__BASEURL");
+        const jenkinsUsername = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "JENKINS__USERNAME");
+        const jenkinsToken = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "JENKINS__TOKEN");
         return new JenkinsCI(jenkinsURL, jenkinsUsername, jenkinsToken);
     }
 }
@@ -120,7 +120,7 @@ export async function getGitLabProvider(kubeClient: Kubernetes) {
     if (process.env.GITLAB_TOKEN) {
         return new GitLabProvider(process.env.GITLAB_TOKEN);
     } else {
-        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "GITLAB__TOKEN"));
+        return new GitLabProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "GITLAB__TOKEN"));
     }
 }
 
@@ -128,8 +128,8 @@ export async function getBitbucketClient(kubeClient: Kubernetes) {
     if (process.env.BITBUCKET_APP_PASSWORD && process.env.BITBUCKET_USERNAME) {
         return new BitbucketProvider(process.env.BITBUCKET_USERNAME, process.env.BITBUCKET_APP_PASSWORD);
     } else {
-        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__USERNAME");
-        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "BITBUCKET__APP_PASSWORD");
+        const bitbucketUserName = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "BITBUCKET__USERNAME");
+        const bitbucketAppPassword = await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "BITBUCKET__APP_PASSWORD");
         return new BitbucketProvider(bitbucketUserName, bitbucketAppPassword);
     }
 }

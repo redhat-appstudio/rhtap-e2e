@@ -26,7 +26,7 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         const stagingEnvironmentName = 'stage';
         const productionEnvironmentName = 'prod';
 
-        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'rhtap-app';
+        const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
         const developmentNamespace = `${componentRootNamespace}-${developmentEnvironmentName}`;
         const stageNamespace = `${componentRootNamespace}-${stagingEnvironmentName}`;
@@ -155,13 +155,13 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         it(`creates ${gptTemplate} jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName, repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName, repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName, await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         it(`creates ${gptTemplate} GitOps jenkins job and wait for creation`, async () => {
             await jenkinsClient.createJenkinsJobInFolder("github.com", githubOrganization, repositoryName + "-gitops", repositoryName);
             await jenkinsClient.waitForJobCreationInFolder(repositoryName + "-gitops", repositoryName);
-            await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "developer-hub-rhtap-env", "JENKINS__BASEURL") + "/github-webhook/");
+            await gitHubClient.createWebhook(githubOrganization, repositoryName + "-gitops", await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-developer-hub-env", "JENKINS__BASEURL") + "/github-webhook/");
         }, 120000);
 
         /**

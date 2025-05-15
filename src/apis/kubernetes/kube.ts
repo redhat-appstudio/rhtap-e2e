@@ -9,7 +9,7 @@ import { PromiseMiddlewareWrapper } from '@kubernetes/client-node/dist/gen/middl
 /**
  * Constants for interacting with Kubernetes/OpenShift clusters.
  */
-const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ??'rhtap-gitops';
+const RHTAPGitopsNamespace = process.env.RHTAP_GITOPS_NAMESPACE ??'tssc-gitops';
 
 /**
  * Kubernetes class for interacting with Kubernetes/OpenShift clusters.
@@ -236,7 +236,7 @@ export class Kubernetes extends Utils {
     /**
      * Accepts the pipelinerun name and fetches pipelinerun yaml output.
      * Returns the yaml value in the variable 'doc'
-     * @param {string} namespace - The namespace default value is rhtap-app-ci.
+     * @param {string} namespace - The namespace default value is tssc-app-ci.
      * @param {string} name - The name of the pipelinerun
      * @throws This function does not throw directly, but may throw errors during API calls or retries.
      */
@@ -485,7 +485,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getACSEndpoint(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "endpoint");
+        return this.getDeveloperHubSecret(namespace, "tssc-acs-integration", "endpoint");
     }
 
     /**
@@ -495,7 +495,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns token.
     */
     public async getACSToken(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-acs-integration", "token");
+        return this.getDeveloperHubSecret(namespace, "tssc-acs-integration", "token");
     }
 
     /**
@@ -505,7 +505,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getRekorServerUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "rekor_url");
+        return this.getDeveloperHubSecret(namespace, "tssc-tas-integration", "rekor_url");
     }
 
     /**
@@ -515,7 +515,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTUFUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-tas-integration", "tuf_url");
+        return this.getDeveloperHubSecret(namespace, "tssc-tas-integration", "tuf_url");
     }
 
     /**
@@ -544,7 +544,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationBombasticApiUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "bombastic_api_url");
+        return this.getDeveloperHubSecret(namespace, "tssc-trustification-integration", "bombastic_api_url");
     }
 
     /**
@@ -554,7 +554,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationOidcIssuerUrl(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_issuer_url");
+        return this.getDeveloperHubSecret(namespace, "tssc-trustification-integration", "oidc_issuer_url");
     }
 
     /**
@@ -564,7 +564,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationClientId(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_id");
+        return this.getDeveloperHubSecret(namespace, "tssc-trustification-integration", "oidc_client_id");
     }
 
     /**
@@ -574,7 +574,7 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationClientSecret(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "oidc_client_secret");
+        return this.getDeveloperHubSecret(namespace, "tssc-trustification-integration", "oidc_client_secret");
     }
 
     /**
@@ -584,6 +584,6 @@ export class Kubernetes extends Utils {
     * @returns {Promise<string>}  - returns route URL.
     */
     public async getTTrustificationSupportedCycloneDXVersion(namespace: string): Promise<string> {
-        return this.getDeveloperHubSecret(namespace, "rhtap-trustification-integration", "supported_cyclonedx_version");
+        return this.getDeveloperHubSecret(namespace, "tssc-trustification-integration", "supported_cyclonedx_version");
     }
 }
