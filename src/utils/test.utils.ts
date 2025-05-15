@@ -93,7 +93,7 @@ export async function getGitHubClient(kubeClient: Kubernetes) {
     if (process.env.GITHUB_TOKEN) {
         return new GitHubProvider(process.env.GITHUB_TOKEN);
     } else {
-        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRHDHNamespace(), "tssc-github-integration", "token"));
+        return new GitHubProvider(await kubeClient.getDeveloperHubSecret(await getRHTAPRootNamespace(), "tssc-github-integration", "token"));
     }
 }
 
