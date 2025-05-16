@@ -101,5 +101,6 @@ spec:
         else
           echo -e "INFO: Cloning repository 'redhat-appstudio/rhtap-e2e' with revision 'main'"
           git clone https://github.com/redhat-appstudio/rhtap-e2e.git .
+          git checkout "rhtap"
           ./integration-tests/scripts/rhtap-e2e-runner.sh
         fi
