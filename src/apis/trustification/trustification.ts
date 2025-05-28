@@ -57,7 +57,7 @@ export class TrustificationClient extends Utils {
 
     // Function to search for SBOM by name and wait until results are not empty
     public async waitForSbomSearchByName(name: string, timeout = 300000, pollingInterval = 5000): Promise<unknown[]> {
-        const searchUrl = this.bombasticApiUrl + "/api/v2/sbom/search";
+        const searchUrl = this.bombasticApiUrl + "/api/v2/sbom";
         const startTime = Date.now();
 
         while (true) {
@@ -78,9 +78,9 @@ export class TrustificationClient extends Utils {
                     },
                 });
 
-                if (response.status === 200 && response.data.result && response.data.result.length === 1) {
-                    console.log(`SBOM for '${name}' retrieved successfully. Found ${response.data.result.length} result.`);
-                    return response.data.result;
+                if (response.status === 200 && response.data.total === 1) {
+                    console.log(`SBOM for '${name}' retrieved successfully. Found ${response.data.total} result.`);
+                    return response.data.items;
                 }
 
                 console.log(`No SBOM found for '${name}' yet. Retrying...`);
