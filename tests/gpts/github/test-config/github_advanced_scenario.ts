@@ -324,7 +324,9 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * Verifies if the SBOm is uploaded in RHTPA/Trustification
         */
         it('check sbom uploaded in RHTPA', async () => {
-            await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
+            // await checkSBOMInTrustification(kubeClient, extractedBuildImage.split(":")[2]);
+            //because of the bug https://issues.redhat.com/browse/TC-2564 we need to use the image path from the file
+            await checkSBOMInTrustification(kubeClient, '/tmp/files/image'); //NOSONAR
         }, 900000);
 
         /**
