@@ -304,7 +304,9 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         it('check sbom uploaded in RHTPA', async () => {
             const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
             const sbomVersion = await parseSbomVersionFromLogs(buildLog);
-            await checkSBOMInTrustification(kubeClient, sbomVersion);
+            const sbomName = repositoryName + "/results/temp/files/image";//"/home/jenkins/agent/workspace/" + repositoryName + "/" + 
+            await checkSBOMInTrustification(kubeClient, repositoryName);
+            //await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 
         /**

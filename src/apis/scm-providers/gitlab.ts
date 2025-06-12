@@ -461,9 +461,9 @@ export class GitLabProvider extends Utils {
         const filePath = 'rhtap/env.sh';
         const fileContent = await this.getFileContentAsString(repositoryID, branchName, filePath);
         // Replace rekor
-        let updatedContent = fileContent.replace(`http://rekor-server.rhtap-tas.svc`, rekorHost);
+        let updatedContent = fileContent.replace(`http://rekor-server.tssc-tas.svc`, rekorHost);
         // Replace TUF
-        updatedContent = updatedContent.replace(`http://tuf.rhtap-tas.svc`, tufMirror);
+        updatedContent = updatedContent.replace(`http://tuf.tssc-tas.svc`, tufMirror);
         // Add cosign public key variable
         updatedContent = updatedContent.concat("\n" + "export COSIGN_PUBLIC_KEY=" + cosignPublicKey + "\n");
         // Add image registry username
