@@ -91,10 +91,15 @@ configure_gitlab_variables() {
     fi
     
     # Extract and export all GitLab-related credentials
+<<<<<<< HEAD
     export GITLAB_ORGANIZATION="$(get_secret_value "$TSSC_NAMESPACE" "tssc-gitlab-integration" "group")"
     export GITLAB_TOKEN="$(get_secret_value "$TSSC_NAMESPACE" "tssc-gitlab-integration" "token")"
+=======
+    export GITLAB_ORGANIZATION_PUBLIC="$(get_secret_value "rhtap" "rhtap-gitlab-integration" "group")"
+    export GITLAB_TOKEN="$(get_secret_value "rhtap" "rhtap-gitlab-integration" "token")"
+>>>>>>> 2df50fd (Update rhtap-e2e-runner.sh)
     
-    log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION})"
+    log "INFO" "GitLab credentials configured successfully (organization: ${GITLAB_ORGANIZATION_PUBLIC})"
 }
 
 configure_bitbucket_variables() {

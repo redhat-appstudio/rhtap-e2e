@@ -144,7 +144,7 @@ export class GitHubProvider extends Utils {
      */
     public async createAgentCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "agent any",
-            "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
+            "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention never()\n        idleMinutes '0'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n         resourceRequestMemory '4Gi'\n         resourceLimitMemory '4Gi'\n        }\n       }    \n}"
             , "Update agent in Jenkinsfile");
     }
 
@@ -158,6 +158,65 @@ export class GitHubProvider extends Utils {
 
     public async disableQuayCommit(gitOrg: string, gitRepository: string): Promise<string | undefined> {
         return await this.commitInGitHub(gitOrg, gitRepository, 'Jenkinsfile', "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')", `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`, "Enable ACS scan in Jenkins");
+    }
+
+
+    /**
+     * Commits multiple changes to workflow file required to enable RekorHost and TufMirror Secrets.
+     *
+     * @param {string} githubOrganization - The name of the GitHub organization.
+     * @param {string} repositoryName - The name of the repository where the files will be committed.
+     * @param {string} workflowPath - The workflow file name
+     * @returns {Promise<string | undefined>} A Promise resolving to "true" if commit successful, otherwise undefined.
+    */
+    async updateJenkinsfileToEnableSecrets(githubOrganization: string, repositoryName: string, jenkinsfilePath: string) {
+        return await this.commitMultipleFilesInGitHub(
+            githubOrganization,
+            repositoryName,
+            [
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: "/* IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD') */",
+                    replacementString: `IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD')`
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: "QUAY_IO_CREDS = credentials('QUAY_IO_CREDS')",
+                    replacementString: `/* QUAY_IO_CREDS = credentials('QUAY_IO_CREDS') */`
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: "agent any",
+                    replacementString: "agent {\n      kubernetes {\n        label 'jenkins-agent'\n        cloud 'openshift'\n        serviceAccount 'jenkins'\n        podRetention onFailure()\n        idleMinutes '5'\n        containerTemplate {\n         name 'jnlp'\n         image '" + this.jenkinsAgentImage + "'\n         ttyEnabled true\n         args '${computer.jnlpmac} ${computer.name}'\n        }\n       }\n}"
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: "COSIGN_PUBLIC_KEY = credentials('COSIGN_PUBLIC_KEY')",
+                    replacementString: "",
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: `/* TRUSTIFICATION_BOMBASTIC_API_URL = credentials('TRUSTIFICATION_BOMBASTIC_API_URL') */`,
+                    replacementString: "TRUSTIFICATION_BOMBASTIC_API_URL = credentials('TRUSTIFICATION_BOMBASTIC_API_URL')"
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: `/* TRUSTIFICATION_OIDC_ISSUER_URL = credentials('TRUSTIFICATION_OIDC_ISSUER_URL') */`,
+                    replacementString: "TRUSTIFICATION_OIDC_ISSUER_URL = credentials('TRUSTIFICATION_OIDC_ISSUER_URL')"
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: `/* TRUSTIFICATION_OIDC_CLIENT_ID = credentials('TRUSTIFICATION_OIDC_CLIENT_ID') */`,
+                    replacementString: "TRUSTIFICATION_OIDC_CLIENT_ID = credentials('TRUSTIFICATION_OIDC_CLIENT_ID')"
+                },
+                {
+                    path: jenkinsfilePath,
+                    stringToFind: `/* TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION = credentials('TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION') */`,
+                    replacementString: `TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION = credentials('TRUSTIFICATION_SUPPORTED_CYCLONEDX_VERSION')`
+                }
+            ],
+            "Update Jenkinsfile for tests"
+        );
     }
 
     /**

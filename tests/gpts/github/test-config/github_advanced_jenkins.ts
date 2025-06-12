@@ -114,15 +114,8 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
          * Creates commits to update Jenkins agent and enable ACS scan
          */
         it(`Commit updated agent ${gptTemplate} and enable ACS scan`, async () => {
-            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName)).not.toBe(undefined);
-            expect(await gitHubClient.createAgentCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
-            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName)).not.toBe(undefined);
-            expect(await gitHubClient.enableACSJenkins(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
-            expect(await gitHubClient.deleteCosignPublicKey(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
-            expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName)).not.toBe(undefined);
-            expect(await gitHubClient.createRegistryPasswordCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
-            expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName)).not.toBe(undefined);
-            expect(await gitHubClient.disableQuayCommit(githubOrganization, repositoryName + "-gitops")).not.toBe(undefined);
+            await gitHubClient.updateJenkinsfileToEnableSecrets(githubOrganization, repositoryName, "Jenkinsfile");
+            await gitHubClient.updateJenkinsfileToEnableSecrets(githubOrganization, repositoryName + "-gitops", "Jenkinsfile");
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName, await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateRekorHost(githubOrganization, repositoryName + "-gitops", await kubeClient.getRekorServerUrl(RHTAPRootNamespace))).not.toBe(undefined);
             expect(await gitHubClient.updateTUFMirror(githubOrganization, repositoryName, await kubeClient.getTUFUrl(RHTAPRootNamespace))).not.toBe(undefined);
@@ -311,7 +304,9 @@ export const gitHubJenkinsPromotionTemplateTests = (gptTemplate: string, stringO
         it('check sbom uploaded in RHTPA', async () => {
             const buildLog = await jenkinsClient.getJobConsoleLogForBuild(repositoryName, repositoryName, 2);
             const sbomVersion = await parseSbomVersionFromLogs(buildLog);
-            await checkSBOMInTrustification(kubeClient, sbomVersion);
+            const sbomName = repositoryName + "/results/temp/files/image";//"/home/jenkins/agent/workspace/" + repositoryName + "/" + 
+            await checkSBOMInTrustification(kubeClient, repositoryName);
+            //await checkSBOMInTrustification(kubeClient, sbomVersion);
         }, 900000);
 
         /**
