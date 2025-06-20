@@ -79,7 +79,7 @@ configure_github_variables() {
         return 0
     fi
     export GITHUB_ORGANIZATION="rhtap-rhdh-qe"
-    export GITHUB_TOKEN="$(get_secret_value "" "tssc-github-integration" "token")"
+    export GITHUB_TOKEN="$(get_secret_value "$TSSC_NAMESPACE" "tssc-github-integration" "token")"
 }   
 # Extract GitLab organization from Kubernetes secret
 configure_gitlab_variables() {
