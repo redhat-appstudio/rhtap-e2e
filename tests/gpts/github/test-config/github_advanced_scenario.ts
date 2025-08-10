@@ -55,6 +55,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         let tektonClient: Tekton;
 
         let pullRequestNumber: number;
+        let commitRevision: string;
         let gitopsPromotionPRNumber: number;
         let extractedBuildImage: string;
 
@@ -148,21 +149,14 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * @throws {Error} Throws an error if the creation of the pull request fails.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
-            const prNumber = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content');
-
-            // Set the pull request number if creation was successful
-            if (prNumber !== undefined) {
-                pullRequestNumber = prNumber;
-            } else {
-                throw new Error("Failed to create a pull request");
-            }
+            [pullRequestNumber, commitRevision] = await gitHubClient.createPullRequestFromMainBranch(githubOrganization, repositoryName, 'test_file.txt', 'Test content') || [];
         }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'pull_request', onPullTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'pull_request', onPullTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -170,14 +164,14 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
          */
         it(`Merge pull_request to trigger a push pipelinerun`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber);
+            commitRevision = await gitHubClient.mergePullRequest(githubOrganization, repositoryName, pullRequestNumber);
         }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -186,7 +180,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -194,7 +188,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -228,19 +222,14 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            [gitopsPromotionPRNumber, commitRevision] = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, stagingEnvironmentName, extractedBuildImage);
         });
 
         /**
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging.
          */
         it('verifies successful completion of EC PipelineRun to ensure environment promotion from development to staging', async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'pull_request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, commitRevision, 'pull_request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -248,7 +237,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage 
          */
         it(`merge gitops pull request to sync new image in stage environment`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+            commitRevision = await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
         }, 120000);
 
         /*
@@ -280,19 +269,14 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
                 throw new Error("Failed to create a pr");
             }
 
-            const gitopsPromotionPR = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
-            if (gitopsPromotionPR !== undefined) {
-                gitopsPromotionPRNumber = gitopsPromotionPR;
-            } else {
-                throw new Error("Failed to create a pr");
-            }
+            [gitopsPromotionPRNumber, commitRevision] = await gitHubClient.promoteGitopsImageEnvironment(githubOrganization, `${repositoryName}-gitops`, repositoryName, productionEnvironmentName, extractedBuildImage);
         });
 
         /**
          * Verifies successful completion of EC PipelineRun to ensure environment promotion from staging to production.
          */
         it('verifies successful completion of PipelineRun to ensure environment promotion from stage to prod', async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, 'pull_request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(`${repositoryName}-gitops`, ciNamespace, commitRevision, 'pull_request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -300,7 +284,7 @@ export const githubSoftwareTemplatesAdvancedScenarios = (gptTemplate: string) =>
          * If pipelinerun succeeds merge the PR to allow image to sync in prod environment
          */
         it(`merge gitops pull request to sync new image in prod environment`, async () => {
-            await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
+            commitRevision = await gitHubClient.mergePullRequest(githubOrganization, `${repositoryName}-gitops`, gitopsPromotionPRNumber);
         }, 120000);
 
         /**

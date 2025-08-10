@@ -57,6 +57,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         let pipelineAsCodeRoute: string;
 
         let pullRequestID: number;
+        let commitRevision: string;
         let gitopsPromotionPulrequestID: number;
 
         let RHTAPGitopsNamespace: string;
@@ -169,7 +170,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * This step is used to trigger a PipelineRun by creating a pull request.
          */
         it(`Creates a pull request to trigger a PipelineRun`, async () => {
-            pullRequestID = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
+            [pullRequestID, commitRevision] = await bitbucketClient.createPullrequest(bitbucketWorkspace, repositoryName, "test.txt", "Hello World!");
             expect(pullRequestID).not.toBe(undefined);
         }, 120000);
 
@@ -177,7 +178,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} pull request pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'pull_request', onPullTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'pull_request', onPullTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -185,14 +186,14 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Merges a pull request and waits until a pipeline run push is created in the cluster and start to wait until succeed/fail.
          */
         it(`Merge pull_request to trigger a push pipelinerun`, async ()=> {
-            await bitbucketClient.mergePullrequest(bitbucketWorkspace, repositoryName, pullRequestID);
+            commitRevision = await bitbucketClient.mergePullrequest(bitbucketWorkspace, repositoryName, pullRequestID);
         }, 120000);
 
         /**
          * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
          */
         it(`Wait component ${gptTemplate} push pipelinerun to be triggered and finished`, async ()=> {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -201,7 +202,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
         * if failed to figure out the image path ,return pod yaml for reference
         */
         it(`Check ${gptTemplate} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -209,7 +210,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${gptTemplate}`, async ()=> {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'push');
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, commitRevision, 'push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
@@ -225,10 +226,10 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
          */
         it('trigger pull request promotion to promote from development to stage environment', async ()=> {
-            gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, developmentEnvironmentName, stagingEnvironmentName);
+            [gitopsPromotionPulrequestID, commitRevision] = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, developmentEnvironmentName, stagingEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, 'pull_request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, commitRevision, 'pull_request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -236,7 +237,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in stage
          */
         it(`merge gitops pull request to sync new image in stage environment`, async ()=> {
-            await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
+            commitRevision = await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
         }, 120000);
 
         /**
@@ -250,10 +251,10 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Trigger a promotion Pull Request in Gitops repository to promote stage image to prod environment
          */
         it('trigger pull request promotion to promote from stage to prod environment', async ()=> {
-            gitopsPromotionPulrequestID = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
+            [gitopsPromotionPulrequestID, commitRevision] = await bitbucketClient.createPromotionPullrequest(bitbucketWorkspace, repositoryName, stagingEnvironmentName, productionEnvironmentName);
             expect(gitopsPromotionPulrequestID).toBeDefined();
 
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, 'pull_request', onPullGitopsTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(gitopsRepoName, ciNamespace, commitRevision, 'pull_request', onPullGitopsTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -261,7 +262,7 @@ export const bitbucketSoftwareTemplatesAdvancedScenarios = (gptTemplate: string,
          * Merge the gitops Pull Request with the new image value. Expect that argocd will sync the new image in prod
          */
         it(`merge gitops pull request to sync new image in prod environment`, async ()=> {
-            await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
+            commitRevision = await bitbucketClient.mergePullrequest(bitbucketWorkspace, gitopsRepoName, gitopsPromotionPulrequestID);
         }, 120000);
 
         /**

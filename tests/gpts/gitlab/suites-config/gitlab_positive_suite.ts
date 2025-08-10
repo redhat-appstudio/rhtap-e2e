@@ -19,7 +19,7 @@ import { onPushTasks } from '../../../../src/constants/tekton';
  */
 export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
     describe(`Red Hat Trusted Application Pipeline ${softwareTemplateName} GPT tests GitLab provider with public/private image registry`, () => {
-        jest.retryTimes(3, {logErrorsBeforeRetry: true}); 
+        jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
         let backstageClient: DeveloperHubClient;
         let developerHubTask: TaskIdReponse;
@@ -31,6 +31,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
         let pipelineAsCodeRoute: string;
 
         let RHTAPGitopsNamespace: string;
+        let commitRevision: string;
 
         const componentRootNamespace = process.env.APPLICATION_ROOT_NAMESPACE || 'tssc-app';
         const ciNamespace = `${componentRootNamespace}-ci`;
@@ -114,14 +115,14 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
             * Creates an empty commit in the repository and expect that a pipelinerun start. Bug which affect to completelly finish this step: https://issues.redhat.com/browse/RHTAPBUGS-1136
         */
         it(`Creates empty commit to trigger a pipeline run`, async () => {
-            await gitLabProvider.createCommit(gitlabRepositoryID, 'main');
+            commitRevision = await gitLabProvider.createCommit(gitlabRepositoryID, 'main');
         }, 120000);
 
         /**
             * Waits until a pipeline run is created in the cluster and start to wait until succeed/fail.
         */
         it(`Wait component ${softwareTemplateName} pipelinerun to be triggered and finished`, async () => {
-            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, 'Push', onPushTasks);
+            const pipelineRunResult = await tektonClient.verifyPipelineRunByRepository(repositoryName, ciNamespace, commitRevision, 'Push', onPushTasks);
             expect(pipelineRunResult).toBe(true);
         }, 900000);
 
@@ -130,7 +131,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * if failed to figure out the image path ,return pod yaml for reference
          */
         it(`Check ${softwareTemplateName} pipelinerun yaml has the rh-syft image path`, async () => {
-            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, 'Push');
+            const result = await verifySyftImagePath(kubeClient, repositoryName, ciNamespace, commitRevision, 'Push');
             expect(result).toBe(true);
         }, 900000);
 
@@ -138,7 +139,7 @@ export const gitLabProviderBasicTests = (softwareTemplateName: string) => {
          * verify if the ACS Scan is successfully done from the logs of task steps
          */
         it(`Check if ACS Scan is successful for ${softwareTemplateName}`, async () => {
-            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, 'Push');
+            const result = await checkIfAcsScanIsPass(kubeClient, repositoryName, ciNamespace, commitRevision, 'Push');
             expect(result).toBe(true);
             console.log("Verified as ACS Scan is Successful");
         }, 900000);
