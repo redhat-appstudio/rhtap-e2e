@@ -34,7 +34,7 @@ spec:
         git checkout "$(params.git-revision)"
 
     - name: eslint-check
-      image: public.ecr.aws/docker/library/node:22.15.0-alpine
+      image: public.ecr.aws/docker/library/node:22.16.0-alpine
       workingDir: /workspace
       script: |
         #!/bin/sh
