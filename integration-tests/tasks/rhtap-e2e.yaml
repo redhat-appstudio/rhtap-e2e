@@ -14,7 +14,7 @@ spec:
       default: "quay.io/konflux-test-storage/rhtap-team/rhtap-e2e"
     - name: rhtap-e2e-container
       type: string
-      default: "quay.io/redhat-user-workloads/rhtap-shared-team-tenant/rhtap-e2e/rhtap-e2e:latest"
+      default: "quay.io/redhat-user-workloads/rhtap-shared-team-tenant/rhtap-e2e:latest"
     - name: job-spec
       type: string
       description: "The job specification containing details of the test execution."
